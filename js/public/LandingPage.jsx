@@ -1,4 +1,4 @@
-// Public Landing Page Component (Beranda Utama with Comprehensive Infographics, Activity Results, Dynamic Priority Programs, and Profile)
+// Public Landing Page Component (Beranda Utama - Menampilkan Program Prioritas Panti Langsung di Area Atas Hero)
 const LandingPage = ({
   onNavigateToDonation,
   onNavigateToLogin,
@@ -55,7 +55,8 @@ const LandingPage = ({
     <div className="space-y-16 pb-16 animate-fade-in">
       
       {/* ========================================================================= */}
-      {/* 1. HERO INFOGRAFIS UTAMA: DATA ANAK ASUH, HASIL DONASI & PROGRAM PRIORITAS */}
+      {/* 1. HERO SECTION (BACKGROUND HIJAU DI BAWAH MENU BERANDA):                */}
+      {/*    LANGSUNG MENYUGUHKAN PROGRAM PRIORITAS PANTI & KEBUTUHAN OPERASIONAL   */}
       {/* ========================================================================= */}
       <section className="relative bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden rounded-b-3xl shadow-xl space-y-10">
         
@@ -63,28 +64,31 @@ const LandingPage = ({
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* 1.1 Header & Ajakan Donasi Utama */}
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10 border-b border-white/10 pb-8">
-          <div className="space-y-3">
+        {/* 1.1 Header Banner Utama: Program Prioritas Panti */}
+        <div className="max-w-7xl mx-auto space-y-4 relative z-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
+          <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner">
-              <i data-lucide="shield-check" className="w-4 h-4 text-emerald-400"></i>
-              <span>Portal Resmi & Akuntabilitas Keuangan PSAK 45</span>
+              <i data-lucide="layers" className="w-4 h-4 text-emerald-400"></i>
+              <span>Program Prioritas Panti Asuhan Kasih Bunda</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Panti Asuhan <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Kasih Bunda</span>
+            
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+              Program Kebutuhan Operasional & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Pembinaan 45 Anak Asuh</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed font-medium">
-              Membina & mengasuh <b className="text-emerald-300">45 anak yatim dan dhuafa</b> dengan komitmen transparansi donasi, laporan arus kas terbuka, dan kuitansi digital instan.
+
+            <p className="text-xs sm:text-base text-slate-300 leading-relaxed font-medium">
+              Bantuan dan donasi Anda langsung dialokasikan untuk pemenuhan gizi makan harian, beasiswa sekolah, serta operasional fasilitas asrama dengan laporan keuangan nirlaba transparan berbasis PSAK 45.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Quick Buttons */}
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 flex-shrink-0">
             <button
               onClick={() => onNavigateToDonation('Konsumsi')}
               className="px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
             >
               <i data-lucide="heart" className="w-5 h-5 fill-slate-950"></i>
-              <span>Donasi Online Cepat</span>
+              <span>Donasi Cepat (Bebas Login)</span>
             </button>
 
             <button
@@ -92,178 +96,22 @@ const LandingPage = ({
               className="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/20 text-xs sm:text-sm flex items-center space-x-2 transition-all"
             >
               <i data-lucide="building-2" className="w-4 h-4 text-emerald-300"></i>
-              <span>Profil & Struktur</span>
+              <span>Profil & Struktur Panti</span>
             </button>
           </div>
         </div>
 
-        {/* 1.2 INFOGRAFIS JUMLAH & DATA ANAK ASUH */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10">
-          <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-            <i data-lucide="bar-chart-3" className="w-4 h-4 text-emerald-400"></i>
-            <span>Infografis Penerima Manfaat & Layanan Panti</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Stat 1: Total Anak Asuh */}
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Total Anak Asuh</span>
-                <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
-                  <i data-lucide="users" className="w-5 h-5"></i>
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">45 Anak</div>
-              <div className="text-[11px] text-emerald-200 font-medium">👦 24 Putra • 👧 21 Putri Asrama</div>
-            </div>
-
-            {/* Stat 2: Jenjang Pendidikan */}
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Jenjang Pendidikan</span>
-                <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300">
-                  <i data-lucide="graduation-cap" className="w-5 h-5"></i>
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">100% Sekolah</div>
-              <div className="text-[11px] text-teal-200 font-medium">SD (15) • SMP (18) • SMA (12)</div>
-            </div>
-
-            {/* Stat 3: Pemenuhan Gizi */}
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Pemenuhan Konsumsi</span>
-                <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
-                  <i data-lucide="utensils" className="w-5 h-5"></i>
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">135 Porsi/Hari</div>
-              <div className="text-[11px] text-amber-200 font-medium">Menu Sehat 3x Sehari + Susu & Buah</div>
-            </div>
-
-            {/* Stat 4: Laporan & Kuitansi */}
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Akuntabilitas Donasi</span>
-                <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
-                  <i data-lucide="file-check" className="w-5 h-5"></i>
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">PSAK 45</div>
-              <div className="text-[11px] text-indigo-200 font-medium">Kuitansi Digital Instan & Transparan</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 1.3 HASIL PENGGUNAAN DONASI (DOKUMENTASI KEGIATAN ANAK ASUH) */}
+        {/* 1.2 KARTU PROGRAM PRIORITAS PANTI (LANGSUNG TAMPIL DI AREA ATAS) */}
         <div className="max-w-7xl mx-auto space-y-4 relative z-10">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-              <i data-lucide="image" className="w-4 h-4 text-emerald-400"></i>
-              <span>Hasil Penggunaan Donasi & Aktivitas Nyata Anak Asuh</span>
+            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-emerald-300">
+              <i data-lucide="heart-handshake" className="w-4 h-4 text-emerald-400"></i>
+              <span>Pilihan Program Bantuan Kebutuhan Anak</span>
             </div>
-            <span className="text-[11px] text-slate-300 font-medium">Terdokumentasi & Terverifikasi</span>
+            <span className="text-[11px] text-slate-300 font-medium">Klik tombol donasi pada program yang ingin Anda bantu</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* Foto Kegiatan 1 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-36 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
-                <div className="relative z-10 space-y-1">
-                  <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center mx-auto text-xl">
-                    🍲
-                  </div>
-                  <div className="text-xs font-black text-white">Gizi Harian & Makan Sehat</div>
-                </div>
-              </div>
-              <div className="p-3.5 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-emerald-300">Alokasi Dana Konsumsi</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Penyediaan beras, lauk segar, telur, susu pertumbuhan untuk 45 anak asuh setiap hari.
-                </p>
-              </div>
-            </div>
-
-            {/* Foto Kegiatan 2 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-36 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
-                <div className="relative z-10 space-y-1">
-                  <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center mx-auto text-xl">
-                    💻
-                  </div>
-                  <div className="text-xs font-black text-white">Lab Komputer & Coding</div>
-                </div>
-              </div>
-              <div className="p-3.5 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-teal-300">Alokasi Dana Pendidikan</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Pelatihan ketrampilan digital, bimbingan tugas sekolah daring, dan akses 15 unit PC internet.
-                </p>
-              </div>
-            </div>
-
-            {/* Foto Kegiatan 3 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-36 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
-                <div className="relative z-10 space-y-1">
-                  <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mx-auto text-xl">
-                    📖
-                  </div>
-                  <div className="text-xs font-black text-white">Halaqah Tahfidz Qur'an</div>
-                </div>
-              </div>
-              <div className="p-3.5 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-indigo-300">Pembinaan Akhlak & Adab</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Bimbingan tahsin dan setoran hafalan Al-Qur'an harian bersama pengasuh dan ustadz asrama.
-                </p>
-              </div>
-            </div>
-
-            {/* Foto Kegiatan 4 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-36 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
-                <div className="relative z-10 space-y-1">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center mx-auto text-xl">
-                    🩺
-                  </div>
-                  <div className="text-xs font-black text-white">Cek Kesehatan & Sanitasi</div>
-                </div>
-              </div>
-              <div className="p-3.5 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-rose-300">Alokasi Dana Kesehatan</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Pemeriksaan berkala dokter relawan, pengadaan suplemen, serta kebersihan kamar tidur asrama.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* 1.4 SEMUA PROGRAM PRIORITAS PANTI (DINAMIS DARI PENGURUS HARIAN) */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10 pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-t border-white/10 pt-6">
-            <div>
-              <div className="inline-flex items-center space-x-1.5 text-xs font-black uppercase text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
-                <i data-lucide="layers" className="w-3.5 h-3.5"></i>
-                <span>Program Prioritas Panti Asuhan</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-                Kebutuhan Program Mendesak Anak Asuh
-              </h2>
-            </div>
-            <p className="text-xs text-slate-300 max-w-md">
-              Pilih program bantuan di bawah ini untuk menyalurkan donasi Anda secara langsung dan terarah.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {activePrograms.length === 0 ? (
               <div className="col-span-3 text-center py-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/10 text-slate-300">
                 <p className="text-sm font-bold">Belum ada program prioritas aktif yang ditampilkan.</p>
@@ -277,7 +125,7 @@ const LandingPage = ({
                 return (
                   <div 
                     key={prog.id} 
-                    className="bg-white rounded-3xl p-6 shadow-xl border border-slate-200 text-slate-900 space-y-4 flex flex-col justify-between hover:scale-[1.01] transition-all"
+                    className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-4 flex flex-col justify-between hover:scale-[1.01] transition-all"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -330,17 +178,142 @@ const LandingPage = ({
           </div>
         </div>
 
-      </section>
+        {/* 1.3 INFOGRAFIS JUMLAH & DEMOGRAFI ANAK ASUH */}
+        <div className="max-w-7xl mx-auto space-y-4 relative z-10 pt-4 border-t border-white/10">
+          <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+            <i data-lucide="bar-chart-3" className="w-4 h-4 text-emerald-400"></i>
+            <span>Infografis Anak Asuh & Kebutuhan Harian</span>
+          </div>
 
-      {/* [COMMENTED: Hero Section Lama Dikomentari Sesuai Arahan Mitra]
-      <section className="relative bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl sm:text-5xl font-black">Mewujudkan Masa Depan Cerah Bagi 45 Anak Asuh Panti</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>45 Anak</div>
-          <div>PSAK 45</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Total Anak Asuh</span>
+                <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
+                  <i data-lucide="users" className="w-5 h-5"></i>
+                </span>
+              </div>
+              <div className="text-3xl font-black text-white">45 Anak</div>
+              <div className="text-[11px] text-emerald-200 font-medium">👦 24 Putra • 👧 21 Putri Asrama</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Jenjang Sekolah</span>
+                <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300">
+                  <i data-lucide="graduation-cap" className="w-5 h-5"></i>
+                </span>
+              </div>
+              <div className="text-3xl font-black text-white">100% Sekolah</div>
+              <div className="text-[11px] text-teal-200 font-medium">SD (15) • SMP (18) • SMA (12)</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Pemenuhan Konsumsi</span>
+                <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
+                  <i data-lucide="utensils" className="w-5 h-5"></i>
+                </span>
+              </div>
+              <div className="text-3xl font-black text-white">135 Porsi/Hari</div>
+              <div className="text-[11px] text-amber-200 font-medium">Menu Sehat 3x Sehari + Susu & Buah</div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Akuntabilitas Donasi</span>
+                <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
+                  <i data-lucide="file-check" className="w-5 h-5"></i>
+                </span>
+              </div>
+              <div className="text-3xl font-black text-white">PSAK 45</div>
+              <div className="text-[11px] text-indigo-200 font-medium">Kuitansi Digital Instan & Transparan</div>
+            </div>
+          </div>
         </div>
+
+        {/* 1.4 HASIL PENGGUNAAN DONASI (DOKUMENTASI FOTO KEGIATAN NYATA) */}
+        <div className="max-w-7xl mx-auto space-y-4 relative z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+              <i data-lucide="image" className="w-4 h-4 text-emerald-400"></i>
+              <span>Hasil Penyaluran Donasi & Aktivitas Nyata Anak Asuh</span>
+            </div>
+            <span className="text-[11px] text-slate-300 font-medium">Dokumentasi Terverifikasi</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
+              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
+                <div className="relative z-10 space-y-1">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center mx-auto text-xl">
+                    🍲
+                  </div>
+                  <div className="text-xs font-black text-white">Gizi Harian & Makan Sehat</div>
+                </div>
+              </div>
+              <div className="p-3 space-y-1 bg-slate-900/60">
+                <div className="text-[11px] font-bold text-emerald-300">Alokasi Dana Konsumsi</div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Penyediaan beras, lauk segar, telur, susu pertumbuhan 45 anak asuh setiap hari.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
+              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
+                <div className="relative z-10 space-y-1">
+                  <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center mx-auto text-xl">
+                    💻
+                  </div>
+                  <div className="text-xs font-black text-white">Lab Komputer & Coding</div>
+                </div>
+              </div>
+              <div className="p-3 space-y-1 bg-slate-900/60">
+                <div className="text-[11px] font-bold text-teal-300">Alokasi Dana Pendidikan</div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Pelatihan ketrampilan digital, bimbingan tugas sekolah, dan 15 unit PC internet.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
+              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
+                <div className="relative z-10 space-y-1">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mx-auto text-xl">
+                    📖
+                  </div>
+                  <div className="text-xs font-black text-white">Halaqah Tahfidz Qur'an</div>
+                </div>
+              </div>
+              <div className="p-3 space-y-1 bg-slate-900/60">
+                <div className="text-[11px] font-bold text-indigo-300">Pembinaan Akhlak & Adab</div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Bimbingan tahsin & setoran hafalan Al-Qur'an harian bersama ustadz asrama.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
+              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
+                <div className="relative z-10 space-y-1">
+                  <div className="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center mx-auto text-xl">
+                    🩺
+                  </div>
+                  <div className="text-xs font-black text-white">Cek Kesehatan & Sanitasi</div>
+                </div>
+              </div>
+              <div className="p-3 space-y-1 bg-slate-900/60">
+                <div className="text-[11px] font-bold text-rose-300">Alokasi Dana Kesehatan</div>
+                <p className="text-[11px] text-slate-300 leading-relaxed">
+                  Pemeriksaan dokter relawan, suplemen, serta sanitasi kamar tidur asrama.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </section>
-      */}
 
       {/* ========================================================================= */}
       {/* 2. SEKSI SEJARAH, LATAR BELAKANG, VISI & MISI PANTI                      */}
