@@ -214,47 +214,70 @@ const Navbar = ({
 
                 {/* Role: Pemimpin Lembaga Tab */}
                 {currentUser.role === 'Pemimpin Lembaga' && (
-                  <button
-                    onClick={() => setActiveTab('approval')}
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 relative ${
-                      activeTab === 'approval'
-                        ? 'bg-slate-100 text-indigo-700 shadow-inner'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                    }`}
-                  >
-                    <i data-lucide="user-check" className="w-4 h-4"></i>
-                    <span>Persetujuan Akun (Approval)</span>
-                    {pendingApprovalCount > 0 && (
-                      <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                        {pendingApprovalCount}
-                      </span>
-                    )}
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setActiveTab('approval')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 relative ${
+                        activeTab === 'approval'
+                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <i data-lucide="user-check" className="w-4 h-4"></i>
+                      <span>Persetujuan Akun (Approval)</span>
+                      {pendingApprovalCount > 0 && (
+                        <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                          {pendingApprovalCount}
+                        </span>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('audit')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'audit'
+                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <i data-lucide="history" className="w-4 h-4"></i>
+                      <span>Digital Audit Trail</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('report')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'report'
+                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <i data-lucide="printer" className="w-4 h-4"></i>
+                      <span>Cetak Laporan PSAK 45</span>
+                    </button>
+                  </>
                 )}
 
-                <button
-                  onClick={() => setActiveTab('audit')}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                    activeTab === 'audit'
-                      ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <i data-lucide="history" className="w-4 h-4"></i>
-                  <span>Digital Audit Trail</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('report')}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                    activeTab === 'report'
-                      ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <i data-lucide="printer" className="w-4 h-4"></i>
-                  <span>Cetak Laporan PSAK 45</span>
-                </button>
+                {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan sesuai arahan mitra]
+                {currentUser.role === 'Pengurus Harian' && (
+                  <>
+                    <button
+                      onClick={() => setActiveTab('audit')}
+                      className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
+                    >
+                      <i data-lucide="history" className="w-4 h-4"></i>
+                      <span>Digital Audit Trail</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('report')}
+                      className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
+                    >
+                      <i data-lucide="printer" className="w-4 h-4"></i>
+                      <span>Cetak Laporan PSAK 45</span>
+                    </button>
+                  </>
+                )}
+                */}
               </>
             )}
 
@@ -451,36 +474,59 @@ const Navbar = ({
               )}
 
               {currentUser.role === 'Pemimpin Lembaga' && (
-                <button
-                  onClick={() => { setActiveTab('approval'); setIsMobileMenuOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                    activeTab === 'approval' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
-                  }`}
-                >
-                  <i data-lucide="user-check" className="w-4 h-4"></i>
-                  <span>Persetujuan Akun (Approval)</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => { setActiveTab('approval'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'approval' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <i data-lucide="user-check" className="w-4 h-4"></i>
+                    <span>Persetujuan Akun (Approval)</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'audit' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <i data-lucide="history" className="w-4 h-4"></i>
+                    <span>Digital Audit Trail</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'report' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <i data-lucide="printer" className="w-4 h-4"></i>
+                    <span>Cetak Laporan PSAK 45</span>
+                  </button>
+                </>
               )}
 
-              <button
-                onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                  activeTab === 'audit' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                }`}
-              >
-                <i data-lucide="history" className="w-4 h-4"></i>
-                <span>Digital Audit Trail</span>
-              </button>
-
-              <button
-                onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                  activeTab === 'report' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                }`}
-              >
-                <i data-lucide="printer" className="w-4 h-4"></i>
-                <span>Cetak Laporan PSAK 45</span>
-              </button>
+              {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan pada menu mobile]
+              {currentUser.role === 'Pengurus Harian' && (
+                <>
+                  <button
+                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
+                  >
+                    <i data-lucide="history" className="w-4 h-4"></i>
+                    <span>Digital Audit Trail</span>
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
+                  >
+                    <i data-lucide="printer" className="w-4 h-4"></i>
+                    <span>Cetak Laporan PSAK 45</span>
+                  </button>
+                </>
+              )}
+              */}
 
               <button
                 onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
