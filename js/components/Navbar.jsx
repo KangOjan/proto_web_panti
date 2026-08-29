@@ -244,6 +244,7 @@ const Navbar = ({
                       <span>Digital Audit Trail</span>
                     </button>
 
+                    {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan sesuai arahan mitra]
                     <button
                       onClick={() => setActiveTab('report')}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
@@ -255,6 +256,7 @@ const Navbar = ({
                       <i data-lucide="printer" className="w-4 h-4"></i>
                       <span>Cetak Laporan PSAK 45</span>
                     </button>
+                    */}
                   </>
                 )}
 
@@ -495,6 +497,7 @@ const Navbar = ({
                     <span>Digital Audit Trail</span>
                   </button>
 
+                  {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan pada menu mobile sesuai arahan mitra]
                   <button
                     onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
                     className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
@@ -504,6 +507,7 @@ const Navbar = ({
                     <i data-lucide="printer" className="w-4 h-4"></i>
                     <span>Cetak Laporan PSAK 45</span>
                   </button>
+                  */}
                 </>
               )}
 
