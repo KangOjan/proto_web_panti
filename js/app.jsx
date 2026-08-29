@@ -4,11 +4,12 @@ const App = () => {
   const [users, setUsers] = React.useState(window.INITIAL_SIMK_DATA.users);
   const [transactions, setTransactions] = React.useState(window.INITIAL_SIMK_DATA.transactions);
   const [auditLogs, setAuditLogs] = React.useState(window.INITIAL_SIMK_DATA.auditLogs);
+  const [priorityPrograms, setPriorityPrograms] = React.useState(window.INITIAL_SIMK_DATA.priorityPrograms || []);
 
   // Active Logged-in User (Default: null for Guest / Public Beranda View)
   const [currentUser, setCurrentUser] = React.useState(null);
   
-  // Navigation View State: 'beranda' | 'public-donation' | 'auth' | 'dashboard' | 'transactions' | 'approval' | 'audit' | 'report'
+  // Navigation View State: 'beranda' | 'profil' | 'public-donation' | 'public-dashboard' | 'auth' | 'dashboard' | 'transactions' | 'programs' | 'approval' | 'audit' | 'report'
   const [activeTab, setActiveTab] = React.useState('beranda');
   const [authView, setAuthView] = React.useState('login');
 
@@ -210,6 +211,14 @@ const App = () => {
     setTransactions(prev => [newTransaction, ...prev]);
     logAudit('PUBLIC_DONATION', `Penerimaan Donasi Publik (${donationData.category}) sebesar Rp ${Number(donationData.amount).toLocaleString('id-ID')} dari "${donationData.donorName}" via ${donationData.paymentMethod}. Kode: ${newTrxId}`, donationData.donorName);
 
+    // Also update collectedAmount in priorityPrograms if category matches
+    setPriorityPrograms(prev => prev.map(p => {
+      if (p.category === donationData.category) {
+        return { ...p, collectedAmount: (p.collectedAmount || 0) + Number(donationData.amount) };
+      }
+      return p;
+    }));
+
     // Prepare and show digitally signed receipt
     const receiptObj = {
       receiptNo: newTrxId,
@@ -233,7 +242,7 @@ const App = () => {
     const receiptObj = {
       receiptNo: trxObj.id,
       type: trxObj.type,
-      donorName: trxObj.description,
+      donorName: trxObj.donorName || trxObj.description,
       description: trxObj.description,
       amount: trxObj.amount,
       category: trxObj.category,
@@ -253,6 +262,31 @@ const App = () => {
     setTransactions(prev => prev.filter(t => t.id !== trxId));
     logAudit('DELETE_TRANSACTION', `Menghapus data transaksi ${trxId} sebesar Rp ${targetTrx.amount.toLocaleString('id-ID')} (${targetTrx.description}).`);
     showToast(`Transaksi ${trxId} telah dihapus dari sistem!`, 'rose');
+  };
+
+  // Action 10: CRUD Program Prioritas Panti (Pengurus Harian)
+  const handleSaveProgram = (progData) => {
+    const existingIndex = priorityPrograms.findIndex(p => p.id === progData.id);
+    if (existingIndex >= 0) {
+      // Edit mode
+      setPriorityPrograms(prev => prev.map(p => p.id === progData.id ? progData : p));
+      logAudit('UPDATE_PROGRAM', `Pengurus Harian memperbarui Program Prioritas "${progData.title}" (${progData.category}, Target: Rp ${progData.targetAmount.toLocaleString('id-ID')}).`);
+      showToast(`Program "${progData.title}" berhasil diperbarui!`, 'success');
+    } else {
+      // Create mode
+      setPriorityPrograms(prev => [progData, ...prev]);
+      logAudit('CREATE_PROGRAM', `Pengurus Harian menambahkan Program Prioritas baru "${progData.title}" (${progData.category}, Target: Rp ${progData.targetAmount.toLocaleString('id-ID')}).`);
+      showToast(`Program Prioritas "${progData.title}" berhasil ditambahkan!`, 'success');
+    }
+  };
+
+  const handleDeleteProgram = (progId) => {
+    const target = priorityPrograms.find(p => p.id === progId);
+    if (!target) return;
+
+    setPriorityPrograms(prev => prev.filter(p => p.id !== progId));
+    logAudit('DELETE_PROGRAM', `Pengurus Harian menghapus Program Prioritas "${target.title}" (ID: ${progId}).`);
+    showToast(`Program "${target.title}" telah dihapus.`, 'rose');
   };
 
   // Logout
@@ -312,6 +346,17 @@ const App = () => {
               setActiveTab('auth');
               setAuthView('login');
             }}
+            onNavigateToProfile={() => setActiveTab('profil')}
+            priorityPrograms={priorityPrograms}
+          />
+        )}
+
+        {activeTab === 'profil' && (
+          <OrganizationProfile
+            onNavigateToDonation={(category) => {
+              setSelectedDonationCategory(category || 'Konsumsi');
+              setActiveTab('public-donation');
+            }}
           />
         )}
 
@@ -363,6 +408,15 @@ const App = () => {
               setIsDeleteModalOpen(true);
             }}
             onPrintTransactionReceipt={handlePrintTransactionReceipt}
+          />
+        )}
+
+        {activeTab === 'programs' && (
+          <ProgramManagement
+            priorityPrograms={priorityPrograms}
+            onSaveProgram={handleSaveProgram}
+            onDeleteProgram={handleDeleteProgram}
+            currentUser={currentUser}
           />
         )}
 

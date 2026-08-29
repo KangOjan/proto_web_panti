@@ -272,5 +272,129 @@ window.INITIAL_SIMK_DATA = {
       action: 'REJECT_USER',
       details: 'Menolak permohonan pendaftaran akun Pengurus Harian atas nama "Rahmat Hidayat".'
     }
+  ],
+
+  // 1. Profil & Informasi Umum Panti Asuhan
+  orphanageProfile: {
+    name: 'Panti Asuhan Kasih Bunda',
+    tagline: 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
+    foundedYear: '2012',
+    founder: 'H. Ahmad Dahlan, M.Ag. & Hj. Aminah Dahlan',
+    history: 'Panti Asuhan Kasih Bunda didirikan pada tanggal 14 Juli 2012 bermula dari kepedulian sosial terhadap anak-anak yatim piatu dan dhuafa di wilayah sekitar yang membutuhkan tempat tinggal layak, bimbingan akhlak, dan akses pendidikan formal. Sejak berdiri, panti asuhan telah berhasil membina lebih dari 180 alumni yang kini telah mandiri, melanjutkan ke perguruan tinggi, maupun bekerja secara profesional.',
+    vision: 'Menjadi lembaga pengasuhan dan pembinaan anak yatim dhuafa yang amanah, profesional, dan unggul dalam mencetak generasi sholeh, berprestasi, serta mandiri pada tahun 2030.',
+    missions: [
+      'Menyediakan pemenuhan kebutuhan dasar hidup (sandang, pangan bergizi, dan papan yang layak) secara berkelanjutan.',
+      'Menjamin keberlanjutan pendidikan formal anak dari tingkat dasar (SD) hingga perguruan tinggi.',
+      'Membina karakter Islami, tahfidz Al-Qur\'an, serta budi pekerti luhur bagi seluruh anak asuh.',
+      'Membekali keterampilan vokasional, teknologi digital, dan jiwa kewirausahaan untuk kemandirian masa depan anak asuh.',
+      'Menyelenggarakan tata kelola lembaga yang transparan, akuntabel, dan berbasis standar laporan keuangan nirlaba (PSAK 45).'
+    ],
+    legalities: [
+      { type: 'SK Kemenkumham RI', number: 'AHU-0019283.AH.01.04.Tahun 2012', date: '18 Agustus 2012', verified: true },
+      { type: 'Izin Operasional Dinsos', number: '460/1089/DINSOS-YANREH/2021', date: '10 Mei 2021', verified: true },
+      { type: 'Akta Notaris Pendirian', number: 'No. 24 Notaris H. Hendra Wijaya, S.H.', date: '14 Juli 2012', verified: true },
+      { type: 'NPWP Yayasan', number: '72.481.993.4-013.000', date: 'Terdaftar Aktif', verified: true },
+      { type: 'Tanda Daftar Lembaga Kesejahteraan Sosial (LKS)', number: 'Reg. 31.74.02.001.2022', date: 'Tersertifikasi', verified: true }
+    ],
+    facilities: [
+      { name: 'Asrama Putra & Putri Terpisah', desc: 'Kamar tidur representatif, ber-AC, dan higienis dengan ranjang susun & lemari pribadi.', icon: 'home' },
+      { name: 'Ruang Belajar & Lab Komputer', desc: 'Dilengkapi 15 unit PC terkoneksi internet cepat untuk pembelajaran daring dan keterampilan coding.', icon: 'laptop' },
+      { name: 'Perpustakaan Mini & Pojok Baca', desc: 'Koleksi 1.200+ buku pelajaran, ensiklopedia, kisah teladan, dan buku keterampilan.', icon: 'book-open' },
+      { name: 'Musholla & Rumah Tahfidz', desc: 'Pusat ibadah berjamaah, halaqah tahfidz Al-Qur\'an, dan kajian adab harian.', icon: 'moon' },
+      { name: 'Dapur Sehat & Ruang Makan Gizi', desc: 'Dapur higienis berstandar gizi seimbang dengan penyajian menu bervariasi 3x sehari.', icon: 'utensils' },
+      { name: 'Area Olahraga & Aula Serbaguna', desc: 'Lapangan bulu tangkis, tenis meja, dan aula pembinaan pelatihan keterampilan anak.', icon: 'award' }
+    ],
+    achievements: [
+      { year: '2026', title: 'Juara 1 Lomba Tahfidz 5 Juz Tingkat Provinsi', by: 'M. Rizky Pratama (Kelas 2 SMA)' },
+      { year: '2025', title: 'Penerima Beasiswa Penuh S1 Universitas Negeri Jakarta', by: 'Annisa Nurul Aini (Alumni Panti)' },
+      { year: '2025', title: 'Juara 2 Lomba Robotika & Coding Tingkat Kota', by: 'Tim Robotik Panti Kasih Bunda' },
+      { year: '2024', title: 'Akreditasi Lembaga Kesejahteraan Sosial Nilai A', by: 'Badan Akreditasi Lembaga Kesejahteraan Sosial (BALKS)' }
+    ],
+    contactInfo: {
+      address: 'Jl. Merdeka Kasih Bunda No. 45, RT 04/RW 07, Kebayoran, Jakarta Selatan, 12180',
+      phone: '(021) 7829-1029',
+      whatsapp: '0812-3456-7890',
+      email: 'kontak@pantikasihbunda.or.id',
+      visitingHours: 'Setiap Hari: 08.00 - 17.00 WIB (Konfirmasi WhatsApp H-1 untuk kunjungan rombongan)',
+      gmapsUrl: 'https://maps.google.com/?q=Jakarta+Selatan'
+    }
+  },
+
+  // 2. Struktur Organisasi Kepengurusan Panti
+  organizationStructure: [
+    {
+      level: 1,
+      role: 'Dewan Pembina',
+      members: [
+        { name: 'Prof. Dr. H. Abdul Malik, M.A.', position: 'Ketua Dewan Pembina', photo: '👨‍🏫', desc: 'Guru Besar UIN & Penasihat Yayasan' },
+        { name: 'Hj. Aminah Dahlan, S.Pd.', position: 'Anggota Pembina', photo: '🧕', desc: 'Pendiri & Pengawas Sosial Yayasan' }
+      ]
+    },
+    {
+      level: 2,
+      role: 'Pimpinan Yayasan / Pemimpin Lembaga',
+      members: [
+        { name: 'H. Ahmad Dahlan, M.Ag.', position: 'Ketua Yayasan / Pemimpin Lembaga', roleCode: 'Pemimpin Lembaga', photo: '🧔', desc: 'Penanggung Jawab Utama Operasional & Kebijakan Strategis' }
+      ]
+    },
+    {
+      level: 3,
+      role: 'Pengurus Harian (Manajemen Inti)',
+      members: [
+        { name: 'Budi Santoso, S.E.', position: 'Ketua Pengurus Harian & Keuangan', roleCode: 'Pengurus Harian', photo: '👨‍💼', desc: 'Pengelola Anggaran, Pelaporan PSAK 45, & Digital Audit Trail' },
+        { name: 'Siti Rahmawati, A.Md.', position: 'Sekretaris & Administrasi', roleCode: 'Pengurus Harian', photo: '👩‍💼', desc: 'Pencatatan Data Donatur, Persuratan, & Legalitas' },
+        { name: 'Dra. Hj. Nurhayati', position: 'Bendahara Kas Panti', roleCode: 'Pengurus Harian', photo: '🧕', desc: 'Pengawasan Alur Kas & Verifikasi Kuitansi Digital' }
+      ]
+    },
+    {
+      level: 4,
+      role: 'Divisi Pengasuhan & Pembinaan Anak',
+      members: [
+        { name: 'Ust. Muhammad Farhan, S.Pd.I', position: 'Kepala Pengasuh & Pembina Tahfidz', photo: '👳', desc: 'Koordinator Halaqah Al-Qur\'an & Kedisiplinan Asrama' },
+        { name: 'Dewi Lestari, S.Psi.', position: 'Konselor & Pembina Akademik', photo: '👩‍🏫', desc: 'Pendampingan Psikologis & Bimbingan Belajar Sekolah' },
+        { name: 'Haryanto', position: 'Koordinator Sarana & Logistik', photo: '👨‍🔧', desc: 'Pemeliharaan Fasilitas Gedung, Listrik, & Air Asrama' }
+      ]
+    }
+  ],
+
+  // 3. Master Data Program Prioritas Panti (Dikelola CRUD oleh Pengurus Harian)
+  priorityPrograms: [
+    {
+      id: 'PROG-001',
+      title: 'Pemenuhan Konsumsi & Gizi Harian',
+      category: 'Konsumsi',
+      targetAmount: 20000000,
+      collectedAmount: 14200000,
+      description: 'Pengadaan beras, lauk pauk, telur, susu, dan buah-buahan bergizi seimbang untuk 45 anak asuh setiap hari.',
+      icon: 'utensils',
+      badgeColor: 'amber',
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z'
+    },
+    {
+      id: 'PROG-002',
+      title: 'Beasiswa SPP & Seragam Sekolah',
+      category: 'SPP/Pendidikan',
+      targetAmount: 18000000,
+      collectedAmount: 12500000,
+      description: 'Dukungan biaya SPP bulanan, buku teks pelajaran, dan kelengkapan seragam sekolah 45 anak dari tingkat SD hingga SMA.',
+      icon: 'graduation-cap',
+      badgeColor: 'emerald',
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z'
+    },
+    {
+      id: 'PROG-003',
+      title: 'Operasional & Fasilitas Asrama',
+      category: 'Operasional',
+      targetAmount: 15000000,
+      collectedAmount: 9800000,
+      description: 'Pembiayaan tagihan listrik PLN, air PDAM, sanitasi, pemeliharaan tempat tidur asrama, dan koneksi internet lab komputer.',
+      icon: 'home',
+      badgeColor: 'teal',
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z'
+    }
   ]
 };
+

@@ -1,9 +1,9 @@
-// Public Financial Dashboard Component (Dashboard Keuangan Publik - Bebas Akses Tanpa Login)
+// Public Financial Dashboard Component (Dashboard Keuangan Publik - Khusus Pemasukan Donasi)
 const PublicFinancialDashboard = ({
   transactions,
   onPrintTransactionReceipt
 }) => {
-  const [filterType, setFilterType] = React.useState('ALL'); // 'ALL' | 'pemasukan' | 'pengeluaran'
+  // const [filterType, setFilterType] = React.useState('ALL'); // [COMMENTED: Khusus Pemasukan Publik]
   const [filterCategory, setFilterCategory] = React.useState('ALL');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
@@ -13,12 +13,17 @@ const PublicFinancialDashboard = ({
   const chartInstanceRef = React.useRef(null);
 
   const categories = [
-    'Konsumsi', 'SPP/Pendidikan', 'Operasional', 'Infak/Zakat', 'Donasi Rutin', 'Kesehatan', 'Lainnya'
+    'Konsumsi', 'SPP/Pendidikan', 'Operasional', 'Infak/Zakat', 'Donasi Rutin', 'Lainnya'
   ];
 
-  // Filtering Logic
+  // Filtering Logic (Khusus Pemasukan Sesuai Arahan Mitra)
   const filteredTransactions = transactions.filter(trx => {
+    // Sesuai arahan: Khusus menampilkan transaksi pemasukan saja pada portal publik
+    const matchesType = trx.type === 'pemasukan';
+    /* [COMMENTED: Logika filter pengeluaran publik dinonaktifkan]
     const matchesType = filterType === 'ALL' || trx.type === filterType;
+    */
+
     const matchesCategory = filterCategory === 'ALL' || trx.category === filterCategory;
     
     // Donor Name / Party Name Helper
@@ -36,18 +41,21 @@ const PublicFinancialDashboard = ({
     return matchesType && matchesCategory && matchesSearch && matchesDate;
   });
 
-  // Real-time Income & Expense Totals
+  // Real-time Income Totals
   const totalIncome = filteredTransactions
     .filter(t => t.type === 'pemasukan')
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const totalDonorsCount = filteredTransactions.length;
+  const averageDonation = totalDonorsCount > 0 ? Math.round(totalIncome / totalDonorsCount) : 0;
+
+  /* [COMMENTED: Metrik Pengeluaran & Saldo Sisa Kas dinonaktifkan untuk publik]
   const totalExpense = filteredTransactions
     .filter(t => t.type === 'pengeluaran')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const netBalance = totalIncome - totalExpense;
 
-  // Monthly Accumulated Expenses by Category
   const expenseByCategory = React.useMemo(() => {
     const categoryTotals = {};
     filteredTransactions
@@ -57,26 +65,38 @@ const PublicFinancialDashboard = ({
       });
     return categoryTotals;
   }, [filteredTransactions]);
+  */
 
-  // Chart.js Donut Visualization for Category Expenses
+  // Akumulasi Pemasukan Donasi Per Kategori
+  const incomeByCategory = React.useMemo(() => {
+    const categoryTotals = {};
+    filteredTransactions
+      .filter(t => t.type === 'pemasukan')
+      .forEach(t => {
+        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
+      });
+    return categoryTotals;
+  }, [filteredTransactions]);
+
+  // Chart.js Donut Visualization for Income Category Distribution
   React.useEffect(() => {
     if (chartRef.current && window.Chart) {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy();
       }
 
-      const labels = Object.keys(expenseByCategory);
-      const dataValues = Object.values(expenseByCategory);
+      const labels = Object.keys(incomeByCategory);
+      const dataValues = Object.values(incomeByCategory);
 
       const ctx = chartRef.current.getContext('2d');
       chartInstanceRef.current = new window.Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: labels.length > 0 ? labels : ['Belum Ada Pengeluaran'],
+          labels: labels.length > 0 ? labels : ['Belum Ada Donasi'],
           datasets: [{
             data: dataValues.length > 0 ? dataValues : [1],
             backgroundColor: labels.length > 0 ? [
-              '#f43f5e', '#fb923c', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#64748b'
+              '#10b981', '#14b8a6', '#0ea5e9', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6'
             ] : ['#e2e8f0'],
             borderWidth: 2,
             borderColor: '#ffffff'
@@ -108,7 +128,7 @@ const PublicFinancialDashboard = ({
     }
 
     if (window.lucide) window.lucide.createIcons();
-  }, [expenseByCategory]);
+  }, [incomeByCategory]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
@@ -121,28 +141,28 @@ const PublicFinancialDashboard = ({
             <span>Portal Transparansi Publik (Bebas Akses Tanpa Login)</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mt-2">
-            Dashboard Keuangan Panti Asuhan
+            Transparansi Pemasukan Donasi
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl mt-1 leading-relaxed">
-            Menyajikan Laporan Arus Kas Real-Time, Identitas Donatur Pemasukan, dan Akumulasi Pengeluaran Bulanan per Kategori sesuai Akuntabilitas Nirlaba PSAK 45.
+            Menyajikan Laporan Arus Kas Masuk & Donasi Terkelola secara Real-Time beserta Identitas Donatur dan Kategori Alokasi Dana sesuai Akuntabilitas Nirlaba PSAK 45.
           </p>
         </div>
 
         <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-center min-w-[160px]">
-          <div className="text-[10px] uppercase tracking-wider text-emerald-300 font-extrabold">Total Donasi Terkelola</div>
+          <div className="text-[10px] uppercase tracking-wider text-emerald-300 font-extrabold">Total Donasi Terhimpun</div>
           <div className="text-lg font-black text-white mt-0.5">
             Rp {totalIncome.toLocaleString('id-ID')}
           </div>
         </div>
       </div>
 
-      {/* Real-time Financial Metrics Summary Cards */}
+      {/* Real-time Financial Metrics Summary Cards (Khusus Pemasukan Donasi) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         
-        {/* Card 1: Total Pemasukan */}
+        {/* Card 1: Total Pemasukan Donasi */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 flex items-center justify-between shadow-xs">
           <div>
-            <div className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider">Total Pemasukan (Donasi)</div>
+            <div className="text-xs font-extrabold text-emerald-800 uppercase tracking-wider">Total Donasi Terkelola</div>
             <div className="text-2xl font-black text-emerald-700 mt-1">
               Rp {totalIncome.toLocaleString('id-ID')}
             </div>
@@ -153,7 +173,35 @@ const PublicFinancialDashboard = ({
           </div>
         </div>
 
-        {/* Card 2: Total Pengeluaran */}
+        {/* Card 2: Jumlah Transaksi Donasi Masuk */}
+        <div className="bg-teal-50 border border-teal-200 rounded-3xl p-5 flex items-center justify-between shadow-xs">
+          <div>
+            <div className="text-xs font-extrabold text-teal-800 uppercase tracking-wider">Frekuensi Transaksi</div>
+            <div className="text-2xl font-black text-teal-700 mt-1">
+              {totalDonorsCount} Transaksi
+            </div>
+            <p className="text-[11px] text-teal-600 mt-1 font-medium">Donasi publik terverifikasi</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-teal-600/20">
+            <i data-lucide="heart-handshake" className="w-6 h-6"></i>
+          </div>
+        </div>
+
+        {/* Card 3: Rata-Rata Donasi */}
+        <div className="bg-slate-900 text-white rounded-3xl p-5 flex items-center justify-between shadow-xs border border-slate-800">
+          <div>
+            <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Rata-Rata Per Donasi</div>
+            <div className="text-2xl font-black text-amber-400 mt-1">
+              Rp {averageDonation.toLocaleString('id-ID')}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1 font-medium">Nilai kontribusi per transaksi</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center font-bold">
+            <i data-lucide="calculator" className="w-6 h-6"></i>
+          </div>
+        </div>
+
+        {/* [COMMENTED: Kartu Pengeluaran & Saldo Kas Asli Dinonaktifkan Sesuai Arahan Mitra]
         <div className="bg-rose-50 border border-rose-200 rounded-3xl p-5 flex items-center justify-between shadow-xs">
           <div>
             <div className="text-xs font-extrabold text-rose-800 uppercase tracking-wider">Total Pengeluaran Bulanan</div>
@@ -167,7 +215,6 @@ const PublicFinancialDashboard = ({
           </div>
         </div>
 
-        {/* Card 3: Surplus / Defisit */}
         <div className="bg-slate-900 text-white rounded-3xl p-5 flex items-center justify-between shadow-xs border border-slate-800">
           <div>
             <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Saldo Sisa Kas Panti</div>
@@ -180,21 +227,22 @@ const PublicFinancialDashboard = ({
             <i data-lucide="wallet" className="w-6 h-6"></i>
           </div>
         </div>
+        */}
 
       </div>
 
       {/* CHART & CATEGORY ACCUMULATION SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Donut Chart: Akumulasi Pengeluaran Per Kategori */}
+        {/* Donut Chart: Distribusi Donasi Pemasukan Per Kategori */}
         <div className="lg:col-span-5 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">Akumulasi Pengeluaran Bulanan</h3>
-              <p className="text-xs text-slate-500">Persentase & alokasi biaya per kategori</p>
+              <h3 className="text-base font-extrabold text-slate-900">Alokasi Donasi Masuk</h3>
+              <p className="text-xs text-slate-500">Distribusi proporsi donasi per kategori program</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-1 bg-rose-100 text-rose-800 rounded-full">
-              Kategori Operasional
+            <span className="text-[10px] font-bold px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full">
+              Pemasukan
             </span>
           </div>
 
@@ -203,34 +251,34 @@ const PublicFinancialDashboard = ({
           </div>
         </div>
 
-        {/* List Breakdown: Akumulasi Nominal Per Kategori */}
+        {/* List Breakdown: Akumulasi Nominal Donasi Per Kategori */}
         <div className="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
           <div className="border-b border-slate-100 pb-3">
-            <h3 className="text-base font-extrabold text-slate-900">Akumulasi Biaya Per Kategori (Bulan Ini)</h3>
-            <p className="text-xs text-slate-500">Rincian nominal total yang dikeluarkan untuk kebutuhan panti</p>
+            <h3 className="text-base font-extrabold text-slate-900">Rincian Per Kategori Alokasi Dana</h3>
+            <p className="text-xs text-slate-500">Rincian nominal total yang dihimpun untuk kebutuhan anak panti</p>
           </div>
 
           <div className="space-y-3">
-            {Object.keys(expenseByCategory).length === 0 ? (
+            {Object.keys(incomeByCategory).length === 0 ? (
               <div className="text-center py-8 text-slate-400">
                 <i data-lucide="pie-chart" className="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
-                <p className="text-xs font-semibold">Belum ada transaksi pengeluaran pada rentang ini.</p>
+                <p className="text-xs font-semibold">Belum ada donasi masuk pada rentang filter ini.</p>
               </div>
             ) : (
-              Object.entries(expenseByCategory).map(([catName, catTotal]) => {
-                const percentage = totalExpense > 0 ? Math.round((catTotal / totalExpense) * 100) : 0;
+              Object.entries(incomeByCategory).map(([catName, catTotal]) => {
+                const percentage = totalIncome > 0 ? Math.round((catTotal / totalIncome) * 100) : 0;
                 return (
                   <div key={catName} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-bold">
                       <span className="text-slate-800">{catName}</span>
-                      <span className="text-rose-700 font-black">
+                      <span className="text-emerald-700 font-black">
                         Rp {catTotal.toLocaleString('id-ID')} ({percentage}%)
                       </span>
                     </div>
                     {/* Progress Bar */}
                     <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-rose-500 rounded-full transition-all duration-500"
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       ></div>
                     </div>
@@ -241,25 +289,41 @@ const PublicFinancialDashboard = ({
           </div>
         </div>
 
+        {/* [COMMENTED: Seksi Akumulasi Pengeluaran Lama Dinonaktifkan]
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="text-base font-extrabold text-slate-900">Akumulasi Biaya Per Kategori (Bulan Ini)</h3>
+            <p className="text-xs text-slate-500">Rincian nominal total yang dikeluarkan untuk kebutuhan panti</p>
+          </div>
+          ...
+        </div>
+        */}
+
       </div>
 
-      {/* PUBLIC FILTER TOOLBAR */}
+      {/* PUBLIC FILTER TOOLBAR (KHUSUS PEMASUKAN DONASI) */}
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center space-x-2">
             <i data-lucide="sliders-horizontal" className="w-4 h-4 text-emerald-600"></i>
-            <h3 className="text-base font-extrabold text-slate-900">Filter Transaksi Publik</h3>
+            <h3 className="text-base font-extrabold text-slate-900">Filter Transaksi Donasi Masuk</h3>
           </div>
           <span className="text-xs font-semibold text-slate-500">
-            Menampilkan <b className="text-slate-900">{filteredTransactions.length}</b> transaksi
+            Menampilkan <b className="text-slate-900">{filteredTransactions.length}</b> transaksi donasi
           </span>
         </div>
 
-        {/* First Row: Type Filter Tabs & Category Dropdown */}
+        {/* First Row: Status Badge & Category Dropdown */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           
-          {/* Type Tabs */}
-          <div className="flex items-center space-x-1.5">
+          {/* Active Filter Mode Badge (Khusus Pemasukan) */}
+          <div className="flex items-center space-x-2">
+            <div className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm flex items-center space-x-1.5">
+              <i data-lucide="arrow-down-left" className="w-4 h-4"></i>
+              <span>Pemasukan Donasi Terverifikasi</span>
+            </div>
+
+            {/* [COMMENTED: Opsi Filter Pengeluaran & Semua Jenis Dinonaktifkan Sesuai Arahan Mitra]
             <button
               onClick={() => setFilterType('ALL')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -267,15 +331,6 @@ const PublicFinancialDashboard = ({
               }`}
             >
               Semua Jenis
-            </button>
-            <button
-              onClick={() => setFilterType('pemasukan')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
-                filterType === 'pemasukan' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <i data-lucide="arrow-down-left" className="w-3.5 h-3.5"></i>
-              <span>Hanya Pemasukan</span>
             </button>
             <button
               onClick={() => setFilterType('pengeluaran')}
@@ -286,6 +341,7 @@ const PublicFinancialDashboard = ({
               <i data-lucide="arrow-up-right" className="w-3.5 h-3.5"></i>
               <span>Hanya Pengeluaran</span>
             </button>
+            */}
           </div>
 
           {/* Category Filter */}
@@ -343,14 +399,14 @@ const PublicFinancialDashboard = ({
         </div>
       </div>
 
-      {/* PUBLIC TRANSACTIONS TABLE WITH EXPLICIT DONOR IDENTITY DISPLAY */}
+      {/* PUBLIC TRANSACTIONS TABLE WITH EXPLICIT DONOR IDENTITY DISPLAY (KHUSUS PEMASUKAN) */}
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
             <i data-lucide="list-checks" className="w-4 h-4 text-emerald-600"></i>
-            <span>Rincian Transaksi Keuangan Publik & Identitas Donatur</span>
+            <span>Daftar Transaksi Donasi Masuk & Identitas Donatur</span>
           </h3>
-          <span className="text-[11px] text-slate-500 font-medium">Klik ikon printer untuk melihat Kuitansi Digital</span>
+          <span className="text-[11px] text-slate-500 font-medium">Klik ikon printer untuk melihat Kuitansi Digital Resmi</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -358,10 +414,10 @@ const PublicFinancialDashboard = ({
             <thead>
               <tr className="bg-slate-100/70 border-b border-slate-200 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">
                 <th className="py-3.5 px-4">TANGGAL & KODE</th>
-                <th className="py-3.5 px-4">JENIS & KATEGORI</th>
-                <th className="py-3.5 px-4">NAMA DONATUR / PIHAK PENERIMA</th>
-                <th className="py-3.5 px-4">RINCIAN KETERANGAN</th>
-                <th className="py-3.5 px-4">NOMINAL (RP)</th>
+                <th className="py-3.5 px-4">KATEGORI ALOKASI</th>
+                <th className="py-3.5 px-4">NAMA LENGKAP DONATUR</th>
+                <th className="py-3.5 px-4">RINCIAN DOA / KETERANGAN</th>
+                <th className="py-3.5 px-4">NOMINAL DONASI (RP)</th>
                 <th className="py-3.5 px-4 text-right">KUITANSI</th>
               </tr>
             </thead>
@@ -370,7 +426,7 @@ const PublicFinancialDashboard = ({
                 <tr>
                   <td colSpan="6" className="text-center py-12 text-slate-400">
                     <i data-lucide="file-search" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
-                    <p className="font-semibold">Tidak ada transaksi yang cocok dengan filter Anda.</p>
+                    <p className="font-semibold">Tidak ada transaksi pemasukan yang cocok dengan filter Anda.</p>
                   </td>
                 </tr>
               ) : (
@@ -384,27 +440,24 @@ const PublicFinancialDashboard = ({
                       </td>
 
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          trx.type === 'pemasukan' 
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
-                            : 'bg-rose-100 text-rose-800 border border-rose-200'
-                        }`}>
-                          <i data-lucide={trx.type === 'pemasukan' ? "arrow-down-left" : "arrow-up-right"} className="w-3 h-3"></i>
-                          <span className="capitalize">{trx.type}</span>
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <i data-lucide="arrow-down-left" className="w-3 h-3"></i>
+                          <span>Pemasukan</span>
                         </span>
+                        {/* [COMMENTED: Render jenis pengeluaran dinonaktifkan untuk publik]
+                        <span className="bg-rose-100 text-rose-800 border border-rose-200">Pengeluaran</span>
+                        */}
                         <div className="text-[11px] font-bold text-slate-700 mt-1">{trx.category}</div>
                       </td>
 
                       {/* EXPLICIT DONOR IDENTITY COLUMN */}
                       <td className="py-3.5 px-4">
                         <div className="font-black text-slate-900 flex items-center space-x-1.5">
-                          {trx.type === 'pemasukan' && (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
-                          )}
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
                           <span>{donorDisplay}</span>
                         </div>
                         <div className="text-[10px] text-slate-400 font-mono">
-                          {trx.paymentMethod || (trx.type === 'pemasukan' ? 'Kas Masuk' : 'Kas Keluar')}
+                          {trx.paymentMethod || 'Kas Masuk Bendahara'}
                         </div>
                       </td>
 
@@ -415,11 +468,8 @@ const PublicFinancialDashboard = ({
                       </td>
 
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className={`font-black text-sm ${
-                          trx.type === 'pemasukan' ? 'text-emerald-700' : 'text-rose-700'
-                        }`}>
-                          {trx.type === 'pemasukan' ? '+ ' : '- '}
-                          Rp {trx.amount.toLocaleString('id-ID')}
+                        <div className="font-black text-sm text-emerald-700">
+                          + Rp {trx.amount.toLocaleString('id-ID')}
                         </div>
                       </td>
 

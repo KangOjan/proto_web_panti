@@ -124,7 +124,20 @@ const Navbar = ({
               <span>Beranda</span>
             </button>
 
-            {/* 2. PUBLIC MENU: DONASI (TANPA LOGIN) */}
+            {/* 2. PUBLIC MENU: PROFIL PANTI */}
+            <button
+              onClick={() => setActiveTab('profil')}
+              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                activeTab === 'profil'
+                  ? 'bg-slate-100 text-emerald-700 font-bold shadow-inner'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <i data-lucide="building-2" className="w-4 h-4"></i>
+              <span>Profil Panti</span>
+            </button>
+
+            {/* 3. PUBLIC MENU: DONASI (TANPA LOGIN) */}
             <button
               onClick={() => setActiveTab('public-donation')}
               className={`px-3 py-2 rounded-xl text-sm font-extrabold transition-all flex items-center space-x-2 border ${
@@ -140,7 +153,7 @@ const Navbar = ({
               </span>
             </button>
 
-            {/* 3. PUBLIC MENU: DASHBOARD KEUANGAN PUBLIK (TANPA LOGIN) */}
+            {/* 4. PUBLIC MENU: DASHBOARD KEUANGAN PUBLIK (TANPA LOGIN) */}
             <button
               onClick={() => setActiveTab('public-dashboard')}
               className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
@@ -153,7 +166,7 @@ const Navbar = ({
               <span>Dashboard Keuangan</span>
             </button>
 
-            {/* 3. AUTHENTICATED INTERNAL WORKSPACE MENUS (ONLY WHEN LOGGED IN) */}
+            {/* 5. AUTHENTICATED INTERNAL WORKSPACE MENUS (ONLY WHEN LOGGED IN) */}
             {currentUser && (
               <>
                 <div className="h-5 w-px bg-slate-200 mx-2"></div>
@@ -172,17 +185,31 @@ const Navbar = ({
 
                 {/* Role: Pengurus Harian Tab */}
                 {currentUser.role === 'Pengurus Harian' && (
-                  <button
-                    onClick={() => setActiveTab('transactions')}
-                    className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                      activeTab === 'transactions'
-                        ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                    }`}
-                  >
-                    <i data-lucide="receipt" className="w-4 h-4"></i>
-                    <span>Pencatatan Transaksi (CRUD)</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setActiveTab('transactions')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'transactions'
+                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <i data-lucide="receipt" className="w-4 h-4"></i>
+                      <span>Pencatatan Transaksi (CRUD)</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('programs')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'programs'
+                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <i data-lucide="layers" className="w-4 h-4"></i>
+                      <span>Program Prioritas (CRUD)</span>
+                    </button>
+                  </>
                 )}
 
                 {/* Role: Pemimpin Lembaga Tab */}
@@ -354,6 +381,16 @@ const Navbar = ({
           </button>
 
           <button
+            onClick={() => { setActiveTab('profil'); setIsMobileMenuOpen(false); }}
+            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+              activeTab === 'profil' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
+            }`}
+          >
+            <i data-lucide="building-2" className="w-4 h-4"></i>
+            <span>Profil Panti</span>
+          </button>
+
+          <button
             onClick={() => { setActiveTab('public-donation'); setIsMobileMenuOpen(false); }}
             className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-extrabold flex items-center space-x-2 ${
               activeTab === 'public-donation' ? 'bg-amber-500 text-slate-950' : 'bg-emerald-50 text-emerald-800'
@@ -390,15 +427,27 @@ const Navbar = ({
               </button>
 
               {currentUser.role === 'Pengurus Harian' && (
-                <button
-                  onClick={() => { setActiveTab('transactions'); setIsMobileMenuOpen(false); }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                    activeTab === 'transactions' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                  }`}
-                >
-                  <i data-lucide="receipt" className="w-4 h-4"></i>
-                  <span>Pencatatan Transaksi (CRUD)</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => { setActiveTab('transactions'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'transactions' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <i data-lucide="receipt" className="w-4 h-4"></i>
+                    <span>Pencatatan Transaksi (CRUD)</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('programs'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'programs' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <i data-lucide="layers" className="w-4 h-4"></i>
+                    <span>Program Prioritas (CRUD)</span>
+                  </button>
+                </>
               )}
 
               {currentUser.role === 'Pemimpin Lembaga' && (
