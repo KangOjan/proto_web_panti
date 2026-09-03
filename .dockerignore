@@ -1,0 +1,23 @@
+.git
+.github
+.idea
+.vscode
+node_modules
+npm-debug.log
+yarn-error.log
+vendor
+storage/*.key
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+tests
+.ai
+.agents
+AGENTS.md
+fitur website.md
+README.md

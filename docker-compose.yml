@@ -1,0 +1,38 @@
+services:
+  web-panti:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: web-panti
+    restart: always
+    expose:
+      - "80"
+    environment:
+      APP_NAME: "Panti Kasih Bunda"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_KEY: ${APP_KEY:-base64:k1aIWiB8EELTMDWXghZK7gIyWNronlr0puFSgqj0Asg=}
+      LOG_CHANNEL: stack
+      LOG_LEVEL: error
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+      RUN_MIGRATIONS: "true"
+      VITE_EVALUATOR_MODE: ${VITE_EVALUATOR_MODE:-false}
+    volumes:
+      - panti_storage:/var/www/html/storage
+      - panti_database:/var/www/html/database
+    networks:
+      - proxy
+
+volumes:
+  panti_storage:
+    name: web_panti_storage
+  panti_database:
+    name: web_panti_database
+
+networks:
+  proxy:
+    external: true
