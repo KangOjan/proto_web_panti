@@ -26,7 +26,7 @@ const InventoryLogistics = ({ inventoryData, onToggleWishlist, onOpenAddStockMod
           onClick={onOpenAddStockModal}
           className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors flex items-center space-x-2 shrink-0"
         >
-          <i data-lucide="package-plus" className="w-4 h-4"></i>
+          <LucideIcon name="package-plus" className="w-4 h-4" />
           <span>Tambah Item Stok Baru</span>
         </button>
       </div>
@@ -34,7 +34,7 @@ const InventoryLogistics = ({ inventoryData, onToggleWishlist, onOpenAddStockMod
       {/* Filter & Search Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Cari nama barang, kode logistik..."
@@ -98,7 +98,7 @@ const InventoryLogistics = ({ inventoryData, onToggleWishlist, onOpenAddStockMod
                     <td>
                       {isLowStock ? (
                         <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold flex items-center space-x-1 w-fit">
-                          <i data-lucide="alert-triangle" className="w-3.5 h-3.5 text-amber-600"></i>
+                          <LucideIcon name="alert-triangle" className="w-3.5 h-3.5 text-amber-600" />
                           <span>Stok Menipis</span>
                         </span>
                       ) : (
@@ -119,7 +119,7 @@ const InventoryLogistics = ({ inventoryData, onToggleWishlist, onOpenAddStockMod
                         }`}
                         title="Klik untuk mengubah visibilitas di Wishlist Publik"
                       >
-                        <i data-lucide={item.showOnWishlist ? "eye" : "eye-off"} className="w-3.5 h-3.5"></i>
+                        <LucideIcon name={item.showOnWishlist ? "eye" : "eye-off"} className="w-3.5 h-3.5" />
                         <span>{item.showOnWishlist ? "Tampil di Wishlist" : "Tersembunyi"}</span>
                       </button>
                     </td>

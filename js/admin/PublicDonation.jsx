@@ -23,12 +23,7 @@ const PublicDonation = ({
       setCategory(initialCategory);
     }
   }, [initialCategory]);
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  // Preset Amounts (Exactly 4 items: Rp 50.000, Rp 100.000, Rp 500.000, Rp 1.000.000)
+// Preset Amounts (Exactly 4 items: Rp 50.000, Rp 100.000, Rp 500.000, Rp 1.000.000)
   const presetAmounts = [50000, 100000, 500000, 1000000];
 
   const banks = {
@@ -78,7 +73,7 @@ const PublicDonation = ({
       <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center space-x-2 bg-amber-400 text-slate-950 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm">
-            <i data-lucide="heart" className="w-3.5 h-3.5 fill-slate-950"></i>
+            <LucideIcon name="heart" className="w-3.5 h-3.5 fill-slate-950" />
             <span>Portal Donatur Publik (Tanpa Login)</span>
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight mt-2">Salurkan Donasi & Infak Terbaik Anda</h1>
@@ -233,7 +228,7 @@ const PublicDonation = ({
             >
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-sm text-slate-900">Scan QRIS Dinamis</span>
-                <i data-lucide="qr-code" className="w-6 h-6 text-emerald-600"></i>
+                <LucideIcon name="qr-code" className="w-6 h-6 text-emerald-600" />
               </div>
               <p className="text-[11px] text-slate-500 mt-2 font-medium">
                 Otomatis menyesuaikan nominal donasi (GoPay, OVO, Dana, ShopeePay, BCA Mobile, BSI Mobile).
@@ -251,7 +246,7 @@ const PublicDonation = ({
             >
               <div className="flex items-center justify-between">
                 <span className="font-extrabold text-sm text-slate-900">Transfer Bank</span>
-                <i data-lucide="building" className="w-6 h-6 text-emerald-600"></i>
+                <LucideIcon name="building" className="w-6 h-6 text-emerald-600" />
               </div>
               <p className="text-[11px] text-slate-500 mt-2 font-medium">
                 Transfer langsung ke rekening resmi panti asuhan (BSI, Mandiri, BCA).
@@ -263,7 +258,7 @@ const PublicDonation = ({
           {paymentMethod === 'qris' && (
             <div className="bg-slate-900 text-white rounded-3xl p-6 text-center space-y-4 animate-fade-in border border-slate-800">
               <div className="flex items-center justify-center space-x-2 text-xs font-bold text-amber-400">
-                <i data-lucide="sparkles" className="w-4 h-4"></i>
+                <LucideIcon name="sparkles" className="w-4 h-4" />
                 <span>Kode QRIS Dinamis Diterbitkan</span>
               </div>
 
@@ -359,7 +354,7 @@ const PublicDonation = ({
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
                   }`}
                 >
-                  <i data-lucide={copiedBank ? "check" : "copy"} className="w-4 h-4"></i>
+                  <LucideIcon name={copiedBank ? "check" : "copy"} className="w-4 h-4" />
                   <span>{copiedBank ? "Nomor Rekening Tersalin!" : "Salin Rekening"}</span>
                 </button>
               </div>
@@ -373,7 +368,7 @@ const PublicDonation = ({
           {isVerifying ? (
             <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-center space-y-2 animate-fade-in">
               <div className="flex items-center justify-center space-x-2">
-                <i data-lucide="loader-2" className="w-5 h-5 text-amber-600 animate-spin"></i>
+                <LucideIcon name="loader-2" className="w-5 h-5 text-amber-600 animate-spin" />
                 <span className="font-extrabold text-sm">Verifikasi Pembayaran Real-Time Sedang Berlangsung...</span>
               </div>
               <p className="text-xs text-amber-800">
@@ -385,7 +380,7 @@ const PublicDonation = ({
               type="submit"
               className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-emerald-600/20 flex items-center justify-center space-x-2 transition-all transform hover:-translate-y-0.5"
             >
-              <i data-lucide="check-circle-2" className="w-5 h-5"></i>
+              <LucideIcon name="check-circle-2" className="w-5 h-5" />
               <span>Konfirmasi & Verifikasi Pembayaran Donasi</span>
             </button>
           )}

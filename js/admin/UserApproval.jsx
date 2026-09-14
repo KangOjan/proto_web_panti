@@ -7,12 +7,7 @@ const UserApproval = ({
 }) => {
   const [filterStatus, setFilterStatus] = React.useState('Pending Approval');
   const [searchQuery, setSearchQuery] = React.useState('');
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  const filteredUsers = users.filter(u => {
+const filteredUsers = users.filter(u => {
     const matchesStatus = filterStatus === 'ALL' || u.status === filterStatus;
     const matchesSearch = 
       u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -32,7 +27,7 @@ const UserApproval = ({
       <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="inline-flex items-center space-x-2 bg-indigo-500/30 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-indigo-200 border border-indigo-400/30">
-            <i data-lucide="shield-check" className="w-4 h-4"></i>
+            <LucideIcon name="shield-check" className="w-4 h-4" />
             <span>Portal Otorisasi Pemimpin Lembaga</span>
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight">Persetujuan Akun Pengguna Baru (Approval)</h1>
@@ -66,7 +61,7 @@ const UserApproval = ({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <i data-lucide="clock" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="clock" className="w-3.5 h-3.5" />
             <span>Pending Approval ({pendingCount})</span>
           </button>
 
@@ -78,7 +73,7 @@ const UserApproval = ({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <i data-lucide="check-circle-2" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="check-circle-2" className="w-3.5 h-3.5" />
             <span>Disetujui ({approvedCount})</span>
           </button>
 
@@ -90,7 +85,7 @@ const UserApproval = ({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <i data-lucide="x-circle" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="x-circle" className="w-3.5 h-3.5" />
             <span>Ditolak ({rejectedCount})</span>
           </button>
 
@@ -108,7 +103,7 @@ const UserApproval = ({
 
         {/* Search Field */}
         <div className="relative w-full sm:w-64">
-          <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+          <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Cari NIK, Nama, Username..."
@@ -137,7 +132,7 @@ const UserApproval = ({
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-12 text-slate-400">
-                    <i data-lucide="inbox" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                    <LucideIcon name="inbox" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     <p className="font-semibold">Tidak ada pengajuan akun dalam kategori ini.</p>
                   </td>
                 </tr>
@@ -152,7 +147,7 @@ const UserApproval = ({
 
                     <td className="py-3.5 px-4 text-slate-600">
                       <div className="flex items-center space-x-1">
-                        <i data-lucide="phone" className="w-3 h-3 text-slate-400"></i>
+                        <LucideIcon name="phone" className="w-3 h-3 text-slate-400" />
                         <span>{user.phone}</span>
                       </div>
                       <div className="text-[11px] text-slate-400 truncate max-w-xs">{user.address || '-'}</div>
@@ -179,7 +174,7 @@ const UserApproval = ({
                     <td className="py-3.5 px-4">
                       {user.status === 'Pending Approval' && (
                         <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 font-bold text-[11px]">
-                          <i data-lucide="clock" className="w-3 h-3 text-amber-600 animate-spin"></i>
+                          <LucideIcon name="clock" className="w-3 h-3 text-amber-600 animate-spin" />
                           <span>Pending Approval</span>
                         </span>
                       )}
@@ -187,7 +182,7 @@ const UserApproval = ({
                       {user.status === 'Approved' && (
                         <div>
                           <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-[11px]">
-                            <i data-lucide="check-circle-2" className="w-3 h-3 text-emerald-600"></i>
+                            <LucideIcon name="check-circle-2" className="w-3 h-3 text-emerald-600" />
                             <span>Disetujui</span>
                           </span>
                           {user.approvedBy && (
@@ -198,7 +193,7 @@ const UserApproval = ({
 
                       {user.status === 'Rejected' && (
                         <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 border border-rose-300 font-bold text-[11px]">
-                          <i data-lucide="x-circle" className="w-3 h-3 text-rose-600"></i>
+                          <LucideIcon name="x-circle" className="w-3 h-3 text-rose-600" />
                           <span>Ditolak</span>
                         </span>
                       )}
@@ -211,7 +206,7 @@ const UserApproval = ({
                             onClick={() => onApproveUser(user.id)}
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-1 transition-all"
                           >
-                            <i data-lucide="check" className="w-3.5 h-3.5"></i>
+                            <LucideIcon name="check" className="w-3.5 h-3.5" />
                             <span>Setujui</span>
                           </button>
 
@@ -219,7 +214,7 @@ const UserApproval = ({
                             onClick={() => onRejectUser(user.id)}
                             className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center space-x-1 transition-all"
                           >
-                            <i data-lucide="x" className="w-3.5 h-3.5"></i>
+                            <LucideIcon name="x" className="w-3.5 h-3.5" />
                             <span>Tolak</span>
                           </button>
                         </div>

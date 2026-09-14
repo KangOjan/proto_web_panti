@@ -13,6 +13,7 @@ const AuthPages = ({
   const [loginUsername, setLoginUsername] = React.useState('');
   const [loginPassword, setLoginPassword] = React.useState('');
   const [loginError, setLoginError] = React.useState(null);
+  const [loginLoading, setLoginLoading] = React.useState(false);
 
   // Register form state
   const [formData, setFormData] = React.useState({
@@ -26,10 +27,6 @@ const AuthPages = ({
   });
   const [registerSuccess, setRegisterSuccess] = React.useState(false);
 
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
   const handleRegister = (e) => {
     e.preventDefault();
     if (!formData.nik || !formData.fullName || !formData.username || !formData.password) {
@@ -41,13 +38,37 @@ const AuthPages = ({
     setRegisterSuccess(true);
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setLoginError(null);
 
-    const result = onLoginSuccess(loginUsername, loginPassword);
-    if (!result.success) {
-      setLoginError(result.message);
+    if (loginLoading) {
+      return;
+    }
+
+    setLoginError(null);
+    setLoginLoading(true);
+
+    try {
+      const result = await onLoginSuccess(
+        loginUsername.trim(),
+        loginPassword
+      );
+
+      if (!result?.success) {
+        setLoginError(
+          result?.message ||
+          'Login gagal. Silakan periksa kembali username dan password.'
+        );
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+
+      setLoginError(
+        error?.message ||
+        'Terjadi kesalahan saat menghubungi server.'
+      );
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -62,7 +83,7 @@ const AuthPages = ({
         {/* View Header */}
         <div className="text-center mb-8 relative z-10">
           <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg shadow-emerald-600/20">
-            <i data-lucide={view === 'login' ? "lock" : "user-plus"} className="w-7 h-7"></i>
+            <LucideIcon name={view === 'login' ? "lock" : "user-plus"} className="w-7 h-7" />
           </div>
           <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             {view === 'login' ? "Masuk ke SIMK-Panti" : "Pendaftaran Akun Baru"}
@@ -78,7 +99,7 @@ const AuthPages = ({
         <div className="mb-6 bg-slate-900 text-slate-200 p-3.5 rounded-2xl text-xs space-y-2 border border-slate-800">
           <div className="flex items-center justify-between">
             <span className="font-bold text-amber-400 flex items-center space-x-1">
-              <i data-lucide="zap" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="zap" className="w-3.5 h-3.5" />
               <span>Akses Cepat Pengujian Demo:</span>
             </span>
           </div>
@@ -114,7 +135,7 @@ const AuthPages = ({
           <form onSubmit={handleLogin} className="space-y-4">
             {loginError && (
               <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2.5">
-                <i data-lucide="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></i>
+                <LucideIcon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
                 <div className="font-medium leading-relaxed">{loginError}</div>
               </div>
             )}
@@ -124,7 +145,7 @@ const AuthPages = ({
                 Username
               </label>
               <div className="relative">
-                <i data-lucide="user" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                <LucideIcon name="user" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   required
@@ -141,7 +162,7 @@ const AuthPages = ({
                 Password
               </label>
               <div className="relative">
-                <i data-lucide="key-round" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                <LucideIcon name="key-round" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="password"
                   required
@@ -155,10 +176,18 @@ const AuthPages = ({
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 text-sm transition-all flex items-center justify-center space-x-2 mt-2"
+              disabled={loginLoading}
+              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 text-sm transition-all flex items-center justify-center space-x-2 mt-2"
             >
-              <span>Masuk Ke Sistem</span>
-              <i data-lucide="arrow-right" className="w-4 h-4"></i>
+              <span>
+                {loginLoading
+                  ? 'Memproses...'
+                  : 'Masuk Ke Sistem'}
+              </span>
+
+              {!loginLoading && (
+                <LucideIcon name="arrow-right" className="w-4 h-4" />
+              )}
             </button>
 
             <div className="text-center pt-4 border-t border-slate-100">
@@ -180,7 +209,7 @@ const AuthPages = ({
             {registerSuccess ? (
               <div className="space-y-4 text-center py-4">
                 <div className="w-16 h-16 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto">
-                  <i data-lucide="clock" className="w-8 h-8"></i>
+                  <LucideIcon name="clock" className="w-8 h-8" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">Pendaftaran Berhasil Dikirim!</h3>
                 <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 text-left leading-relaxed space-y-2">
@@ -321,7 +350,7 @@ const AuthPages = ({
                   className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md text-xs transition-all flex items-center justify-center space-x-2 mt-2"
                 >
                   <span>Kirim Permohonan Pendaftaran</span>
-                  <i data-lucide="send" className="w-4 h-4"></i>
+                  <LucideIcon name="send" className="w-4 h-4" />
                 </button>
 
                 <div className="text-center pt-3 border-t border-slate-100">

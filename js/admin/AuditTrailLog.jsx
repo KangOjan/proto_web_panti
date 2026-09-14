@@ -3,10 +3,6 @@ const AuditTrailLog = ({ auditLogs }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filterAction, setFilterAction] = React.useState('ALL');
 
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
   const filteredLogs = auditLogs.filter(log => {
     const matchesAction = filterAction === 'ALL' || log.action.includes(filterAction);
     const matchesSearch =
@@ -33,7 +29,7 @@ const AuditTrailLog = ({ auditLogs }) => {
       <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold text-emerald-300 border border-emerald-500/30">
-            <i data-lucide="shield-alert" className="w-4 h-4 text-emerald-400"></i>
+            <LucideIcon name="shield-alert" className="w-4 h-4 text-emerald-400" />
             <span>Log Keamanan & Transparansi Akuntabilitas</span>
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight mt-2">Digital Audit Trail System</h1>
@@ -86,7 +82,7 @@ const AuditTrailLog = ({ auditLogs }) => {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+          <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Cari eksekutor, NIK, rincian..."
@@ -113,7 +109,7 @@ const AuditTrailLog = ({ auditLogs }) => {
               {filteredLogs.length === 0 ? (
                 <tr>
                   <td colSpan="4" className="text-center py-12 text-slate-400">
-                    <i data-lucide="shield-off" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                    <LucideIcon name="shield-off" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     <p className="font-semibold">Tidak ada data audit log yang ditemukan.</p>
                   </td>
                 </tr>

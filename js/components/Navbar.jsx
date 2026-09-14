@@ -11,14 +11,22 @@ const Navbar = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [isSwitchDropdownOpen, setIsSwitchDropdownOpen] = React.useState(false);
 
-  // Re-initialize icons
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
+  const currentUserName =
+    currentUser?.name ||
+    currentUser?.fullName ||
+    currentUser?.full_name ||
+    currentUser?.username ||
+    'User';
+
+  const getRoleLabel = (role) => {
+    if (role === 'pengurus_harian') return 'Pengurus Harian';
+    if (role === 'pemimpin_lembaga') return 'Pemimpin Lembaga';
+    return role || '-';
+  };
 
   const getRoleBadgeColor = (role) => {
-    if (role === 'Pengurus Harian') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    if (role === 'Pemimpin Lembaga') return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+    if (role === 'pengurus_harian') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+    if (role === 'pemimpin_lembaga') return 'bg-indigo-100 text-indigo-800 border-indigo-300';
     return 'bg-amber-100 text-amber-800 border-amber-300';
   };
 
@@ -51,31 +59,31 @@ const Navbar = ({
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <i data-lucide="globe" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="globe" className="w-3.5 h-3.5" />
             <span>Publik (Beranda)</span>
           </button>
 
           <button
             onClick={() => onSwitchUser('Pengurus Harian')}
             className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-              currentUser?.role === 'Pengurus Harian'
+              currentUser?.role === 'pengurus_harian'
                 ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/50'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <i data-lucide="user-check" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="user-check" className="w-3.5 h-3.5" />
             <span>Pengurus Harian</span>
           </button>
 
           <button
             onClick={() => onSwitchUser('Pemimpin Lembaga')}
             className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-              currentUser?.role === 'Pemimpin Lembaga'
+              currentUser?.role === 'pemimpin_lembaga'
                 ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400/50'
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            <i data-lucide="shield-check" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="shield-check" className="w-3.5 h-3.5" />
             <span>Pemimpin Lembaga</span>
             {pendingApprovalCount > 0 && (
               <span className="ml-1 bg-amber-500 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.2 rounded-full animate-pulse">
@@ -93,7 +101,7 @@ const Navbar = ({
           {/* Brand Logo & Title */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab(currentUser ? 'dashboard' : 'beranda')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <i data-lucide="building-2" className="w-6 h-6"></i>
+              <LucideIcon name="building-2" className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
@@ -120,7 +128,7 @@ const Navbar = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <i data-lucide="home" className="w-4 h-4"></i>
+              <LucideIcon name="home" className="w-4 h-4" />
               <span>Beranda</span>
             </button>
 
@@ -133,7 +141,7 @@ const Navbar = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <i data-lucide="building-2" className="w-4 h-4"></i>
+              <LucideIcon name="building-2" className="w-4 h-4" />
               <span>Profil Panti</span>
             </button>
 
@@ -146,7 +154,7 @@ const Navbar = ({
                   : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
               }`}
             >
-              <i data-lucide="heart" className="w-4 h-4 text-rose-500 fill-rose-100"></i>
+              <LucideIcon name="heart" className="w-4 h-4 text-rose-500 fill-rose-100" />
               <span>Donasi</span>
               <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full uppercase">
                 Bebas Login
@@ -162,7 +170,7 @@ const Navbar = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <i data-lucide="line-chart" className="w-4 h-4 text-emerald-600"></i>
+              <LucideIcon name="line-chart" className="w-4 h-4 text-emerald-600" />
               <span>Dashboard Keuangan</span>
             </button>
 
@@ -179,12 +187,12 @@ const Navbar = ({
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <i data-lucide="layout-dashboard" className="w-4 h-4"></i>
+                  <LucideIcon name="layout-dashboard" className="w-4 h-4" />
                   <span>Dashboard Keuangan</span>
                 </button>
 
                 {/* Role: Pengurus Harian Tab */}
-                {currentUser.role === 'Pengurus Harian' && (
+                {currentUser.role === 'pengurus_harian' && (
                   <>
                     <button
                       onClick={() => setActiveTab('transactions')}
@@ -194,7 +202,7 @@ const Navbar = ({
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <i data-lucide="receipt" className="w-4 h-4"></i>
+                      <LucideIcon name="receipt" className="w-4 h-4" />
                       <span>Pencatatan Transaksi (CRUD)</span>
                     </button>
 
@@ -206,14 +214,14 @@ const Navbar = ({
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <i data-lucide="layers" className="w-4 h-4"></i>
+                      <LucideIcon name="layers" className="w-4 h-4" />
                       <span>Program Prioritas (CRUD)</span>
                     </button>
                   </>
                 )}
 
                 {/* Role: Pemimpin Lembaga Tab */}
-                {currentUser.role === 'Pemimpin Lembaga' && (
+                {currentUser.role === 'pemimpin_lembaga' && (
                   <>
                     <button
                       onClick={() => setActiveTab('approval')}
@@ -223,7 +231,7 @@ const Navbar = ({
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <i data-lucide="user-check" className="w-4 h-4"></i>
+                      <LucideIcon name="user-check" className="w-4 h-4" />
                       <span>Persetujuan Akun (Approval)</span>
                       {pendingApprovalCount > 0 && (
                         <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -240,7 +248,7 @@ const Navbar = ({
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <i data-lucide="history" className="w-4 h-4"></i>
+                      <LucideIcon name="history" className="w-4 h-4" />
                       <span>Digital Audit Trail</span>
                     </button>
 
@@ -253,7 +261,7 @@ const Navbar = ({
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                       }`}
                     >
-                      <i data-lucide="printer" className="w-4 h-4"></i>
+                      <LucideIcon name="printer" className="w-4 h-4" />
                       <span>Cetak Laporan PSAK 45</span>
                     </button>
                     */}
@@ -261,20 +269,20 @@ const Navbar = ({
                 )}
 
                 {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan sesuai arahan mitra]
-                {currentUser.role === 'Pengurus Harian' && (
+                {currentUser.role === 'pengurus_harian' && (
                   <>
                     <button
                       onClick={() => setActiveTab('audit')}
                       className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
                     >
-                      <i data-lucide="history" className="w-4 h-4"></i>
+                      <LucideIcon name="history" className="w-4 h-4" />
                       <span>Digital Audit Trail</span>
                     </button>
                     <button
                       onClick={() => setActiveTab('report')}
                       className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
                     >
-                      <i data-lucide="printer" className="w-4 h-4"></i>
+                      <LucideIcon name="printer" className="w-4 h-4" />
                       <span>Cetak Laporan PSAK 45</span>
                     </button>
                   </>
@@ -291,11 +299,11 @@ const Navbar = ({
               <div className="flex items-center space-x-2">
                 <div className="text-right hidden md:block">
                   <div className="text-xs font-bold text-slate-800 leading-tight">
-                    {currentUser.fullName}
+                    {currentUserName}
                   </div>
                   <div className="flex items-center justify-end space-x-1 mt-0.5">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getRoleBadgeColor(currentUser.role)}`}>
-                      {currentUser.role}
+                      {getRoleLabel(currentUser.role)}
                     </span>
                   </div>
                 </div>
@@ -308,9 +316,9 @@ const Navbar = ({
                     title="Menu Opsi Pengguna"
                   >
                     <div className="w-8 h-8 rounded-lg bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
-                      {currentUser.fullName ? currentUser.fullName.charAt(0) : 'U'}
+                      {currentUserName.charAt(0).toUpperCase()}
                     </div>
-                    <i data-lucide="chevron-down" className="w-4 h-4 text-slate-500"></i>
+                    <LucideIcon name="chevron-down" className="w-4 h-4 text-slate-500" />
                   </button>
 
                   {/* Profile Dropdown */}
@@ -318,7 +326,7 @@ const Navbar = ({
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in">
                       <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
                         <p className="text-xs font-semibold text-slate-500">Pengguna Terhubung:</p>
-                        <p className="text-sm font-bold text-slate-800 truncate">{currentUser.fullName}</p>
+                        <p className="text-sm font-bold text-slate-800 truncate">{currentUserName}</p>
                         <p className="text-xs text-slate-500 font-mono">NIK: {currentUser.nik}</p>
                       </div>
 
@@ -334,8 +342,8 @@ const Navbar = ({
                           className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 font-medium flex items-center justify-between"
                         >
                           <span>Switch Ke: Pengurus Harian</span>
-                          {currentUser.role === 'Pengurus Harian' && (
-                            <i data-lucide="check" className="w-4 h-4 text-emerald-600"></i>
+                          {currentUser.role === 'pengurus_harian' && (
+                            <LucideIcon name="check" className="w-4 h-4 text-emerald-600" />
                           )}
                         </button>
                         <button
@@ -346,8 +354,8 @@ const Navbar = ({
                           className="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-indigo-50 text-slate-700 hover:text-indigo-800 font-medium flex items-center justify-between"
                         >
                           <span>Switch Ke: Pemimpin Lembaga</span>
-                          {currentUser.role === 'Pemimpin Lembaga' && (
-                            <i data-lucide="check" className="w-4 h-4 text-indigo-600"></i>
+                          {currentUser.role === 'pemimpin_lembaga' && (
+                            <LucideIcon name="check" className="w-4 h-4 text-indigo-600" />
                           )}
                         </button>
                       </div>
@@ -360,7 +368,7 @@ const Navbar = ({
                           }}
                           className="w-full text-left px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl flex items-center space-x-2 font-semibold"
                         >
-                          <i data-lucide="log-out" className="w-4 h-4 text-rose-500"></i>
+                          <LucideIcon name="log-out" className="w-4 h-4 text-rose-500" />
                           <span>Keluar (Logout)</span>
                         </button>
                       </div>
@@ -374,7 +382,7 @@ const Navbar = ({
                   onClick={() => onNavigateToAuth('login')}
                   className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold shadow-sm flex items-center space-x-1.5 transition-all"
                 >
-                  <i data-lucide="log-in" className="w-3.5 h-3.5 text-emerald-400"></i>
+                  <LucideIcon name="log-in" className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Log In</span>
                 </button>
               </div>
@@ -385,7 +393,7 @@ const Navbar = ({
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
             >
-              <i data-lucide={isMobileMenuOpen ? "x" : "menu"} className="w-5 h-5"></i>
+              <LucideIcon name={isMobileMenuOpen ? "x" : "menu"} className="w-5 h-5" />
             </button>
           </div>
 
@@ -401,7 +409,7 @@ const Navbar = ({
               activeTab === 'beranda' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
             }`}
           >
-            <i data-lucide="home" className="w-4 h-4"></i>
+            <LucideIcon name="home" className="w-4 h-4" />
             <span>Beranda</span>
           </button>
 
@@ -411,7 +419,7 @@ const Navbar = ({
               activeTab === 'profil' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
             }`}
           >
-            <i data-lucide="building-2" className="w-4 h-4"></i>
+            <LucideIcon name="building-2" className="w-4 h-4" />
             <span>Profil Panti</span>
           </button>
 
@@ -421,7 +429,7 @@ const Navbar = ({
               activeTab === 'public-donation' ? 'bg-amber-500 text-slate-950' : 'bg-emerald-50 text-emerald-800'
             }`}
           >
-            <i data-lucide="heart" className="w-4 h-4 text-rose-500"></i>
+            <LucideIcon name="heart" className="w-4 h-4 text-rose-500" />
             <span>Donasi (Bebas Login)</span>
           </button>
 
@@ -431,14 +439,14 @@ const Navbar = ({
               activeTab === 'public-dashboard' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
             }`}
           >
-            <i data-lucide="line-chart" className="w-4 h-4 text-emerald-600"></i>
+            <LucideIcon name="line-chart" className="w-4 h-4 text-emerald-600" />
             <span>Dashboard Keuangan Publik</span>
           </button>
 
           {currentUser ? (
             <>
               <div className="border-t border-slate-100 pt-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Menu Ruang Kerja Internal ({currentUser.role})
+                Menu Ruang Kerja Internal ({getRoleLabel(currentUser.role)})
               </div>
 
               <button
@@ -447,11 +455,11 @@ const Navbar = ({
                   activeTab === 'dashboard' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
                 }`}
               >
-                <i data-lucide="layout-dashboard" className="w-4 h-4"></i>
+                <LucideIcon name="layout-dashboard" className="w-4 h-4" />
                 <span>Dashboard Keuangan</span>
               </button>
 
-              {currentUser.role === 'Pengurus Harian' && (
+              {currentUser.role === 'pengurus_harian' && (
                 <>
                   <button
                     onClick={() => { setActiveTab('transactions'); setIsMobileMenuOpen(false); }}
@@ -459,7 +467,7 @@ const Navbar = ({
                       activeTab === 'transactions' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
                     }`}
                   >
-                    <i data-lucide="receipt" className="w-4 h-4"></i>
+                    <LucideIcon name="receipt" className="w-4 h-4" />
                     <span>Pencatatan Transaksi (CRUD)</span>
                   </button>
 
@@ -469,13 +477,13 @@ const Navbar = ({
                       activeTab === 'programs' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
                     }`}
                   >
-                    <i data-lucide="layers" className="w-4 h-4"></i>
+                    <LucideIcon name="layers" className="w-4 h-4" />
                     <span>Program Prioritas (CRUD)</span>
                   </button>
                 </>
               )}
 
-              {currentUser.role === 'Pemimpin Lembaga' && (
+              {currentUser.role === 'pemimpin_lembaga' && (
                 <>
                   <button
                     onClick={() => { setActiveTab('approval'); setIsMobileMenuOpen(false); }}
@@ -483,7 +491,7 @@ const Navbar = ({
                       activeTab === 'approval' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
                     }`}
                   >
-                    <i data-lucide="user-check" className="w-4 h-4"></i>
+                    <LucideIcon name="user-check" className="w-4 h-4" />
                     <span>Persetujuan Akun (Approval)</span>
                   </button>
 
@@ -493,7 +501,7 @@ const Navbar = ({
                       activeTab === 'audit' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
                     }`}
                   >
-                    <i data-lucide="history" className="w-4 h-4"></i>
+                    <LucideIcon name="history" className="w-4 h-4" />
                     <span>Digital Audit Trail</span>
                   </button>
 
@@ -504,7 +512,7 @@ const Navbar = ({
                       activeTab === 'report' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
                     }`}
                   >
-                    <i data-lucide="printer" className="w-4 h-4"></i>
+                    <LucideIcon name="printer" className="w-4 h-4" />
                     <span>Cetak Laporan PSAK 45</span>
                   </button>
                   */}
@@ -512,20 +520,20 @@ const Navbar = ({
               )}
 
               {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan pada menu mobile]
-              {currentUser.role === 'Pengurus Harian' && (
+              {currentUser.role === 'pengurus_harian' && (
                 <>
                   <button
                     onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
                     className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
                   >
-                    <i data-lucide="history" className="w-4 h-4"></i>
+                    <LucideIcon name="history" className="w-4 h-4" />
                     <span>Digital Audit Trail</span>
                   </button>
                   <button
                     onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
                     className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
                   >
-                    <i data-lucide="printer" className="w-4 h-4"></i>
+                    <LucideIcon name="printer" className="w-4 h-4" />
                     <span>Cetak Laporan PSAK 45</span>
                   </button>
                 </>
@@ -536,7 +544,7 @@ const Navbar = ({
                 onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
                 className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center space-x-2"
               >
-                <i data-lucide="log-out" className="w-4 h-4 text-rose-500"></i>
+                <LucideIcon name="log-out" className="w-4 h-4 text-rose-500" />
                 <span>Keluar (Logout)</span>
               </button>
             </>

@@ -111,7 +111,7 @@ const VisitManagement = ({ visitsData, onUpdateVisitStatus }) => {
                     onClick={() => onUpdateVisitStatus(visit.id, 'Disetujui', 'Jadwal disetujui oleh pengurus panti.')}
                     className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow transition-colors flex items-center justify-center space-x-1.5"
                   >
-                    <i data-lucide="check-circle" className="w-4 h-4"></i>
+                    <LucideIcon name="check-circle" className="w-4 h-4" />
                     <span>Setujui (Approve)</span>
                   </button>
                 )}
@@ -121,7 +121,7 @@ const VisitManagement = ({ visitsData, onUpdateVisitStatus }) => {
                     onClick={() => setSelectedRejectVisit(visit)}
                     className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-200 text-xs font-bold transition-colors flex items-center justify-center space-x-1.5"
                   >
-                    <i data-lucide="x-circle" className="w-4 h-4"></i>
+                    <LucideIcon name="x-circle" className="w-4 h-4" />
                     <span>Tolak Kunjungan</span>
                   </button>
                 )}

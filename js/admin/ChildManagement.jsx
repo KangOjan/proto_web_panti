@@ -28,7 +28,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
           onClick={onOpenAddChildModal}
           className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-colors flex items-center space-x-2 shrink-0"
         >
-          <i data-lucide="user-plus" className="w-4 h-4"></i>
+          <LucideIcon name="user-plus" className="w-4 h-4" />
           <span>Tambah Anak Asuh Baru</span>
         </button>
       </div>
@@ -36,7 +36,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
       {/* Filter & Search Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Cari berdasarkan nama anak, kode ID..."
@@ -155,7 +155,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
                 onClick={() => setSelectedChild(null)}
                 className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600"
               >
-                <i data-lucide="x" className="w-5 h-5"></i>
+                <LucideIcon name="x" className="w-5 h-5" />
               </button>
             </div>
 
@@ -167,7 +167,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
                   modalTab === 'medical' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <i data-lucide="activity" className="w-4 h-4"></i>
+                <LucideIcon name="activity" className="w-4 h-4" />
                 <span>Rekam Medis Kesehatan</span>
               </button>
 
@@ -177,7 +177,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
                   modalTab === 'report' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <i data-lucide="book-open" className="w-4 h-4"></i>
+                <LucideIcon name="book-open" className="w-4 h-4" />
                 <span>Nilai Rapor Sekolah</span>
               </button>
 
@@ -187,7 +187,7 @@ const ChildManagement = ({ childrenData, onOpenAddChildModal, onUpdateChild }) =
                   modalTab === 'achievements' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                <i data-lucide="award" className="w-4 h-4"></i>
+                <LucideIcon name="award" className="w-4 h-4" />
                 <span>Prestasi & Bakat</span>
               </button>
             </div>

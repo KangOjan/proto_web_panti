@@ -161,8 +161,6 @@ const FinancialDashboard = ({
         }
       });
     }
-
-    if (window.lucide) window.lucide.createIcons();
   }, [transactions]);
 
   return (
@@ -172,7 +170,7 @@ const FinancialDashboard = ({
       <div className="bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3 py-1 rounded-full text-xs font-bold text-emerald-300 border border-emerald-500/30">
-            <i data-lucide="sparkles" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="sparkles" className="w-3.5 h-3.5" />
             <span>Real-time Financial Analytics</span>
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight mt-2">Dashboard Keuangan Real-Time</h1>
@@ -181,12 +179,12 @@ const FinancialDashboard = ({
           </p>
         </div>
 
-        {currentUser?.role === 'Pengurus Harian' && (
+        {currentUser?.role === 'pengurus_harian' && (
           <button
             onClick={() => onNavigateTab('transactions')}
             className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-2xl shadow-lg text-xs flex items-center space-x-2 transition-all whitespace-nowrap"
           >
-            <i data-lucide="plus" className="w-4 h-4"></i>
+            <LucideIcon name="plus" className="w-4 h-4" />
             <span>Kelola & Catat Transaksi</span>
           </button>
         )}
@@ -200,14 +198,14 @@ const FinancialDashboard = ({
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Saldo Saat Ini (Kas & Bank)</span>
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-              <i data-lucide="wallet" className="w-6 h-6"></i>
+              <LucideIcon name="wallet" className="w-6 h-6" />
             </div>
           </div>
           <div className="text-3xl font-black text-slate-900 tracking-tight">
             Rp {currentBalance.toLocaleString('id-ID')}
           </div>
           <div className="mt-3 flex items-center space-x-1.5 text-xs text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-xl w-fit">
-            <i data-lucide="check-circle" className="w-3.5 h-3.5"></i>
+            <LucideIcon name="check-circle" className="w-3.5 h-3.5" />
             <span>Status Kas Positif (Surplus)</span>
           </div>
         </div>
@@ -217,7 +215,7 @@ const FinancialDashboard = ({
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Pemasukan Akumulasi</span>
             <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-              <i data-lucide="arrow-down-left" className="w-6 h-6"></i>
+              <LucideIcon name="arrow-down-left" className="w-6 h-6" />
             </div>
           </div>
           <div className="text-3xl font-black text-emerald-600 tracking-tight">
@@ -233,7 +231,7 @@ const FinancialDashboard = ({
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Pengeluaran Akumulasi</span>
             <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
-              <i data-lucide="arrow-up-right" className="w-6 h-6"></i>
+              <LucideIcon name="arrow-up-right" className="w-6 h-6" />
             </div>
           </div>
           <div className="text-3xl font-black text-rose-600 tracking-tight">

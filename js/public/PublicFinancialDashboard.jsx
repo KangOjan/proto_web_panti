@@ -126,8 +126,6 @@ const PublicFinancialDashboard = ({
         }
       });
     }
-
-    if (window.lucide) window.lucide.createIcons();
   }, [incomeByCategory]);
 
   return (
@@ -137,7 +135,7 @@ const PublicFinancialDashboard = ({
       <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner">
-            <i data-lucide="globe" className="w-4 h-4 text-emerald-400"></i>
+            <LucideIcon name="globe" className="w-4 h-4 text-emerald-400" />
             <span>Portal Transparansi Publik (Bebas Akses Tanpa Login)</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mt-2">
@@ -169,7 +167,7 @@ const PublicFinancialDashboard = ({
             <p className="text-[11px] text-emerald-600 mt-1 font-medium">Tercatat real-time dari donatur</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/20">
-            <i data-lucide="arrow-down-left" className="w-6 h-6"></i>
+            <LucideIcon name="arrow-down-left" className="w-6 h-6" />
           </div>
         </div>
 
@@ -183,7 +181,7 @@ const PublicFinancialDashboard = ({
             <p className="text-[11px] text-teal-600 mt-1 font-medium">Donasi publik terverifikasi</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-teal-600/20">
-            <i data-lucide="heart-handshake" className="w-6 h-6"></i>
+            <LucideIcon name="heart-handshake" className="w-6 h-6" />
           </div>
         </div>
 
@@ -197,7 +195,7 @@ const PublicFinancialDashboard = ({
             <p className="text-[11px] text-slate-400 mt-1 font-medium">Nilai kontribusi per transaksi</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center font-bold">
-            <i data-lucide="calculator" className="w-6 h-6"></i>
+            <LucideIcon name="calculator" className="w-6 h-6" />
           </div>
         </div>
 
@@ -211,7 +209,7 @@ const PublicFinancialDashboard = ({
             <p className="text-[11px] text-rose-600 mt-1 font-medium">Akumulasi biaya operasional</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-bold shadow-md shadow-rose-600/20">
-            <i data-lucide="arrow-up-right" className="w-6 h-6"></i>
+            <LucideIcon name="arrow-up-right" className="w-6 h-6" />
           </div>
         </div>
 
@@ -224,7 +222,7 @@ const PublicFinancialDashboard = ({
             <p className="text-[11px] text-slate-400 mt-1 font-medium">Cadangan dana anak asuh</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center font-bold">
-            <i data-lucide="wallet" className="w-6 h-6"></i>
+            <LucideIcon name="wallet" className="w-6 h-6" />
           </div>
         </div>
         */}
@@ -261,7 +259,7 @@ const PublicFinancialDashboard = ({
           <div className="space-y-3">
             {Object.keys(incomeByCategory).length === 0 ? (
               <div className="text-center py-8 text-slate-400">
-                <i data-lucide="pie-chart" className="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                <LucideIcon name="pie-chart" className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                 <p className="text-xs font-semibold">Belum ada donasi masuk pada rentang filter ini.</p>
               </div>
             ) : (
@@ -305,7 +303,7 @@ const PublicFinancialDashboard = ({
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center space-x-2">
-            <i data-lucide="sliders-horizontal" className="w-4 h-4 text-emerald-600"></i>
+            <LucideIcon name="sliders-horizontal" className="w-4 h-4 text-emerald-600" />
             <h3 className="text-base font-extrabold text-slate-900">Filter Transaksi Donasi Masuk</h3>
           </div>
           <span className="text-xs font-semibold text-slate-500">
@@ -319,7 +317,7 @@ const PublicFinancialDashboard = ({
           {/* Active Filter Mode Badge (Khusus Pemasukan) */}
           <div className="flex items-center space-x-2">
             <div className="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white shadow-sm flex items-center space-x-1.5">
-              <i data-lucide="arrow-down-left" className="w-4 h-4"></i>
+              <LucideIcon name="arrow-down-left" className="w-4 h-4" />
               <span>Pemasukan Donasi Terverifikasi</span>
             </div>
 
@@ -338,7 +336,7 @@ const PublicFinancialDashboard = ({
                 filterType === 'pengeluaran' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              <i data-lucide="arrow-up-right" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="arrow-up-right" className="w-3.5 h-3.5" />
               <span>Hanya Pengeluaran</span>
             </button>
             */}
@@ -386,7 +384,7 @@ const PublicFinancialDashboard = ({
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Cari Nama Donatur / Kategori / Nominal</label>
             <div className="relative">
-              <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+              <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="cth: Hendra, Konsumsi, 100000..."
@@ -403,7 +401,7 @@ const PublicFinancialDashboard = ({
       <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
-            <i data-lucide="list-checks" className="w-4 h-4 text-emerald-600"></i>
+            <LucideIcon name="list-checks" className="w-4 h-4 text-emerald-600" />
             <span>Daftar Transaksi Donasi Masuk & Identitas Donatur</span>
           </h3>
           <span className="text-[11px] text-slate-500 font-medium">Klik ikon printer untuk melihat Kuitansi Digital Resmi</span>
@@ -425,7 +423,7 @@ const PublicFinancialDashboard = ({
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-12 text-slate-400">
-                    <i data-lucide="file-search" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                    <LucideIcon name="file-search" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     <p className="font-semibold">Tidak ada transaksi pemasukan yang cocok dengan filter Anda.</p>
                   </td>
                 </tr>
@@ -441,7 +439,7 @@ const PublicFinancialDashboard = ({
 
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                          <i data-lucide="arrow-down-left" className="w-3 h-3"></i>
+                          <LucideIcon name="arrow-down-left" className="w-3 h-3" />
                           <span>Pemasukan</span>
                         </span>
                         {/* [COMMENTED: Render jenis pengeluaran dinonaktifkan untuk publik]

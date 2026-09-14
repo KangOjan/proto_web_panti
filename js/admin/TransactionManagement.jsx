@@ -12,12 +12,7 @@ const TransactionManagement = ({
   const [searchQuery, setSearchQuery] = React.useState('');
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  const categories = [
+const categories = [
     'Donasi Rutin', 'Infak/Zakat', 'Bantuan Pemerintah/APBD', 
     'Operasional', 'SPP/Pendidikan', 'Konsumsi', 'Kesehatan', 'Lainnya'
   ];
@@ -47,7 +42,7 @@ const TransactionManagement = ({
     .filter(t => t.type === 'pengeluaran')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const isEditableRole = currentUser?.role === 'Pengurus Harian';
+  const isEditableRole = currentUser?.role === 'pengurus_harian';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-6">
@@ -75,7 +70,7 @@ const TransactionManagement = ({
             onClick={() => onOpenAddModal()}
             className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-2xl shadow-md shadow-emerald-600/20 text-xs flex items-center space-x-2 transition-all"
           >
-            <i data-lucide="plus-circle" className="w-4 h-4"></i>
+            <LucideIcon name="plus-circle" className="w-4 h-4" />
             <span>Catat Transaksi Baru</span>
           </button>
         )}
@@ -91,7 +86,7 @@ const TransactionManagement = ({
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
-            <i data-lucide="trending-up" className="w-5 h-5"></i>
+            <LucideIcon name="trending-up" className="w-5 h-5" />
           </div>
         </div>
 
@@ -103,7 +98,7 @@ const TransactionManagement = ({
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center">
-            <i data-lucide="trending-down" className="w-5 h-5"></i>
+            <LucideIcon name="trending-down" className="w-5 h-5" />
           </div>
         </div>
 
@@ -117,7 +112,7 @@ const TransactionManagement = ({
             </div>
           </div>
           <div className="w-10 h-10 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center">
-            <i data-lucide="wallet" className="w-5 h-5"></i>
+            <LucideIcon name="wallet" className="w-5 h-5" />
           </div>
         </div>
       </div>
@@ -142,7 +137,7 @@ const TransactionManagement = ({
                 filterType === 'pemasukan' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              <i data-lucide="arrow-down-left" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="arrow-down-left" className="w-3.5 h-3.5" />
               <span>Pemasukan</span>
             </button>
             <button
@@ -151,7 +146,7 @@ const TransactionManagement = ({
                 filterType === 'pengeluaran' ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              <i data-lucide="arrow-up-right" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="arrow-up-right" className="w-3.5 h-3.5" />
               <span>Pengeluaran</span>
             </button>
           </div>
@@ -198,7 +193,7 @@ const TransactionManagement = ({
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Cari Keterangan / Kode</label>
             <div className="relative">
-              <i data-lucide="search" className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+              <LucideIcon name="search" className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Kata kunci..."
@@ -229,7 +224,7 @@ const TransactionManagement = ({
               {filteredTransactions.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="text-center py-12 text-slate-400">
-                    <i data-lucide="file-x" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                    <LucideIcon name="file-x" className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     <p className="font-semibold">Tidak ada transaksi keuangan yang sesuai filter.</p>
                   </td>
                 </tr>
@@ -247,7 +242,7 @@ const TransactionManagement = ({
                           ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
                           : 'bg-rose-100 text-rose-800 border border-rose-200'
                       }`}>
-                        <i data-lucide={trx.type === 'pemasukan' ? "arrow-down-left" : "arrow-up-right"} className="w-3 h-3"></i>
+                        <LucideIcon name={trx.type === 'pemasukan' ? "arrow-down-left" : "arrow-up-right"} className="w-3 h-3" />
                         <span className="capitalize">{trx.type}</span>
                       </span>
                       <div className="text-[11px] font-semibold text-slate-600 mt-1">{trx.category}</div>

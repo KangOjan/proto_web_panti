@@ -6,12 +6,7 @@ const FinancialReportPSAK45 = ({
   const [periodType, setPeriodType] = React.useState('monthly'); // 'monthly' | 'yearly'
   const [selectedMonth, setSelectedMonth] = React.useState('2026-07');
   const [selectedYear, setSelectedYear] = React.useState('2026');
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  // Filter transactions based on period
+// Filter transactions based on period
   const reportTransactions = transactions.filter(t => {
     if (periodType === 'monthly') {
       return t.date.startsWith(selectedMonth);
@@ -155,7 +150,7 @@ const FinancialReportPSAK45 = ({
             onClick={handleTriggerPrint}
             className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-md text-xs flex items-center space-x-2 transition-all"
           >
-            <i data-lucide="printer" className="w-4 h-4 text-emerald-400"></i>
+            <LucideIcon name="printer" className="w-4 h-4 text-emerald-400" />
             <span>Cetak Laporan PDF</span>
           </button>
         </div>

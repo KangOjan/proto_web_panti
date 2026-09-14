@@ -1,468 +1,833 @@
-// Program Management Component (CRUD Program Prioritas Panti - Khusus Pengurus Harian)
 const ProgramManagement = ({
   priorityPrograms,
+  campaignLoading = false,
+  campaignError = null,
   onSaveProgram,
-  onDeleteProgram,
-  currentUser
+  onDeactivateProgram,
+  currentUser,
 }) => {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [editingProg, setEditingProg] = React.useState(null);
-  const [deleteConfirmId, setDeleteConfirmId] = React.useState(null);
+  const [isModalOpen, setIsModalOpen] =
+    React.useState(false);
 
-  // Form State
-  const [title, setTitle] = React.useState('');
-  const [category, setCategory] = React.useState('Konsumsi');
-  const [targetAmount, setTargetAmount] = React.useState(20000000);
-  const [collectedAmount, setCollectedAmount] = React.useState(0);
-  const [description, setDescription] = React.useState('');
-  const [icon, setIcon] = React.useState('utensils');
-  const [badgeColor, setBadgeColor] = React.useState('emerald');
-  const [isActive, setIsActive] = React.useState(true);
+  const [editingProg, setEditingProg] =
+    React.useState(null);
 
+  const [deactivateConfirmId, setDeactivateConfirmId] =
+    React.useState(null);
+
+  const [categories, setCategories] =
+    React.useState([]);
+
+  const [categoriesLoading, setCategoriesLoading] =
+    React.useState(false);
+
+  const [saving, setSaving] =
+    React.useState(false);
+
+  const [title, setTitle] =
+    React.useState('');
+
+  const [categoryId, setCategoryId] =
+    React.useState('');
+
+  const [targetAmount, setTargetAmount] =
+    React.useState(15000000);
+
+  const [deadline, setDeadline] =
+    React.useState('');
+
+  const [description, setDescription] =
+    React.useState('');
+
+  const [headerImageUrl, setHeaderImageUrl] =
+    React.useState('');
+
+  const [status, setStatus] =
+    React.useState('active');
   React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
+    let cancelled = false;
 
-  const categories = [
-    'Konsumsi', 'SPP/Pendidikan', 'Operasional', 'Kesehatan', 'Infak/Zakat', 'Donasi Rutin', 'Lainnya'
-  ];
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
 
-  const iconOptions = [
-    { value: 'utensils', label: 'Konsumsi / Dapur (Piring & Sendok)' },
-    { value: 'graduation-cap', label: 'Pendidikan / SPP (Toga Wisuda)' },
-    { value: 'home', label: 'Asrama / Operasional (Gedung)' },
-    { value: 'heart', label: 'Kesehatan & Kasih (Hati)' },
-    { value: 'book-open', label: 'Buku / Perpustakaan (Buku Terbuka)' },
-    { value: 'laptop', label: 'Teknologi / Komputer (Laptop)' },
-    { value: 'award', label: 'Prestasi / Bakat (Piala)' }
-  ];
+        const response =
+          await CampaignApi.getCategories();
 
-  const colorOptions = [
-    { value: 'emerald', label: 'Hijau Emerald', bg: 'bg-emerald-500' },
-    { value: 'teal', label: 'Biru Teal', bg: 'bg-teal-500' },
-    { value: 'amber', label: 'Kuning Amber', bg: 'bg-amber-500' },
-    { value: 'indigo', label: 'Ungu Indigo', bg: 'bg-indigo-500' },
-    { value: 'rose', label: 'Merah Rose', bg: 'bg-rose-500' }
-  ];
+        if (cancelled) return;
 
-  const handleOpenAddModal = () => {
+        const data = Array.isArray(response.data)
+          ? response.data
+          : [];
+
+        setCategories(data);
+
+        if (
+          !categoryId &&
+          data.length > 0
+        ) {
+          setCategoryId(String(data[0].id));
+        }
+      } catch (error) {
+        console.error(
+          'Failed to load campaign categories:',
+          error
+        );
+      } finally {
+        if (!cancelled) {
+          setCategoriesLoading(false);
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const resetForm = () => {
     setEditingProg(null);
     setTitle('');
-    setCategory('Konsumsi');
+
+    setCategoryId(
+      categories.length > 0
+        ? String(categories[0].id)
+        : ''
+    );
+
     setTargetAmount(15000000);
-    setCollectedAmount(0);
+    setDeadline('');
     setDescription('');
-    setIcon('utensils');
-    setBadgeColor('emerald');
-    setIsActive(true);
+    setHeaderImageUrl('');
+    setStatus('active');
+  };
+
+  const handleOpenAddModal = () => {
+    resetForm();
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (prog) => {
-    setEditingProg(prog);
-    setTitle(prog.title || '');
-    setCategory(prog.category || 'Konsumsi');
-    setTargetAmount(prog.targetAmount || 0);
-    setCollectedAmount(prog.collectedAmount || 0);
-    setDescription(prog.description || '');
-    setIcon(prog.icon || 'utensils');
-    setBadgeColor(prog.badgeColor || 'emerald');
-    setIsActive(prog.isActive !== false);
+  const handleOpenEditModal = (program) => {
+    setEditingProg(program);
+
+    setTitle(program.title || '');
+
+    setCategoryId(
+      program.categoryId
+        ? String(program.categoryId)
+        : ''
+    );
+
+    setTargetAmount(
+      Number(program.targetAmount || 0)
+    );
+
+    setDeadline(
+      program.deadline
+        ? String(program.deadline).substring(0, 10)
+        : ''
+    );
+
+    setDescription(
+      program.description || ''
+    );
+
+    setHeaderImageUrl(
+      program.headerImageUrl || ''
+    );
+
+    setStatus(
+      program.status || 'inactive'
+    );
+
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!title.trim() || !description.trim()) {
-      alert("Mohon lengkapi Judul dan Deskripsi Program Prioritas.");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!title.trim()) {
+      alert(
+        'Judul program wajib diisi.'
+      );
       return;
     }
 
-    const programPayload = {
-      id: editingProg ? editingProg.id : `PROG-${Math.floor(Math.random() * 899 + 100)}`,
-      title,
-      category,
-      targetAmount: Number(targetAmount),
-      collectedAmount: Number(collectedAmount),
-      description,
-      icon,
-      badgeColor,
-      isActive,
-      updatedAt: new Date().toISOString()
+    if (!categoryId) {
+      alert(
+        'Kategori program wajib dipilih.'
+      );
+      return;
+    }
+
+    if (!description.trim()) {
+      alert(
+        'Deskripsi program wajib diisi.'
+      );
+      return;
+    }
+
+    if (
+      Number(targetAmount) < 100000
+    ) {
+      alert(
+        'Target dana minimal Rp100.000.'
+      );
+      return;
+    }
+
+    if (!deadline) {
+      alert(
+        'Batas waktu program wajib diisi.'
+      );
+      return;
+    }
+
+    const selectedCategory =
+      categories.find(
+        (category) =>
+          String(category.id) ===
+          String(categoryId)
+      );
+
+    const payload = {
+      id: editingProg?.id || null,
+
+      categoryId:
+        Number(categoryId),
+
+      category:
+        selectedCategory?.name ||
+        editingProg?.category ||
+        'Lainnya',
+
+      title: title.trim(),
+
+      targetAmount:
+        Number(targetAmount),
+
+      deadline,
+
+      description:
+        description.trim(),
+
+      headerImageUrl:
+        headerImageUrl.trim(),
+
+      status,
     };
 
-    onSaveProgram(programPayload);
-    setIsModalOpen(false);
+    try {
+      setSaving(true);
+
+      const result =
+        await onSaveProgram(payload);
+
+      if (result?.success) {
+        setIsModalOpen(false);
+        resetForm();
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Summary Metrics
-  const totalPrograms = priorityPrograms.length;
-  const activeCount = priorityPrograms.filter(p => p.isActive !== false).length;
-  const totalTarget = priorityPrograms.reduce((sum, p) => sum + (p.targetAmount || 0), 0);
-  const totalCollected = priorityPrograms.reduce((sum, p) => sum + (p.collectedAmount || 0), 0);
+  const handleDeactivate = async () => {
+    if (!deactivateConfirmId) {
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const result =
+        await onDeactivateProgram(
+          deactivateConfirmId
+        );
+
+      if (result?.success) {
+        setDeactivateConfirmId(null);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const totalPrograms =
+    priorityPrograms.length;
+
+  const activeCount =
+    priorityPrograms.filter(
+      (program) =>
+        program.status === 'active'
+    ).length;
+
+  const totalTarget =
+    priorityPrograms.reduce(
+      (sum, program) =>
+        sum +
+        Number(
+          program.targetAmount || 0
+        ),
+      0
+    );
+
+  const totalCollected =
+    priorityPrograms.reduce(
+      (sum, program) =>
+        sum +
+        Number(
+          program.collectedAmount || 0
+        ),
+      0
+    );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
-      
-      {/* Header Banner */}
+
       <div className="bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+
         <div>
           <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-            <i data-lucide="layers" className="w-4 h-4 text-emerald-400"></i>
-            <span>Ruang Kerja: Pengurus Harian</span>
+            <LucideIcon name="layers" className="w-4 h-4 text-emerald-400" />
+
+            <span>
+              Ruang Kerja: Pengurus Harian
+            </span>
           </div>
+
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-2">
             Manajemen Program Prioritas Panti
           </h1>
+
           <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl mt-1 leading-relaxed">
-            Kelola daftar program prioritas panti asuhan. Program yang berstatus <b>Aktif</b> akan secara otomatis tampil sebagai kartu donasi interaktif pada halaman <b>Beranda</b> publik.
+            Kelola program prioritas panti.
+            Program berstatus Aktif akan
+            ditampilkan pada halaman publik.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={handleOpenAddModal}
-          className="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg shadow-amber-400/20 flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
+          disabled={categoriesLoading}
+          className="px-5 py-3 bg-amber-400 hover:bg-amber-300 disabled:opacity-50 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center space-x-2"
         >
-          <i data-lucide="plus-circle" className="w-4 h-4 text-slate-950"></i>
-          <span>Tambah Program Prioritas</span>
+          <LucideIcon name="plus-circle" className="w-4 h-4" />
+
+          <span>
+            Tambah Program Prioritas
+          </span>
         </button>
       </div>
 
-      {/* Program Stats Metrics */}
+      {campaignError && (
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-sm font-semibold">
+          {campaignError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-          <div className="text-xs font-extrabold text-slate-500 uppercase">Total Program</div>
-          <div className="text-2xl font-black text-slate-900 mt-1">{totalPrograms} Program</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Tercatat di sistem</div>
+
+        <div className="bg-white p-5 rounded-3xl border border-slate-200">
+          <div className="text-xs font-extrabold text-slate-500 uppercase">
+            Total Program
+          </div>
+
+          <div className="text-2xl font-black text-slate-900 mt-1">
+            {totalPrograms} Program
+          </div>
         </div>
 
-        <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-200 shadow-xs">
-          <div className="text-xs font-extrabold text-emerald-800 uppercase">Program Aktif (Beranda)</div>
-          <div className="text-2xl font-black text-emerald-700 mt-1">{activeCount} Program</div>
-          <div className="text-[11px] text-emerald-600 mt-0.5">Tayang di halaman publik</div>
+        <div className="bg-emerald-50 p-5 rounded-3xl border border-emerald-200">
+          <div className="text-xs font-extrabold text-emerald-800 uppercase">
+            Program Aktif
+          </div>
+
+          <div className="text-2xl font-black text-emerald-700 mt-1">
+            {activeCount} Program
+          </div>
         </div>
 
-        <div className="bg-teal-50 p-5 rounded-3xl border border-teal-200 shadow-xs">
-          <div className="text-xs font-extrabold text-teal-800 uppercase">Total Target Dana</div>
-          <div className="text-xl font-black text-teal-700 mt-1">Rp {totalTarget.toLocaleString('id-ID')}</div>
-          <div className="text-[11px] text-teal-600 mt-0.5">Kebutuhan operasional anak</div>
+        <div className="bg-teal-50 p-5 rounded-3xl border border-teal-200">
+          <div className="text-xs font-extrabold text-teal-800 uppercase">
+            Total Target Dana
+          </div>
+
+          <div className="text-xl font-black text-teal-700 mt-1">
+            Rp {totalTarget.toLocaleString('id-ID')}
+          </div>
         </div>
 
-        <div className="bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 shadow-xs">
-          <div className="text-xs font-extrabold text-amber-400 uppercase">Total Terhimpun</div>
-          <div className="text-xl font-black text-white mt-1">Rp {totalCollected.toLocaleString('id-ID')}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Donasi masuk terverifikasi</div>
+        <div className="bg-slate-900 text-white p-5 rounded-3xl">
+          <div className="text-xs font-extrabold text-amber-400 uppercase">
+            Total Terhimpun
+          </div>
+
+          <div className="text-xl font-black mt-1">
+            Rp {totalCollected.toLocaleString('id-ID')}
+          </div>
+
+          <div className="text-[11px] text-slate-400 mt-1">
+            Akan dihitung otomatis dari donasi
+            terverifikasi.
+          </div>
         </div>
       </div>
 
-      {/* Program List Table / Card View */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-6">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden p-6">
+
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+
           <div>
-            <h3 className="text-base font-extrabold text-slate-900">Daftar Program Prioritas Panti</h3>
-            <p className="text-xs text-slate-500">Gunakan tombol Aksi untuk mengubah detail atau menonaktifkan tayangan program</p>
+            <h3 className="text-base font-extrabold text-slate-900">
+              Daftar Program Prioritas Panti
+            </h3>
+
+            <p className="text-xs text-slate-500">
+              Program tidak dihapus permanen.
+              Gunakan status nonaktif untuk
+              mengarsipkan program.
+            </p>
           </div>
+
           <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {priorityPrograms.length} Program Terdaftar
+            {priorityPrograms.length}
+            {' '}Program
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto mt-4">
+
           <table className="w-full text-left border-collapse">
+
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">
-                <th className="py-3.5 px-4">PROGRAM & KATEGORI</th>
-                <th className="py-3.5 px-4">DESKRIPSI KEBUTUHAN</th>
-                <th className="py-3.5 px-4">TARGET DANA (RP)</th>
-                <th className="py-3.5 px-4">TERHIMPUN (RP)</th>
-                <th className="py-3.5 px-4">PROGRES</th>
-                <th className="py-3.5 px-4">STATUS BERANDA</th>
-                <th className="py-3.5 px-4 text-right">AKSI</th>
+                <th className="py-3.5 px-4">
+                  Program & Kategori
+                </th>
+
+                <th className="py-3.5 px-4">
+                  Deskripsi
+                </th>
+
+                <th className="py-3.5 px-4">
+                  Target Dana
+                </th>
+
+                <th className="py-3.5 px-4">
+                  Terhimpun
+                </th>
+
+                <th className="py-3.5 px-4">
+                  Status
+                </th>
+
+                <th className="py-3.5 px-4 text-right">
+                  Aksi
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-medium">
-              {priorityPrograms.length === 0 ? (
+
+            <tbody className="divide-y divide-slate-100 text-xs">
+
+              {campaignLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-12 text-slate-400">
-                    <i data-lucide="layers" className="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
-                    <p className="font-semibold">Belum ada data program prioritas. Klik "Tambah Program Prioritas" untuk membuat.</p>
+                  <td
+                    colSpan="6"
+                    className="text-center py-12 text-slate-400"
+                  >
+                    Memuat program...
+                  </td>
+                </tr>
+              ) : priorityPrograms.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="text-center py-12 text-slate-400"
+                  >
+                    Belum ada program prioritas.
                   </td>
                 </tr>
               ) : (
-                priorityPrograms.map((prog) => {
-                  const percent = prog.targetAmount > 0 
-                    ? Math.min(100, Math.round(((prog.collectedAmount || 0) / prog.targetAmount) * 100))
-                    : 0;
+                priorityPrograms.map(
+                  (program) => (
+                    <tr
+                      key={program.id}
+                      className="hover:bg-slate-50"
+                    >
+                      <td className="py-3.5 px-4">
+                        <div className="font-black text-slate-900">
+                          {program.title}
+                        </div>
 
-                  return (
-                    <tr key={prog.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="font-black text-slate-900 text-xs">{prog.title}</div>
-                        <div className="flex items-center space-x-1.5 mt-1">
-                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                            {prog.category}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">{prog.id}</span>
+                        <div className="text-[10px] text-emerald-700 mt-1">
+                          {program.category}
                         </div>
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <div className="text-slate-600 text-xs max-w-xs line-clamp-2 leading-relaxed">
-                          {prog.description}
+                        <div className="max-w-xs line-clamp-2 text-slate-600">
+                          {program.description}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap font-bold text-slate-900">
-                        Rp {(prog.targetAmount || 0).toLocaleString('id-ID')}
+                      <td className="py-3.5 px-4 font-bold whitespace-nowrap">
+                        Rp{' '}
+                        {Number(
+                          program.targetAmount || 0
+                        ).toLocaleString('id-ID')}
                       </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap font-black text-emerald-700">
-                        Rp {(prog.collectedAmount || 0).toLocaleString('id-ID')}
+                      <td className="py-3.5 px-4 font-black text-emerald-700 whitespace-nowrap">
+                        Rp{' '}
+                        {Number(
+                          program.collectedAmount || 0
+                        ).toLocaleString('id-ID')}
                       </td>
 
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                            <div 
-                              className="h-full bg-emerald-500 rounded-full"
-                              style={{ width: `${percent}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-[11px] font-extrabold text-slate-700">{percent}%</span>
-                        </div>
-                      </td>
+                      <td className="py-3.5 px-4">
 
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        {prog.isActive !== false ? (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span>Tayang di Beranda</span>
+                        {program.status === 'active' ? (
+                          <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                            Aktif
+                          </span>
+                        ) : program.status === 'draft' ? (
+                          <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
+                            Draft
                           </span>
                         ) : (
-                          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
-                            <span>Diarsipkan</span>
+                          <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-bold">
+                            Nonaktif
                           </span>
                         )}
+
                       </td>
 
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end space-x-1.5">
-                          <button
-                            onClick={() => handleOpenEditModal(prog)}
-                            className="p-1.5 text-slate-600 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 rounded-lg transition-all border border-slate-200"
-                            title="Edit Program"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
-                            </svg>
-                          </button>
+
+                        <div className="flex justify-end gap-2">
 
                           <button
-                            onClick={() => setDeleteConfirmId(prog.id)}
-                            className="p-1.5 text-slate-600 hover:text-rose-600 bg-slate-100 hover:bg-rose-50 rounded-lg transition-all border border-slate-200"
-                            title="Hapus Program"
+                            type="button"
+                            onClick={() =>
+                              handleOpenEditModal(
+                                program
+                              )
+                            }
+                            className="p-2 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 rounded-lg"
+                            title="Edit Program"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-                              <path d="M3 6h18"></path>
-                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                            </svg>
+                            <LucideIcon name="pencil" className="w-4 h-4" />
                           </button>
+
+                          {program.status !==
+                            'inactive' && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setDeactivateConfirmId(
+                                  program.id
+                                )
+                              }
+                              className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 rounded-lg"
+                              title="Nonaktifkan Program"
+                            >
+                              <LucideIcon name="archive" className="w-4 h-4" />
+                            </button>
+                          )}
+
                         </div>
                       </td>
                     </tr>
-                  );
-                })
+                  )
+                )
               )}
+
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ADD / EDIT PROGRAM MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in no-print overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative my-8 max-h-[90vh] overflow-y-auto">
-            
+        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+
             <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-5 right-5 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              type="button"
+              onClick={() =>
+                setIsModalOpen(false)
+              }
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-slate-100"
             >
-              <i data-lucide="x" className="w-5 h-5"></i>
+              <LucideIcon name="x" className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center space-x-3 mb-6 border-b border-slate-100 pb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                <i data-lucide="layers" className="w-5 h-5"></i>
-              </div>
-              <div>
-                <h3 className="text-lg font-extrabold text-slate-900">
-                  {editingProg ? "Edit Program Prioritas" : "Tambah Program Prioritas Baru"}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Program ini akan ditampilkan pada beranda website untuk memudahkan donatur menyalurkan bantuan.
-                </p>
-              </div>
-            </div>
+            <h3 className="text-xl font-extrabold text-slate-900">
+              {editingProg
+                ? 'Edit Program Prioritas'
+                : 'Tambah Program Prioritas'}
+            </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
+            <p className="text-xs text-slate-500 mt-1 mb-6">
+              Data akan disimpan ke server SIMK-Panti.
+            </p>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
+
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Judul Program Prioritas *
+                <label className="block text-xs font-bold mb-1">
+                  Judul Program *
                 </label>
+
                 <input
                   type="text"
                   required
-                  placeholder="cth: Pengadaan Seragam & Perlengkapan Sekolah"
+                  maxLength="255"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                  onChange={(event) =>
+                    setTitle(event.target.value)
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Kategori Alokasi Donasi *
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-bold bg-white text-slate-900"
-                  >
-                    {categories.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Kategori *
+                </label>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Ikon Program
-                  </label>
-                  <select
-                    value={icon}
-                    onChange={(e) => setIcon(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-semibold bg-white text-slate-900"
-                  >
-                    {iconOptions.map(ico => (
-                      <option key={ico.value} value={ico.value}>{ico.label}</option>
-                    ))}
-                  </select>
-                </div>
+                <select
+                  required
+                  value={categoryId}
+                  onChange={(event) =>
+                    setCategoryId(
+                      event.target.value
+                    )
+                  }
+                  disabled={categoriesLoading}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white"
+                >
+                  <option value="">
+                    Pilih kategori
+                  </option>
+
+                  {categories.map(
+                    (category) => (
+                      <option
+                        key={category.id}
+                        value={category.id}
+                      >
+                        {category.name}
+                      </option>
+                    )
+                  )}
+                </select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Target Dana (Rp) *
+                  <label className="block text-xs font-bold mb-1">
+                    Target Dana *
                   </label>
+
                   <input
                     type="number"
                     required
                     min="100000"
+                    step="1000"
                     value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-black text-slate-900"
+                    onChange={(event) =>
+                      setTargetAmount(
+                        event.target.value
+                      )
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Dana Terkumpul Saat Ini (Rp)
+                  <label className="block text-xs font-bold mb-1">
+                    Batas Waktu *
                   </label>
+
                   <input
-                    type="number"
-                    min="0"
-                    value={collectedAmount}
-                    onChange={(e) => setCollectedAmount(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-black text-emerald-700"
+                    type="date"
+                    required
+                    value={deadline}
+                    onChange={(event) =>
+                      setDeadline(
+                        event.target.value
+                      )
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300"
                   />
                 </div>
+
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Deskripsi Kebutuhan & Peruntukkan Program *
+                <label className="block text-xs font-bold mb-1">
+                  URL Gambar Header
                 </label>
+
+                <input
+                  type="url"
+                  value={headerImageUrl}
+                  onChange={(event) =>
+                    setHeaderImageUrl(
+                      event.target.value
+                    )
+                  }
+                  placeholder="https://..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Deskripsi *
+                </label>
+
                 <textarea
-                  rows="3"
+                  rows="4"
                   required
-                  placeholder="Rincian kebutuhan pengadaan dan manfaat bagi anak-anak panti..."
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-medium leading-relaxed"
+                  onChange={(event) =>
+                    setDescription(
+                      event.target.value
+                    )
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300"
                 ></textarea>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold text-slate-900">Status Tayang di Beranda</div>
-                  <div className="text-[11px] text-slate-500">Jika aktif, program ini akan langsung muncul di halaman beranda publik</div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Status Program *
                 </label>
+
+                <select
+                  value={status}
+                  onChange={(event) =>
+                    setStatus(
+                      event.target.value
+                    )
+                  }
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white"
+                >
+                  <option value="draft">
+                    Draft
+                  </option>
+
+                  <option value="active">
+                    Aktif
+                  </option>
+
+                  <option value="inactive">
+                    Nonaktif
+                  </option>
+                </select>
               </div>
 
-              <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+
+                <div className="text-xs font-bold text-slate-700">
+                  Dana Terkumpul
+                </div>
+
+                <div className="text-lg font-black text-emerald-700 mt-1">
+                  Rp{' '}
+                  {Number(
+                    editingProg?.collectedAmount ||
+                      0
+                  ).toLocaleString('id-ID')}
+                </div>
+
+                <div className="text-[11px] text-slate-500 mt-1">
+                  Nilai ini tidak dapat diedit secara manual.
+                  Nantinya dihitung dari donasi/payment
+                  yang sudah terverifikasi.
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100">
+
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+                  onClick={() =>
+                    setIsModalOpen(false)
+                  }
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl hover:bg-slate-100"
                 >
                   Batal
                 </button>
+
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md flex items-center space-x-2"
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-black"
                 >
-                  <i data-lucide="check" className="w-4 h-4"></i>
-                  <span>{editingProg ? "Simpan Perubahan" : "Tambah Program"}</span>
+                  {saving
+                    ? 'Menyimpan...'
+                    : editingProg
+                    ? 'Simpan Perubahan'
+                    : 'Tambah Program'}
                 </button>
-              </div>
 
+              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
-      {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in no-print">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <i data-lucide="alert-triangle" className="w-6 h-6"></i>
+      {deactivateConfirmId && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+
+            <div className="w-12 h-12 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center mx-auto">
+              <LucideIcon name="archive" className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900">Hapus Program Prioritas?</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Program ini tidak akan ditampilkan lagi pada halaman beranda publik.
-              </p>
-            </div>
-            <div className="flex items-center space-x-2 pt-2">
+
+            <h3 className="text-base font-extrabold mt-4">
+              Nonaktifkan Program?
+            </h3>
+
+            <p className="text-xs text-slate-500 mt-2">
+              Program tidak dihapus dari database,
+              tetapi tidak akan ditampilkan lagi
+              pada halaman publik.
+            </p>
+
+            <div className="flex gap-2 mt-6">
+
               <button
-                onClick={() => setDeleteConfirmId(null)}
-                className="w-1/2 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700"
+                type="button"
+                onClick={() =>
+                  setDeactivateConfirmId(null)
+                }
+                className="w-1/2 py-2.5 bg-slate-100 rounded-xl text-xs font-bold"
               >
                 Batal
               </button>
+
               <button
-                onClick={() => {
-                  onDeleteProgram(deleteConfirmId);
-                  setDeleteConfirmId(null);
-                }}
-                className="w-1/2 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md"
+                type="button"
+                disabled={saving}
+                onClick={handleDeactivate}
+                className="w-1/2 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 rounded-xl text-xs font-black"
               >
-                Ya, Hapus
+                Nonaktifkan
               </button>
+
             </div>
           </div>
         </div>
@@ -472,4 +837,5 @@ const ProgramManagement = ({
   );
 };
 
-window.ProgramManagement = ProgramManagement;
+window.ProgramManagement =
+  ProgramManagement;

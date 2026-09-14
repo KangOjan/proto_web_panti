@@ -9,7 +9,7 @@ const Footer = ({ onOpenDonationModal, setActiveRole }) => {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
-                <i data-lucide="heart-handshake" className="w-6 h-6"></i>
+                <LucideIcon name="heart-handshake" className="w-6 h-6" />
               </div>
               <span className="text-xl font-bold text-white">PantiAsih Kasih Bunda</span>
             </div>
@@ -18,13 +18,13 @@ const Footer = ({ onOpenDonationModal, setActiveRole }) => {
             </p>
             <div className="flex space-x-3 pt-2">
               <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <i data-lucide="facebook" className="w-4 h-4"></i>
+                <LucideIcon name="facebook" className="w-4 h-4" />
               </a>
               <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <i data-lucide="instagram" className="w-4 h-4"></i>
+                <LucideIcon name="instagram" className="w-4 h-4" />
               </a>
               <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <i data-lucide="youtube" className="w-4 h-4"></i>
+                <LucideIcon name="youtube" className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -34,19 +34,19 @@ const Footer = ({ onOpenDonationModal, setActiveRole }) => {
             <h4 className="text-white text-base font-semibold border-b border-slate-800 pb-2">Kontak & Alamat</h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li className="flex items-start space-x-3">
-                <i data-lucide="map-pin" className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                <LucideIcon name="map-pin" className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <span>Jl. Kasih Bunda No. 45, Coblong, Kota Bandung, Jawa Barat 40135</span>
               </li>
               <li className="flex items-center space-x-3">
-                <i data-lucide="phone" className="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <LucideIcon name="phone" className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span>(022) 250-8899 / 0812-8877-6655</span>
               </li>
               <li className="flex items-center space-x-3">
-                <i data-lucide="mail" className="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <LucideIcon name="mail" className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span>info@pantiasih-kasihbunda.or.id</span>
               </li>
               <li className="flex items-center space-x-3">
-                <i data-lucide="clock" className="w-5 h-5 text-emerald-400 shrink-0"></i>
+                <LucideIcon name="clock" className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span>Buka Kunjungan: Setiap Hari 08:00 - 17:00 WIB</span>
               </li>
             </ul>
@@ -86,7 +86,7 @@ const Footer = ({ onOpenDonationModal, setActiveRole }) => {
                 onClick={() => setActiveRole('admin')}
                 className="w-full py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 text-xs transition-colors flex items-center justify-center space-x-1.5"
               >
-                <i data-lucide="lock" className="w-3.5 h-3.5"></i>
+                <LucideIcon name="lock" className="w-3.5 h-3.5" />
                 <span>Portal Pengurus Admin</span>
               </button>
             </div>

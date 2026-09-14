@@ -35,7 +35,7 @@ const AdminDashboard = ({
             onClick={onOpenAddChildModal}
             className="px-3.5 py-2 rounded-xl bg-white text-emerald-900 font-bold text-xs shadow hover:bg-emerald-50 transition-colors flex items-center space-x-1.5"
           >
-            <i data-lucide="user-plus" className="w-4 h-4 text-emerald-600"></i>
+            <LucideIcon name="user-plus" className="w-4 h-4 text-emerald-600" />
             <span>+ Anak Asuh</span>
           </button>
 
@@ -43,7 +43,7 @@ const AdminDashboard = ({
             onClick={onOpenAddTrxModal}
             className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow transition-colors flex items-center space-x-1.5"
           >
-            <i data-lucide="plus-circle" className="w-4 h-4"></i>
+            <LucideIcon name="plus-circle" className="w-4 h-4" />
             <span>+ Transaksi Kas</span>
           </button>
         </div>
@@ -60,7 +60,7 @@ const AdminDashboard = ({
           <div className="flex justify-between items-center text-slate-500 text-xs font-bold uppercase">
             <span>Total Anak Asuh</span>
             <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <i data-lucide="users" className="w-4 h-4"></i>
+              <LucideIcon name="users" className="w-4 h-4" />
             </div>
           </div>
           <div className="text-3xl font-extrabold text-slate-900">{childrenData.length}</div>
@@ -75,7 +75,7 @@ const AdminDashboard = ({
           <div className="flex justify-between items-center text-slate-500 text-xs font-bold uppercase">
             <span>Donasi Bulan Ini</span>
             <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center">
-              <i data-lucide="wallet" className="w-4 h-4"></i>
+              <LucideIcon name="wallet" className="w-4 h-4" />
             </div>
           </div>
           <div className="text-2xl font-extrabold text-emerald-700">
@@ -92,7 +92,7 @@ const AdminDashboard = ({
           <div className="flex justify-between items-center text-slate-500 text-xs font-bold uppercase">
             <span>Stok Logistik Menipis</span>
             <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-              <i data-lucide="alert-triangle" className="w-4 h-4"></i>
+              <LucideIcon name="alert-triangle" className="w-4 h-4" />
             </div>
           </div>
           <div className="text-3xl font-extrabold text-amber-600">{lowStockItems.length} Item</div>
@@ -107,7 +107,7 @@ const AdminDashboard = ({
           <div className="flex justify-between items-center text-slate-500 text-xs font-bold uppercase">
             <span>Pending Kunjungan</span>
             <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
-              <i data-lucide="calendar-clock" className="w-4 h-4"></i>
+              <LucideIcon name="calendar-clock" className="w-4 h-4" />
             </div>
           </div>
           <div className="text-3xl font-extrabold text-blue-600">{pendingVisits.length} Request</div>
@@ -123,7 +123,7 @@ const AdminDashboard = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
           <div className="flex justify-between items-center pb-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
-              <i data-lucide="package-warning" className="w-4 h-4 text-amber-600"></i>
+              <LucideIcon name="package-warning" className="w-4 h-4 text-amber-600" />
               <span>Peringatan Stok Logistik Menipis</span>
             </h3>
             <button
@@ -157,7 +157,7 @@ const AdminDashboard = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
           <div className="flex justify-between items-center pb-3 border-b border-slate-100">
             <h3 className="text-sm font-bold text-slate-800 flex items-center space-x-2">
-              <i data-lucide="clock" className="w-4 h-4 text-blue-600"></i>
+              <LucideIcon name="clock" className="w-4 h-4 text-blue-600" />
               <span>Pengajuan Kunjungan Baru</span>
             </h3>
             <button

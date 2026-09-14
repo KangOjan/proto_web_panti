@@ -50,7 +50,7 @@ const ImpactStats = ({ stats }) => {
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.bgGradient} text-white flex items-center justify-center shadow-lg shadow-emerald-700/20`}>
-                  <i data-lucide={item.icon} className="w-6 h-6"></i>
+                  <LucideIcon name={item.icon} className="w-6 h-6" />
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.badgeColor}`}>
                   {item.unit}

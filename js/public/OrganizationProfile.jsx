@@ -4,19 +4,14 @@ const OrganizationProfile = ({
 }) => {
   const profile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
   const structure = window.INITIAL_SIMK_DATA?.organizationStructure || [];
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  return (
+return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-10">
       
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
         <div className="space-y-3 z-10">
           <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner">
-            <i data-lucide="building-2" className="w-4 h-4 text-emerald-400"></i>
+            <LucideIcon name="building-2" className="w-4 h-4 text-emerald-400" />
             <span>Profil Lembaga & Struktur Kepengurusan</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
@@ -44,7 +39,7 @@ const OrganizationProfile = ({
         <div className="lg:col-span-5 bg-gradient-to-br from-emerald-800 to-teal-900 text-white rounded-3xl p-6 sm:p-8 shadow-sm space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-white/10 text-emerald-300 flex items-center justify-center font-bold">
-              <i data-lucide="compass" className="w-6 h-6"></i>
+              <LucideIcon name="compass" className="w-6 h-6" />
             </div>
             <h3 className="text-xl font-extrabold text-white">Visi Utama Lembaga</h3>
             <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed font-medium">
@@ -68,7 +63,7 @@ const OrganizationProfile = ({
         <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center space-x-3 border-b border-slate-100 pb-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-              <i data-lucide="target" className="w-5 h-5"></i>
+              <LucideIcon name="target" className="w-5 h-5" />
             </div>
             <div>
               <h3 className="text-lg font-extrabold text-slate-900">Misi Pelayanan & Pembinaan</h3>
@@ -214,7 +209,7 @@ const OrganizationProfile = ({
       <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
         <div className="flex items-center space-x-3 border-b border-slate-100 pb-3">
           <div className="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
-            <i data-lucide="file-check-2" className="w-5 h-5"></i>
+            <LucideIcon name="file-check-2" className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-lg font-extrabold text-slate-900">Legalitas & Dokumen Perizinan Resmi</h3>
@@ -254,15 +249,15 @@ const OrganizationProfile = ({
 
             <div className="space-y-3 pt-2 text-xs">
               <div className="flex items-start space-x-3">
-                <i data-lucide="map-pin" className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5"></i>
+                <LucideIcon name="map-pin" className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-slate-200 font-medium">{profile.contactInfo?.address}</span>
               </div>
               <div className="flex items-center space-x-3">
-                <i data-lucide="phone" className="w-5 h-5 text-emerald-400 flex-shrink-0"></i>
+                <LucideIcon name="phone" className="w-5 h-5 text-emerald-400 flex-shrink-0" />
                 <span className="text-slate-200 font-medium">WhatsApp / Telp: {profile.contactInfo?.whatsapp} ({profile.contactInfo?.phone})</span>
               </div>
               <div className="flex items-center space-x-3">
-                <i data-lucide="clock" className="w-5 h-5 text-amber-400 flex-shrink-0"></i>
+                <LucideIcon name="clock" className="w-5 h-5 text-amber-400 flex-shrink-0" />
                 <span className="text-slate-300 font-medium">{profile.contactInfo?.visitingHours}</span>
               </div>
             </div>
@@ -280,7 +275,7 @@ const OrganizationProfile = ({
                 rel="noreferrer"
                 className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition-all flex items-center space-x-1.5"
               >
-                <i data-lucide="message-circle" className="w-4 h-4 text-emerald-400"></i>
+                <LucideIcon name="message-circle" className="w-4 h-4 text-emerald-400" />
                 <span>Hubungi via WhatsApp</span>
               </a>
             </div>
@@ -293,7 +288,7 @@ const OrganizationProfile = ({
               <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
               <div className="relative z-10 text-center space-y-2 p-4">
                 <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-lg animate-bounce">
-                  <i data-lucide="map-pin" className="w-5 h-5"></i>
+                  <LucideIcon name="map-pin" className="w-5 h-5" />
                 </div>
                 <div className="text-xs font-black text-white">Gedung Panti Asuhan Kasih Bunda</div>
                 <div className="text-[10px] text-slate-300">Kebayoran, Jakarta Selatan</div>

@@ -45,7 +45,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
           <div className="bg-emerald-950/80 border border-emerald-700/60 rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-400 uppercase">Transfer Bank</span>
-              <i data-lucide="building-2" className="w-5 h-5 text-emerald-300"></i>
+              <LucideIcon name="building-2" className="w-5 h-5 text-emerald-300" />
             </div>
             
             <div className="space-y-3">
@@ -58,7 +58,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
                   onClick={() => copyToClipboard('8830123456', 'BCA')}
                   className="p-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center space-x-1"
                 >
-                  <i data-lucide={copiedBank === 'BCA' ? 'check' : 'copy'} className="w-4 h-4"></i>
+                  <LucideIcon name={copiedBank === 'BCA' ? 'check' : 'copy'} className="w-4 h-4" />
                   <span>{copiedBank === 'BCA' ? 'Tersalin' : 'Salin'}</span>
                 </button>
               </div>
@@ -72,7 +72,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
                   onClick={() => copyToClipboard('131000998877', 'Mandiri')}
                   className="p-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center space-x-1"
                 >
-                  <i data-lucide={copiedBank === 'Mandiri' ? 'check' : 'copy'} className="w-4 h-4"></i>
+                  <LucideIcon name={copiedBank === 'Mandiri' ? 'check' : 'copy'} className="w-4 h-4" />
                   <span>{copiedBank === 'Mandiri' ? 'Tersalin' : 'Salin'}</span>
                 </button>
               </div>
@@ -85,12 +85,12 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
           <div className="bg-emerald-950/80 border border-emerald-700/60 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-400 uppercase">QRIS All Payment</span>
-              <i data-lucide="qr-code" className="w-5 h-5 text-emerald-300"></i>
+              <LucideIcon name="qr-code" className="w-5 h-5 text-emerald-300" />
             </div>
             
             <div className="bg-white p-3 rounded-xl mx-auto text-center border-2 border-emerald-400/40 max-w-[160px]">
               <div className="w-32 h-32 bg-slate-900 rounded-lg p-2 flex flex-col items-center justify-center text-white text-center">
-                <i data-lucide="qr-code" className="w-20 h-20 text-emerald-400"></i>
+                <LucideIcon name="qr-code" className="w-20 h-20 text-emerald-400" />
                 <span className="text-[10px] font-bold text-slate-300 mt-1">SCAN QRIS HERE</span>
               </div>
             </div>
@@ -104,7 +104,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
           <div className="bg-emerald-950/80 border border-emerald-700/60 rounded-2xl p-6 space-y-4 shadow-xl flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-400 uppercase">e-Wallet & Konfirmasi</span>
-              <i data-lucide="wallet" className="w-5 h-5 text-emerald-300"></i>
+              <LucideIcon name="wallet" className="w-5 h-5 text-emerald-300" />
             </div>
 
             <div className="space-y-2 text-sm">
@@ -122,7 +122,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
               onClick={onOpenDonationModal}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-sm shadow-lg hover:from-orange-600 hover:to-amber-600 transition-all flex items-center justify-center space-x-2"
             >
-              <i data-lucide="send" className="w-4 h-4"></i>
+              <LucideIcon name="send" className="w-4 h-4" />
               <span>Isi Form Konfirmasi Donasi</span>
             </button>
           </div>
@@ -136,7 +136,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
         
         <div className="text-center space-y-3">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
-            <i data-lucide="heart" className="w-3.5 h-3.5 text-orange-600"></i>
+            <LucideIcon name="heart" className="w-3.5 h-3.5 text-orange-600" />
             <span>Program Pendampingan Belajar & Gizi</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -200,7 +200,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
                 <div className="space-y-2 pt-2 border-t border-slate-100 text-xs">
                   <div className="flex items-center justify-between text-slate-600">
                     <span className="flex items-center space-x-1.5 font-medium">
-                      <i data-lucide="sparkles" className="w-3.5 h-3.5 text-amber-500"></i>
+                      <LucideIcon name="sparkles" className="w-3.5 h-3.5 text-amber-500" />
                       <span>Cita-cita:</span>
                     </span>
                     <span className="font-bold text-slate-800">{child.ambition}</span>
@@ -208,7 +208,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
 
                   <div className="flex items-center justify-between text-slate-600">
                     <span className="flex items-center space-x-1.5 font-medium">
-                      <i data-lucide="smile" className="w-3.5 h-3.5 text-emerald-500"></i>
+                      <LucideIcon name="smile" className="w-3.5 h-3.5 text-emerald-500" />
                       <span>Hobi & Minat:</span>
                     </span>
                     <span className="font-bold text-slate-800">{child.hobbies}</span>
@@ -219,12 +219,12 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
                 <div className="pt-2">
                   {child.fosterStatus === 'Ada Orang Tua Asuh' ? (
                     <div className="px-3 py-1.5 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 text-xs font-semibold flex items-center justify-center space-x-1.5">
-                      <i data-lucide="check-circle-2" className="w-4 h-4 text-teal-600"></i>
+                      <LucideIcon name="check-circle-2" className="w-4 h-4 text-teal-600" />
                       <span>Memiliki Orang Tua Asuh</span>
                     </div>
                   ) : (
                     <div className="px-3 py-1.5 rounded-xl bg-orange-50 text-orange-800 border border-orange-200 text-xs font-semibold flex items-center justify-center space-x-1.5">
-                      <i data-lucide="clock" className="w-4 h-4 text-orange-600"></i>
+                      <LucideIcon name="clock" className="w-4 h-4 text-orange-600" />
                       <span>Membutuhkan Orang Tua Asuh</span>
                     </div>
                   )}
@@ -238,7 +238,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
                   onClick={() => onOpenFosterModal(child)}
                   className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors flex items-center justify-center space-x-2"
                 >
-                  <i data-lucide="heart" className="w-4 h-4"></i>
+                  <LucideIcon name="heart" className="w-4 h-4" />
                   <span>Jadi Orang Tua Asuh {child.firstName}</span>
                 </button>
               </div>

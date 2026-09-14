@@ -34,7 +34,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
                 onClick={onOpenDonationModal}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-base shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:from-orange-600 hover:to-amber-600 transform hover:-translate-y-1 transition-all flex items-center justify-center space-x-3"
               >
-                <i data-lucide="heart" className="w-5 h-5 fill-white"></i>
+                <LucideIcon name="heart" className="w-5 h-5 fill-white" />
                 <span>Donasi Sekarang</span>
               </button>
 
@@ -42,7 +42,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
                 onClick={onScrollToVisit}
                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-white text-emerald-800 border-2 border-emerald-600/30 font-bold text-base hover:bg-emerald-50 hover:border-emerald-600 transform hover:-translate-y-1 transition-all flex items-center justify-center space-x-2 shadow-sm"
               >
-                <i data-lucide="calendar-plus" className="w-5 h-5 text-emerald-600"></i>
+                <LucideIcon name="calendar-plus" className="w-5 h-5 text-emerald-600" />
                 <span>Jadwalkan Kunjungan</span>
               </button>
             </div>
@@ -81,7 +81,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
                 <div className="absolute bottom-4 left-4 right-4 p-4 rounded-2xl glass-card text-slate-900 border border-white/40">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-                      <i data-lucide="smile" className="w-6 h-6"></i>
+                      <LucideIcon name="smile" className="w-6 h-6" />
                     </div>
                     <div>
                       <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Senyum Kebersamaan</div>
@@ -94,7 +94,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
               {/* Floating Highlight Card */}
               <div className="absolute -top-6 -left-6 hidden sm:flex items-center space-x-3 p-4 rounded-2xl bg-white shadow-xl border border-slate-100 text-slate-800 animate-pulse-glow">
                 <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center">
-                  <i data-lucide="award" className="w-6 h-6"></i>
+                  <LucideIcon name="award" className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-800">128+ Alumni Mandiri</div>

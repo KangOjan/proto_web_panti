@@ -6,31 +6,90 @@ const LandingPage = ({
   priorityPrograms = window.INITIAL_SIMK_DATA?.priorityPrograms || []
 }) => {
   const profile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
   // Filter active priority programs
-  const activePrograms = priorityPrograms.filter(p => p.isActive !== false);
+  const activePrograms = priorityPrograms.filter(
+    (program) => program.status === 'active'
+  );
+
+  const getCategoryPresentation = (categoryName = '') => {
+    const category = categoryName.toLowerCase();
+
+    if (category.includes('konsumsi')) {
+      return {
+        icon: 'utensils',
+        badge:
+          'bg-amber-100 text-amber-800 border-amber-300',
+        iconClass:
+          'bg-amber-100 text-amber-700',
+      };
+    }
+
+    if (
+      category.includes('pendidikan') ||
+      category.includes('spp') ||
+      category.includes('sekolah') ||
+      category.includes('perlengkapan')
+    ) {
+      return {
+        icon: 'graduation-cap',
+        badge:
+          'bg-emerald-100 text-emerald-800 border-emerald-300',
+        iconClass:
+          'bg-emerald-100 text-emerald-700',
+      };
+    }
+
+    if (
+      category.includes('operasional') ||
+      category.includes('asrama')
+    ) {
+      return {
+        icon: 'home',
+        badge:
+          'bg-teal-100 text-teal-800 border-teal-300',
+        iconClass:
+          'bg-teal-100 text-teal-700',
+      };
+    }
+
+    if (category.includes('kesehatan')) {
+      return {
+        icon: 'heart',
+        badge:
+          'bg-rose-100 text-rose-800 border-rose-300',
+        iconClass:
+          'bg-rose-100 text-rose-700',
+      };
+    }
+
+    return {
+      icon: 'heart-handshake',
+      badge:
+        'bg-indigo-100 text-indigo-800 border-indigo-300',
+      iconClass:
+        'bg-indigo-100 text-indigo-700',
+    };
+  };
 
   const getIconElement = (iconName) => {
     switch (iconName) {
       case 'utensils':
-        return <i data-lucide="utensils" className="w-6 h-6"></i>;
+        return <LucideIcon name="utensils" className="w-6 h-6" />;
       case 'graduation-cap':
-        return <i data-lucide="graduation-cap" className="w-6 h-6"></i>;
+        return <LucideIcon name="graduation-cap" className="w-6 h-6" />;
       case 'home':
-        return <i data-lucide="home" className="w-6 h-6"></i>;
+        return <LucideIcon name="home" className="w-6 h-6" />;
       case 'heart-pulse':
       case 'heart':
-        return <i data-lucide="heart" className="w-6 h-6"></i>;
+        return <LucideIcon name="heart" className="w-6 h-6" />;
       case 'book-open':
-        return <i data-lucide="book-open" className="w-6 h-6"></i>;
+        return <LucideIcon name="book-open" className="w-6 h-6" />;
       case 'laptop':
-        return <i data-lucide="laptop" className="w-6 h-6"></i>;
+        return <LucideIcon name="laptop" className="w-6 h-6" />;
+      case 'heart-handshake':
+        return <LucideIcon name="heart-handshake" className="w-6 h-6" />
       default:
-        return <i data-lucide="sparkles" className="w-6 h-6"></i>;
+        return <LucideIcon name="sparkles" className="w-6 h-6" />;
     }
   };
 
@@ -68,7 +127,7 @@ const LandingPage = ({
         <div className="max-w-7xl mx-auto space-y-4 relative z-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner">
-              <i data-lucide="layers" className="w-4 h-4 text-emerald-400"></i>
+              <LucideIcon name="layers" className="w-4 h-4 text-emerald-400" />
               <span>Program Prioritas Panti Asuhan Kasih Bunda</span>
             </div>
             
@@ -87,7 +146,7 @@ const LandingPage = ({
               onClick={() => onNavigateToDonation('Konsumsi')}
               className="px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
             >
-              <i data-lucide="heart" className="w-5 h-5 fill-slate-950"></i>
+              <LucideIcon name="heart" className="w-5 h-5 fill-slate-950" />
               <span>Donasi Cepat (Bebas Login)</span>
             </button>
 
@@ -95,7 +154,7 @@ const LandingPage = ({
               onClick={onNavigateToProfile}
               className="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/20 text-xs sm:text-sm flex items-center space-x-2 transition-all"
             >
-              <i data-lucide="building-2" className="w-4 h-4 text-emerald-300"></i>
+              <LucideIcon name="building-2" className="w-4 h-4 text-emerald-300" />
               <span>Profil & Struktur Panti</span>
             </button>
           </div>
@@ -105,7 +164,7 @@ const LandingPage = ({
         <div className="max-w-7xl mx-auto space-y-4 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-emerald-300">
-              <i data-lucide="heart-handshake" className="w-4 h-4 text-emerald-400"></i>
+              <LucideIcon name="heart-handshake" className="w-4 h-4 text-emerald-400" />
               <span>Pilihan Program Bantuan Kebutuhan Anak</span>
             </div>
             <span className="text-[11px] text-slate-300 font-medium">Klik tombol donasi pada program yang ingin Anda bantu</span>
@@ -118,9 +177,20 @@ const LandingPage = ({
               </div>
             ) : (
               activePrograms.map((prog) => {
-                const percent = prog.targetAmount > 0 
-                  ? Math.min(100, Math.round(((prog.collectedAmount || 0) / prog.targetAmount) * 100))
-                  : 0;
+                const presentation =
+                  getCategoryPresentation(prog.category);
+
+                const percent =
+                  prog.targetAmount > 0
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          ((prog.collectedAmount || 0) /
+                            prog.targetAmount) *
+                            100
+                        )
+                      )
+                    : 0;
 
                 return (
                   <div 
@@ -129,15 +199,14 @@ const LandingPage = ({
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${
-                          prog.badgeColor === 'amber' ? 'bg-amber-100 text-amber-700' :
-                          prog.badgeColor === 'emerald' ? 'bg-emerald-100 text-emerald-700' :
-                          prog.badgeColor === 'indigo' ? 'bg-indigo-100 text-indigo-700' :
-                          'bg-teal-100 text-teal-700'
-                        }`}>
-                          {getIconElement(prog.icon)}
+                        <div
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${presentation.iconClass}`}
+                        >
+                          {getIconElement(presentation.icon)}
                         </div>
-                        <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border ${getBadgeClass(prog.badgeColor)}`}>
+                        <span
+                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border ${presentation.badge}`}
+                        >
                           {prog.category}
                         </span>
                       </div>
@@ -181,7 +250,7 @@ const LandingPage = ({
         {/* 1.3 INFOGRAFIS JUMLAH & DEMOGRAFI ANAK ASUH */}
         <div className="max-w-7xl mx-auto space-y-4 relative z-10 pt-4 border-t border-white/10">
           <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-            <i data-lucide="bar-chart-3" className="w-4 h-4 text-emerald-400"></i>
+            <LucideIcon name="bar-chart-3" className="w-4 h-4 text-emerald-400" />
             <span>Infografis Anak Asuh & Kebutuhan Harian</span>
           </div>
 
@@ -190,7 +259,7 @@ const LandingPage = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-300">Total Anak Asuh</span>
                 <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
-                  <i data-lucide="users" className="w-5 h-5"></i>
+                  <LucideIcon name="users" className="w-5 h-5" />
                 </span>
               </div>
               <div className="text-3xl font-black text-white">45 Anak</div>
@@ -201,7 +270,7 @@ const LandingPage = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-300">Jenjang Sekolah</span>
                 <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300">
-                  <i data-lucide="graduation-cap" className="w-5 h-5"></i>
+                  <LucideIcon name="graduation-cap" className="w-5 h-5" />
                 </span>
               </div>
               <div className="text-3xl font-black text-white">100% Sekolah</div>
@@ -212,7 +281,7 @@ const LandingPage = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-300">Pemenuhan Konsumsi</span>
                 <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
-                  <i data-lucide="utensils" className="w-5 h-5"></i>
+                  <LucideIcon name="utensils" className="w-5 h-5" />
                 </span>
               </div>
               <div className="text-3xl font-black text-white">135 Porsi/Hari</div>
@@ -223,7 +292,7 @@ const LandingPage = ({
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-300">Akuntabilitas Donasi</span>
                 <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
-                  <i data-lucide="file-check" className="w-5 h-5"></i>
+                  <LucideIcon name="file-check" className="w-5 h-5" />
                 </span>
               </div>
               <div className="text-3xl font-black text-white">PSAK 45</div>
@@ -236,7 +305,7 @@ const LandingPage = ({
         <div className="max-w-7xl mx-auto space-y-4 relative z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-              <i data-lucide="image" className="w-4 h-4 text-emerald-400"></i>
+              <LucideIcon name="image" className="w-4 h-4 text-emerald-400" />
               <span>Hasil Penyaluran Donasi & Aktivitas Nyata Anak Asuh</span>
             </div>
             <span className="text-[11px] text-slate-300 font-medium">Dokumentasi Terverifikasi</span>
@@ -322,7 +391,7 @@ const LandingPage = ({
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-              <i data-lucide="book-marked" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="book-marked" className="w-3.5 h-3.5" />
               <span>Sejarah & Latar Belakang</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -347,13 +416,13 @@ const LandingPage = ({
 
           <div className="lg:col-span-5 bg-slate-50 rounded-3xl p-6 border border-slate-200 space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
-              <i data-lucide="target" className="w-4 h-4 text-emerald-600"></i>
+              <LucideIcon name="target" className="w-4 h-4 text-emerald-600" />
               <span>Pilar Misi Pelayanan Yayasan</span>
             </h3>
             <div className="space-y-2.5 text-xs">
               {profile.missions?.slice(0, 5).map((m, i) => (
                 <div key={i} className="flex items-start space-x-2 text-slate-700">
-                  <i data-lucide="check-circle" className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+                  <LucideIcon name="check-circle" className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{m}</span>
                 </div>
               ))}
@@ -401,7 +470,7 @@ const LandingPage = ({
         {/* Prestasi */}
         <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <i data-lucide="trophy" className="w-5 h-5 text-amber-500"></i>
+            <LucideIcon name="trophy" className="w-5 h-5 text-amber-500" />
             <h3 className="text-base font-extrabold text-slate-900">Prestasi Anak Asuh Panti</h3>
           </div>
           <div className="space-y-3">
@@ -422,7 +491,7 @@ const LandingPage = ({
         {/* Legalitas Ringkas */}
         <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <i data-lucide="shield-check" className="w-5 h-5 text-emerald-600"></i>
+            <LucideIcon name="shield-check" className="w-5 h-5 text-emerald-600" />
             <h3 className="text-base font-extrabold text-slate-900">Legalitas & Akreditasi Lembaga</h3>
           </div>
           <div className="space-y-2.5">
@@ -460,15 +529,15 @@ const LandingPage = ({
 
               <div className="space-y-2.5 text-xs">
                 <div className="flex items-start space-x-3">
-                  <i data-lucide="map-pin" className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5"></i>
+                  <LucideIcon name="map-pin" className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-slate-200">{profile.contactInfo?.address}</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <i data-lucide="phone" className="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                  <LucideIcon name="phone" className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                   <span className="text-slate-200">WhatsApp: {profile.contactInfo?.whatsapp}</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <i data-lucide="mail" className="w-4 h-4 text-emerald-400 flex-shrink-0"></i>
+                  <LucideIcon name="mail" className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                   <span className="text-slate-200">Email: {profile.contactInfo?.email}</span>
                 </div>
               </div>
@@ -486,7 +555,7 @@ const LandingPage = ({
                   rel="noreferrer"
                   className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition-all flex items-center space-x-1.5"
                 >
-                  <i data-lucide="message-circle" className="w-4 h-4 text-emerald-400"></i>
+                  <LucideIcon name="message-circle" className="w-4 h-4 text-emerald-400" />
                   <span>Hubungi via WhatsApp</span>
                 </a>
               </div>
@@ -498,7 +567,7 @@ const LandingPage = ({
                 <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
                 <div className="relative z-10 text-center space-y-1 p-3">
                   <div className="w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-md">
-                    <i data-lucide="map-pin" className="w-4 h-4"></i>
+                    <LucideIcon name="map-pin" className="w-4 h-4" />
                   </div>
                   <div className="text-xs font-black text-white">{profile.name}</div>
                   <div className="text-[10px] text-slate-300">Jakarta Selatan</div>

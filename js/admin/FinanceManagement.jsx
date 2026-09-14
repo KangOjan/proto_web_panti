@@ -54,7 +54,7 @@ const FinanceManagement = ({ financeData, donorData, onOpenAddTrxModal, onToggle
               onClick={onOpenAddTrxModal}
               className="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow transition-colors flex items-center space-x-1"
             >
-              <i data-lucide="plus-circle" className="w-4 h-4"></i>
+              <LucideIcon name="plus-circle" className="w-4 h-4" />
               <span>+ Catat Transaksi</span>
             </button>
           )}
@@ -86,7 +86,7 @@ const FinanceManagement = ({ financeData, donorData, onOpenAddTrxModal, onToggle
           {/* Filter Bar */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+              <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
                 placeholder="Cari uraian transaksi, kategori..."
@@ -159,7 +159,7 @@ const FinanceManagement = ({ financeData, donorData, onOpenAddTrxModal, onToggle
           
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <div className="relative">
-              <i data-lucide="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+              <LucideIcon name="search" className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
                 placeholder="Cari nama donatur, email..."

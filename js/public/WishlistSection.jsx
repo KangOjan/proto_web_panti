@@ -46,14 +46,14 @@ const WishlistSection = ({ wishlistData, onOpenDonationModal }) => {
 
                     {item.urgent && !isCompleted && (
                       <span className="px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-[11px] font-extrabold flex items-center space-x-1">
-                        <i data-lucide="alert-circle" className="w-3.5 h-3.5 text-red-600"></i>
+                        <LucideIcon name="alert-circle" className="w-3.5 h-3.5 text-red-600" />
                         <span>Mendesak</span>
                       </span>
                     )}
 
                     {isCompleted && (
                       <span className="px-2.5 py-1 rounded-full bg-teal-100 text-teal-800 text-[11px] font-extrabold flex items-center space-x-1">
-                        <i data-lucide="check-circle-2" className="w-3.5 h-3.5 text-teal-600"></i>
+                        <LucideIcon name="check-circle-2" className="w-3.5 h-3.5 text-teal-600" />
                         <span>Terpenuhi</span>
                       </span>
                     )}
@@ -107,7 +107,7 @@ const WishlistSection = ({ wishlistData, onOpenDonationModal }) => {
                         : 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md hover:shadow-lg hover:from-orange-600 hover:to-amber-600'
                     }`}
                   >
-                    <i data-lucide={isCompleted ? "check-circle" : "heart"} className="w-4 h-4"></i>
+                    <LucideIcon name={isCompleted ? "check-circle" : "heart"} className="w-4 h-4" />
                     <span>{isCompleted ? "Kebutuhan Terpenuhi" : "Penuhi Kebutuhan Ini"}</span>
                   </button>
                 </div>

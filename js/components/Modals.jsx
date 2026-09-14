@@ -5,8 +5,6 @@ const AddEditTrxModal = ({
   onSubmitTransaction,
   editingTrx = null
 }) => {
-  if (!isOpen) return null;
-
   const [type, setType] = React.useState(editingTrx ? editingTrx.type : 'pemasukan');
   const [date, setDate] = React.useState(editingTrx ? editingTrx.date : new Date().toISOString().split('T')[0]);
   const [amount, setAmount] = React.useState(editingTrx ? editingTrx.amount : 100000);
@@ -27,8 +25,32 @@ const AddEditTrxModal = ({
   const [copiedBank, setCopiedBank] = React.useState(false);
 
   React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
+    if (!isOpen) return;
+
+    const nextType = editingTrx?.type || 'pemasukan';
+
+    setType(nextType);
+    setDate(editingTrx?.date || new Date().toISOString().split('T')[0]);
+    setAmount(editingTrx?.amount ?? 100000);
+    setCategory(
+      editingTrx?.category ||
+        (nextType === 'pemasukan' ? 'Konsumsi' : 'Operasional')
+    );
+    setPartyName(
+      editingTrx?.donorName ||
+        editingTrx?.description ||
+        ''
+    );
+    setPhone(editingTrx?.phone || '');
+    setDescription(editingTrx?.description || '');
+    setPaymentMethod(
+      editingTrx?.paymentMethod?.includes('Transfer') ? 'bank' : 'qris'
+    );
+    setSelectedBank('BSI');
+    setCopiedBank(false);
+  }, [isOpen, editingTrx]);
+
+  if (!isOpen) return null;
 
   const presetAmounts = [50000, 100000, 500000, 1000000];
 
@@ -102,7 +124,7 @@ const AddEditTrxModal = ({
           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white ${
             type === 'pemasukan' ? 'bg-emerald-600' : 'bg-rose-600'
           }`}>
-            <i data-lucide={type === 'pemasukan' ? "arrow-down-left" : "arrow-up-right"} className="w-5 h-5"></i>
+            <LucideIcon name={type === 'pemasukan' ? "arrow-down-left" : "arrow-up-right"} className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-lg font-extrabold text-slate-900">
@@ -129,7 +151,7 @@ const AddEditTrxModal = ({
                   type === 'pemasukan' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <i data-lucide="arrow-down-left" className="w-4 h-4"></i>
+                <LucideIcon name="arrow-down-left" className="w-4 h-4" />
                 <span>Pemasukan (Kas Masuk)</span>
               </button>
 
@@ -140,7 +162,7 @@ const AddEditTrxModal = ({
                   type === 'pengeluaran' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <i data-lucide="arrow-up-right" className="w-4 h-4"></i>
+                <LucideIcon name="arrow-up-right" className="w-4 h-4" />
                 <span>Pengeluaran (Kas Keluar)</span>
               </button>
             </div>
@@ -312,7 +334,7 @@ const AddEditTrxModal = ({
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-extrabold text-sm text-slate-900">Scan QRIS Dinamis</span>
-                    <i data-lucide="qr-code" className="w-6 h-6 text-emerald-600"></i>
+                    <LucideIcon name="qr-code" className="w-6 h-6 text-emerald-600" />
                   </div>
                   <p className="text-[11px] text-slate-500 mt-2 font-medium">
                     Otomatis menyesuaikan nominal donasi (GoPay, OVO, Dana, ShopeePay, m-Banking).
@@ -331,7 +353,7 @@ const AddEditTrxModal = ({
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-extrabold text-sm text-slate-900">Transfer Bank</span>
-                    <i data-lucide="building" className="w-6 h-6 text-emerald-600"></i>
+                    <LucideIcon name="building" className="w-6 h-6 text-emerald-600" />
                   </div>
                   <p className="text-[11px] text-slate-500 mt-2 font-medium">
                     Transfer langsung ke rekening resmi panti asuhan (BSI, Mandiri, BCA).
@@ -412,7 +434,7 @@ const AddEditTrxModal = ({
                 type === 'pemasukan' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
               }`}
             >
-              <i data-lucide="check-circle-2" className="w-4 h-4"></i>
+              <LucideIcon name="check-circle-2" className="w-4 h-4" />
               <span>{editingTrx ? "Simpan Perubahan Transaksi" : "Simpan Transaksi"}</span>
             </button>
           </div>
@@ -436,7 +458,7 @@ const ConfirmDeleteModal = ({
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in no-print">
       <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-          <i data-lucide="alert-triangle" className="w-7 h-7"></i>
+          <LucideIcon name="alert-triangle" className="w-7 h-7" />
         </div>
 
         <div>

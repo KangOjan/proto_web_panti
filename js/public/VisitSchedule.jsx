@@ -47,7 +47,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
         
         <div className="text-center space-y-3">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-            <i data-lucide="calendar-range" className="w-4 h-4 text-emerald-600"></i>
+            <LucideIcon name="calendar-range" className="w-4 h-4 text-emerald-600" />
             <span>Ramah Komunitas & Donatur</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
@@ -65,7 +65,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
             
             <div className="flex items-center space-x-3 pb-4 border-b border-slate-200">
               <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
-                <i data-lucide="file-text" className="w-5 h-5"></i>
+                <LucideIcon name="file-text" className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-800">Formulir Pengajuan Kunjungan</h3>
@@ -75,7 +75,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
 
             {submitted && (
               <div className="p-4 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-sm font-semibold flex items-center space-x-3 animate-fade-in">
-                <i data-lucide="check-circle-2" className="w-6 h-6 text-emerald-700 shrink-0"></i>
+                <LucideIcon name="check-circle-2" className="w-6 h-6 text-emerald-700 shrink-0" />
                 <div>
                   <strong>Pengajuan Berhasil Dikirim!</strong>
                   <p className="text-xs text-emerald-800 font-normal">Tim pengurus PantiAsih Kasih Bunda telah menerima jadwal Anda dan akan menghubungi via WhatsApp/Email.</p>
@@ -188,7 +188,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-lg shadow-emerald-700/25 transition-all flex items-center justify-center space-x-2"
               >
-                <i data-lucide="send" className="w-4 h-4"></i>
+                <LucideIcon name="send" className="w-4 h-4" />
                 <span>Kirim Pengajuan Jadwal Kunjungan</span>
               </button>
             </form>
@@ -201,7 +201,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
             <div className="p-6 rounded-3xl bg-slate-900 text-white shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <h3 className="text-base font-bold flex items-center space-x-2 text-teal-400">
-                  <i data-lucide="calendar" className="w-5 h-5"></i>
+                  <LucideIcon name="calendar" className="w-5 h-5" />
                   <span>Jadwal Terkonfirmasi (Minggu Ini)</span>
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full bg-teal-900 text-teal-300 text-xs font-bold">
@@ -233,7 +233,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
               </div>
 
               <div className="p-3 rounded-xl bg-slate-800/50 text-xs text-slate-400 flex items-center space-x-2 border border-slate-700/50">
-                <i data-lucide="info" className="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <LucideIcon name="info" className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Jadwal di atas sudah disetujui pengurus agar tidak bentrok.</span>
               </div>
             </div>

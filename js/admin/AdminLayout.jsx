@@ -22,12 +22,12 @@ const AdminLayout = ({ activeTab, setActiveTab, setActiveRole, children }) => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 rounded-lg text-slate-300 hover:bg-slate-800"
             >
-              <i data-lucide="menu" className="w-6 h-6"></i>
+              <LucideIcon name="menu" className="w-6 h-6" />
             </button>
 
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-white text-sm">
-                <i data-lucide="shield-check" className="w-5 h-5"></i>
+                <LucideIcon name="shield-check" className="w-5 h-5" />
               </div>
               <span className="font-bold text-base text-white tracking-wide">
                 Portal Admin Pengurus Panti
@@ -45,7 +45,7 @@ const AdminLayout = ({ activeTab, setActiveTab, setActiveRole, children }) => {
               onClick={() => setActiveRole('public')}
               className="px-3.5 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-all flex items-center space-x-1.5 shadow"
             >
-              <i data-lucide="globe" className="w-3.5 h-3.5"></i>
+              <LucideIcon name="globe" className="w-3.5 h-3.5" />
               <span>Ke Tampilan Publik</span>
             </button>
           </div>
@@ -73,7 +73,7 @@ const AdminLayout = ({ activeTab, setActiveTab, setActiveRole, children }) => {
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <i data-lucide={item.icon} className="w-4 h-4"></i>
+                <LucideIcon name={item.icon} className="w-4 h-4" />
                 <span>{item.label}</span>
               </button>
             ))}
@@ -87,7 +87,7 @@ const AdminLayout = ({ activeTab, setActiveTab, setActiveRole, children }) => {
               <div className="flex justify-between items-center pb-2 border-b border-slate-100">
                 <span className="font-bold text-slate-800 text-sm">Navigasi Admin</span>
                 <button onClick={() => setSidebarOpen(false)} className="p-1 rounded text-slate-500">
-                  <i data-lucide="x" className="w-5 h-5"></i>
+                  <LucideIcon name="x" className="w-5 h-5" />
                 </button>
               </div>
 
@@ -104,7 +104,7 @@ const AdminLayout = ({ activeTab, setActiveTab, setActiveRole, children }) => {
                       : 'text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <i data-lucide={item.icon} className="w-4 h-4"></i>
+                  <LucideIcon name={item.icon} className="w-4 h-4" />
                   <span>{item.label}</span>
                 </button>
               ))}

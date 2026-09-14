@@ -5,12 +5,7 @@ const DigitalReceiptModal = ({
   receiptData
 }) => {
   if (!isOpen || !receiptData) return null;
-
-  React.useEffect(() => {
-    if (window.lucide) window.lucide.createIcons();
-  });
-
-  const isIncome = receiptData.type !== 'pengeluaran';
+const isIncome = receiptData.type !== 'pengeluaran';
   const displayPartyName = receiptData.donorName || receiptData.description || 'Hamba Allah / Umum';
   const displayOfficer = receiptData.createdBy || 'Budi Santoso, S.E.';
 
