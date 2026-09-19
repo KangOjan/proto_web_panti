@@ -88,11 +88,21 @@ const App = () => {
   ] = React.useState('login');
 
   const [
-    selectedDonationCategory,
-    setSelectedDonationCategory,
-  ] = React.useState(
-    'Konsumsi'
-  );
+    selectedDonationContext,
+    setSelectedDonationContext,
+  ] = React.useState({
+    allocationCategory:
+      'Konsumsi',
+
+    campaignId:
+      null,
+
+    campaignTitle:
+      null,
+
+    campaignSlug:
+      null,
+  });
 
   /*
   |--------------------------------------------------------------------------
@@ -157,6 +167,58 @@ const App = () => {
       4000
     );
   };
+
+  const openPublicDonation =
+    (
+      contextOrCategory =
+        'Konsumsi'
+    ) => {
+      if (
+        typeof contextOrCategory ===
+        'string'
+      ) {
+        setSelectedDonationContext({
+          allocationCategory:
+            contextOrCategory ||
+            'Konsumsi',
+
+          campaignId:
+            null,
+
+          campaignTitle:
+            null,
+
+          campaignSlug:
+            null,
+        });
+      } else {
+        setSelectedDonationContext({
+          allocationCategory:
+            contextOrCategory
+              ?.allocationCategory ||
+            'Konsumsi',
+
+          campaignId:
+            contextOrCategory
+              ?.campaignId ??
+            null,
+
+          campaignTitle:
+            contextOrCategory
+              ?.campaignTitle ||
+            null,
+
+          campaignSlug:
+            contextOrCategory
+              ?.campaignSlug ||
+            null,
+        });
+      }
+
+      setActiveTab(
+        'public-donation'
+      );
+    };
 
   const getCurrentUserName =
     () => {
@@ -1347,18 +1409,9 @@ const App = () => {
         {activeTab ===
           'beranda' && (
           <LandingPage
-            onNavigateToDonation={(
-              category
-            ) => {
-              setSelectedDonationCategory(
-                category ||
-                  'Konsumsi'
-              );
-
-              setActiveTab(
-                'public-donation'
-              );
-            }}
+            onNavigateToDonation={
+              openPublicDonation
+            }
 
             onNavigateToLogin={
               () => {
@@ -1388,26 +1441,17 @@ const App = () => {
         {activeTab ===
           'profil' && (
           <OrganizationProfile
-            onNavigateToDonation={(
-              category
-            ) => {
-              setSelectedDonationCategory(
-                category ||
-                  'Konsumsi'
-              );
-
-              setActiveTab(
-                'public-donation'
-              );
-            }}
+            onNavigateToDonation={
+              openPublicDonation
+            }
           />
         )}
 
         {activeTab ===
           'public-donation' && (
           <PublicDonation
-            initialCategory={
-              selectedDonationCategory
+            donationContext={
+              selectedDonationContext
             }
 
             onSubmitPublicDonation={

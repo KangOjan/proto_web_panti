@@ -235,7 +235,25 @@ const LandingPage = ({
                     </div>
 
                     <button
-                      onClick={() => onNavigateToDonation(prog.category)}
+                      onClick={() =>
+                        onNavigateToDonation({
+                          allocationCategory:
+                            prog.category ||
+                            'Lainnya',
+
+                          campaignId:
+                            prog.id ??
+                            null,
+
+                          campaignTitle:
+                            prog.title ||
+                            null,
+
+                          campaignSlug:
+                            prog.slug ||
+                            null,
+                        })
+                      }
                       className="w-full py-3 bg-slate-900 hover:bg-emerald-700 hover:shadow-lg text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center space-x-1"
                     >
                       <span>Donasi {prog.category} Sekarang →</span>

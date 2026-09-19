@@ -1,28 +1,86 @@
 // Public Donation Portal Component (User Umum - Tanpa Login)
 const PublicDonation = ({
   onSubmitPublicDonation,
-  initialCategory
+  donationContext = null,
 }) => {
-  const [donorName, setDonorName] = React.useState('');
-  const [amount, setAmount] = React.useState(100000);
-  const [category, setCategory] = React.useState(initialCategory || 'Konsumsi');
-  const [phone, setPhone] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [note, setNote] = React.useState('');
+  const initialCategory =
+    donationContext
+      ?.allocationCategory ||
+    'Konsumsi';
 
-  // Payment Method: 'bank' | 'qris'
-  const [paymentMethod, setPaymentMethod] = React.useState('qris');
-  const [selectedBank, setSelectedBank] = React.useState('BSI');
+  const [
+    donorName,
+    setDonorName,
+  ] = React.useState('');
+
+  const [
+    amount,
+    setAmount,
+  ] = React.useState(
+    100000
+  );
+
+  const [
+    category,
+    setCategory,
+  ] = React.useState(
+    initialCategory
+  );
+
+  const [
+    phone,
+    setPhone,
+  ] = React.useState('');
+
+  const [
+    email,
+    setEmail,
+  ] = React.useState('');
+
+  const [
+    note,
+    setNote,
+  ] = React.useState('');
+
+  // Payment Method:
+  // 'bank' | 'qris'
+  const [
+    paymentMethod,
+    setPaymentMethod,
+  ] = React.useState(
+    'qris'
+  );
+
+  const [
+    selectedBank,
+    setSelectedBank,
+  ] = React.useState(
+    'BSI'
+  );
 
   // Verification & State
-  const [isVerifying, setIsVerifying] = React.useState(false);
-  const [copiedBank, setCopiedBank] = React.useState(false);
+  const [
+    isVerifying,
+    setIsVerifying,
+  ] = React.useState(false);
 
-  React.useEffect(() => {
-    if (initialCategory) {
-      setCategory(initialCategory);
-    }
-  }, [initialCategory]);
+  const [
+    copiedBank,
+    setCopiedBank,
+  ] = React.useState(false);
+
+  React.useEffect(
+    () => {
+      setCategory(
+        donationContext
+          ?.allocationCategory ||
+        'Konsumsi'
+      );
+    },
+    [
+      donationContext,
+    ]
+  );
 // Preset Amounts (Exactly 4 items: Rp 50.000, Rp 100.000, Rp 500.000, Rp 1.000.000)
   const presetAmounts = [50000, 100000, 500000, 1000000];
 
@@ -50,16 +108,45 @@ const PublicDonation = ({
     // Simulate real-time payment gateway verification delay (1.8s)
     setTimeout(() => {
       setIsVerifying(false);
-      
+
       const donationData = {
         donorName,
-        amount: parseFloat(amount),
+
+        amount:
+          parseFloat(
+            amount
+          ),
+
         category,
+
+        campaignId:
+          donationContext
+            ?.campaignId ??
+          null,
+
+        campaignTitle:
+          donationContext
+            ?.campaignTitle ||
+          null,
+
+        campaignSlug:
+          donationContext
+            ?.campaignSlug ||
+          null,
+
         phone,
         email,
         note,
-        paymentMethod: paymentMethod === 'qris' ? 'Scan QRIS Dinamis' : `Transfer Bank (${selectedBank})`,
-        bankDetail: paymentMethod === 'bank' ? banks[selectedBank] : null
+
+        paymentMethod:
+          paymentMethod === 'qris'
+            ? 'Scan QRIS Dinamis'
+            : `Transfer Bank (${selectedBank})`,
+
+        bankDetail:
+          paymentMethod === 'bank'
+            ? banks[selectedBank]
+            : null,
       };
 
       onSubmitPublicDonation(donationData);
@@ -68,7 +155,7 @@ const PublicDonation = ({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in space-y-8">
-      
+
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -90,8 +177,39 @@ const PublicDonation = ({
 
       {/* Main Form Container */}
       <form onSubmit={handleProcessDonation} className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
-        
-        {/* Section 1: Data Donatur & Nominal (Re-designed Layout) */}
+
+
+        {donationContext?.campaignId && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <LucideIcon
+                  name="heart-handshake"
+                  className="h-5 w-5"
+                />
+              </div>
+
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                  Donasi untuk Program
+                </div>
+
+                <div className="mt-0.5 text-sm font-extrabold text-slate-900">
+                  {
+                    donationContext
+                      .campaignTitle
+                  }
+                </div>
+
+                <div className="mt-1 text-xs text-slate-600">
+                  Alokasi donasi mengikuti kategori program ini.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+{/* Section 1: Data Donatur & Nominal (Re-designed Layout) */}
         <div className="space-y-5">
           <h3 className="text-sm font-extrabold text-slate-900 border-b border-slate-100 pb-2 flex items-center space-x-2">
             <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs flex items-center justify-center font-black">1</span>
@@ -120,8 +238,18 @@ const PublicDonation = ({
               </label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-bold bg-white text-emerald-950"
+                onChange={(e) =>
+                  setCategory(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  Boolean(
+                    donationContext
+                      ?.campaignId
+                  )
+                }
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-bold bg-white text-emerald-950 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
               >
                 <option value="Konsumsi">Pemenuhan Konsumsi & Gizi Harian</option>
                 <option value="SPP/Pendidikan">Beasiswa SPP & Seragam Sekolah</option>
@@ -135,7 +263,7 @@ const PublicDonation = ({
 
           {/* Row 2: Nominal Donasi (Left, 50%) & No HP/WhatsApp (Right, 50%) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-            
+
             {/* Left Column: Nominal Donasi with 4 Preset Buttons (2 per row grid) */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
