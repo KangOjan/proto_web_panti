@@ -143,20 +143,27 @@
   <!--
     Runtime configuration.
 
-    API URL is public configuration,
-    NOT a secret.
-
-    Midtrans Server Key and other
-    server-side credentials MUST NEVER
-    be stored here.
+    API URL and Midtrans Client Key are public client configuration.
+    Midtrans Server Key MUST NEVER be stored in the frontend.
   -->
   <script>
     window.SIMK_CONFIG =
       Object.freeze({
         API_BASE_URL:
-          'http://127.0.0.1:8000/api/v1'
+          'http://127.0.0.1:8000/api/v1',
+
+        MIDTRANS_ENVIRONMENT:
+          'sandbox',
+
+        MIDTRANS_CLIENT_KEY:
+          'SB-Mid-client-PJlSZds48c8OdeaW'
       });
   </script>
+
+  <!-- Midtrans Snap loader -->
+  <script
+    src="js/payments/midtransSnap.js?v=1.0"
+  ></script>
 
   <!-- Backend API Layer -->
   <script
@@ -255,7 +262,7 @@
 
   <script
     type="text/babel"
-    src="js/admin/PublicDonation.jsx?v=5.0"
+    src="js/admin/PublicDonation.jsx?v=5.1"
   ></script>
 
   <!-- Application -->

@@ -68,6 +68,16 @@ const PublicDonation = ({
     setPaymentSession,
   ] = React.useState(null);
 
+  const [
+    snapOpening,
+    setSnapOpening,
+  ] = React.useState(false);
+
+  const [
+    snapMessage,
+    setSnapMessage,
+  ] = React.useState(null);
+
   React.useEffect(
     () => {
       setCategory(
@@ -85,6 +95,14 @@ const PublicDonation = ({
       );
 
       setPaymentSession(
+        null
+      );
+
+      setSnapOpening(
+        false
+      );
+
+      setSnapMessage(
         null
       );
     },
@@ -106,6 +124,126 @@ const PublicDonation = ({
       createdDonation
     );
 
+  const refreshPaymentStatus =
+    async (paymentPublicId) => {
+      try {
+        const response =
+          await PaymentApi
+            .getStatus(
+              paymentPublicId
+            );
+
+        const payment =
+          response?.data;
+
+        if (payment) {
+          setPaymentSession(
+            payment
+          );
+        }
+
+        return payment;
+      } catch (error) {
+        console.error(
+          'Payment status refresh failed:',
+          error
+        );
+
+      return null;
+    }
+  };
+
+  const openSnap =
+    async (payment) => {
+      if (
+        !payment?.snap_token
+      ) {
+        setSubmissionError(
+          'Snap token pembayaran tidak tersedia.'
+        );
+
+        return;
+      }
+
+      try {
+        setSnapOpening(
+          true
+        );
+
+        setSubmissionError(
+          null
+        );
+
+        setSnapMessage(
+          null
+        );
+
+        await MidtransSnap.pay(
+          payment.snap_token,
+          {
+            onSuccess:
+              async () => {
+                setSnapMessage(
+                  'Pembayaran selesai di Midtrans. Sistem sedang mengonfirmasi status dari backend.'
+                );
+
+                await refreshPaymentStatus(
+                  payment.public_id
+                );
+              },
+
+            onPending:
+              async () => {
+                setSnapMessage(
+                  'Instruksi pembayaran telah dibuat. Status pembayaran masih menunggu penyelesaian.'
+                );
+
+                await refreshPaymentStatus(
+                  payment.public_id
+                );
+              },
+
+            onError:
+              async () => {
+                setSubmissionError(
+                  'Midtrans melaporkan kegagalan pembayaran.'
+                );
+
+                await refreshPaymentStatus(
+                  payment.public_id
+                );
+              },
+
+            onClose:
+              () => {
+                setSnapMessage(
+                  'Popup pembayaran ditutup. Anda dapat membuka kembali sesi pembayaran.'
+                );
+              },
+          }
+        );
+      } catch (error) {
+        console.error(
+          'Failed to open Midtrans Snap:',
+          error
+        );
+
+        setSubmissionError(
+          error?.message ||
+            'Gagal membuka Midtrans Snap.'
+        );
+      } finally {
+        setSnapOpening(
+          false
+        );
+      }
+    };
+
+  /*
+  |--------------------------------------------------------------------------
+  | Submission Handlers
+  |--------------------------------------------------------------------------
+  */
   const handleProcessDonation =
     async (event) => {
       event.preventDefault();
@@ -143,6 +281,10 @@ const PublicDonation = ({
       );
 
       setSubmissionError(
+        null
+      );
+
+      setSnapMessage(
         null
       );
 
@@ -203,6 +345,10 @@ const PublicDonation = ({
         }
 
         setPaymentSession(
+          result.payment
+        );
+
+        await openSnap(
           result.payment
         );
       } catch (error) {
@@ -516,8 +662,23 @@ const PublicDonation = ({
                   </div>
 
                   <div className="pt-1 text-[11px] text-emerald-800">
-                    Tahap berikutnya akan membuka Snap Midtrans. Status ini belum berarti donasi telah dibayar.
+                    Gunakan popup Midtrans untuk menyelesaikan pembayaran. Status browser tidak menjadi bukti pembayaran final.
                   </div>
+
+                  <button
+                    type="button"
+                    disabled={snapOpening}
+                    onClick={() =>
+                      openSnap(
+                        paymentSession
+                      )
+                    }
+                    className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {snapOpening
+                      ? 'Membuka Midtrans...'
+                      : 'Buka Pembayaran Midtrans'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -526,6 +687,12 @@ const PublicDonation = ({
 
         {/* SUBMISSION STATUS & BUTTON */}
         <div className="space-y-3 pt-4 border-t border-slate-100">
+          {snapMessage && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs font-semibold text-blue-900">
+              {snapMessage}
+            </div>
+          )}
+
           {submissionError && (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-900">
               <div className="flex items-start gap-2">
