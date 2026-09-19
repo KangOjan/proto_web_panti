@@ -92,7 +92,7 @@ const App = () => {
     setSelectedDonationContext,
   ] = React.useState({
     allocationCategory:
-      'Konsumsi',
+      'konsumsi',
 
     campaignId:
       null,
@@ -168,6 +168,80 @@ const App = () => {
     );
   };
 
+  const mapCampaignCategoryToDonationAllocation =
+    (categoryName = '') => {
+      const normalized =
+        String(categoryName)
+          .trim()
+          .toLowerCase();
+
+      if (
+        normalized.includes(
+          'kebutuhan harian'
+        ) ||
+        normalized.includes(
+          'konsumsi'
+        ) ||
+        normalized.includes(
+          'gizi'
+        )
+      ) {
+        return 'konsumsi';
+      }
+
+      if (
+        normalized.includes(
+          'perlengkapan anak'
+        ) ||
+        normalized.includes(
+          'pendidikan'
+        ) ||
+        normalized.includes(
+          'spp'
+        ) ||
+        normalized.includes(
+          'sekolah'
+        )
+      ) {
+        return 'spp_pendidikan';
+      }
+
+      if (
+        normalized.includes(
+          'operasional'
+        ) ||
+        normalized.includes(
+          'asrama'
+        )
+      ) {
+        return 'operasional';
+      }
+
+      if (
+        normalized.includes(
+          'donasi rutin'
+        ) ||
+        normalized.includes(
+          'rutin'
+        )
+      ) {
+        return 'donasi_rutin';
+      }
+
+      if (
+        normalized.includes(
+          'infak'
+        ) ||
+        normalized.includes(
+          'zakat'
+        )
+      ) {
+        return 'infak_zakat';
+      }
+
+      return 'lainnya';
+    };
+
   const openPublicDonation =
     (
       contextOrCategory =
@@ -179,8 +253,9 @@ const App = () => {
       ) {
         setSelectedDonationContext({
           allocationCategory:
-            contextOrCategory ||
-            'Konsumsi',
+            mapCampaignCategoryToDonationAllocation(
+              contextOrCategory
+            ),
 
           campaignId:
             null,
@@ -194,9 +269,13 @@ const App = () => {
       } else {
         setSelectedDonationContext({
           allocationCategory:
-            contextOrCategory
-              ?.allocationCategory ||
-            'Konsumsi',
+            mapCampaignCategoryToDonationAllocation(
+              contextOrCategory
+                ?.campaignCategory ||
+              contextOrCategory
+                ?.allocationCategory ||
+              ''
+            ),
 
           campaignId:
             contextOrCategory

@@ -6,7 +6,7 @@ const PublicDonation = ({
   const initialCategory =
     donationContext
       ?.allocationCategory ||
-    'Konsumsi';
+    'konsumsi';
 
   const [
     donorName,
@@ -74,7 +74,7 @@ const PublicDonation = ({
       setCategory(
         donationContext
           ?.allocationCategory ||
-        'Konsumsi'
+        'konsumsi'
       );
     },
     [
@@ -251,12 +251,24 @@ const PublicDonation = ({
                 }
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-bold bg-white text-emerald-950 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
               >
-                <option value="Konsumsi">Pemenuhan Konsumsi & Gizi Harian</option>
-                <option value="SPP/Pendidikan">Beasiswa SPP & Seragam Sekolah</option>
-                <option value="Operasional">Operasional & Fasilitas Asrama</option>
-                <option value="Donasi Rutin">Donasi Rutin Operasional Anak</option>
-                <option value="Infak/Zakat">Infak / Zakat Maal</option>
-                <option value="Lainnya">Donasi Insidental / Sedekah Umum</option>
+                <option value="konsumsi">
+                  Pemenuhan Konsumsi & Gizi Harian
+                </option>
+                <option value="spp_pendidikan">
+                  Beasiswa SPP & Seragam Sekolah
+                </option>
+                <option value="operasional">
+                  Operasional & Fasilitas Asrama
+                </option>
+                <option value="donasi_rutin">
+                  Donasi Rutin Operasional Anak
+                </option>
+                <option value="infak_zakat">
+                  Infak / Zakat Maal
+                </option>
+                <option value="lainnya">
+                  Donasi Insidental / Sedekah Umum
+                </option>
               </select>
             </div>
           </div>
