@@ -1086,22 +1086,128 @@ const App = () => {
   | Public Donation
   |--------------------------------------------------------------------------
   |
-  | Tidak membuat transaksi finansial palsu.
-  | Aktivasi dilakukan pada Phase 3 + Phase 4.
+  | Donation dibuat terlebih dahulu di backend.
+  | Payment initiation kemudian memakai public_id donation tersebut.
+  | Jika payment initiation gagal setelah donation tercatat, retry memakai
+  | donation yang sama agar tidak membuat duplicate donation record.
   |
   */
 
   const handlePublicDonationSubmit =
-    () => {
-      showToast(
-        'Donasi online belum diaktifkan. Modul ini akan menggunakan backend Donation dan Midtrans pada Phase 3 dan Phase 4.',
-        'info'
-      );
+    async (
+      donationData,
+      existingDonation = null
+    ) => {
+      let donation =
+        existingDonation;
 
-      return {
-        success: false,
-        integrationPending: true,
-      };
+      try {
+        if (!donation?.public_id) {
+          const donationPayload = {
+            campaign_id:
+              donationData
+                .campaignId ??
+              null,
+
+            allocation_category:
+              donationData.category,
+
+            donor_name:
+              donationData
+                .donorName
+                .trim(),
+
+            phone:
+              donationData.phone
+                ?.trim() ||
+              null,
+
+            email:
+              donationData.email
+                ?.trim() ||
+              null,
+
+            amount:
+              Number(
+                donationData.amount
+              ),
+
+            note:
+              donationData.note
+                ?.trim() ||
+              null,
+
+            publish_identity:
+              false,
+          };
+
+          const donationResponse =
+            await DonationApi
+              .createPublicDonation(
+                donationPayload
+              );
+
+          donation =
+            donationResponse?.data;
+
+          if (!donation?.public_id) {
+            throw new Error(
+              'Server tidak mengembalikan public ID donasi.'
+            );
+          }
+        }
+
+        const paymentResponse =
+          await PaymentApi
+            .initiate(
+              donation.public_id
+            );
+
+        const payment =
+          paymentResponse?.data;
+
+        if (!payment?.public_id) {
+          throw new Error(
+            'Server tidak mengembalikan public ID pembayaran.'
+          );
+        }
+
+        showToast(
+          'Donasi tercatat dan sesi pembayaran Midtrans berhasil dibuat. Pembayaran belum dianggap lunas sebelum dikonfirmasi backend.',
+          'success'
+        );
+
+        return {
+          success: true,
+          donation,
+          payment,
+        };
+      } catch (error) {
+        console.error(
+          'Public donation submission failed:',
+          error
+        );
+
+        const message =
+          error?.message ||
+          'Gagal menyiapkan donasi dan sesi pembayaran.';
+
+        showToast(
+          message,
+          'rose'
+        );
+
+        return {
+          success: false,
+          donation,
+          payment:
+            null,
+          message,
+          errors:
+            error?.errors ||
+            null,
+        };
+      }
     };
 
   const handlePrintTransactionReceipt =
