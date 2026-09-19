@@ -78,6 +78,14 @@ const PublicDonation = ({
     setSnapMessage,
   ] = React.useState(null);
 
+  const [
+    statusChecking,
+    setStatusChecking,
+  ] = React.useState(false);
+
+  const confirmationRunRef =
+    React.useRef(0);
+
   React.useEffect(
     () => {
       setCategory(
@@ -105,6 +113,12 @@ const PublicDonation = ({
       setSnapMessage(
         null
       );
+
+      setStatusChecking(
+        false
+      );
+
+      confirmationRunRef.current += 1;
     },
     [
       donationContext,
@@ -124,6 +138,26 @@ const PublicDonation = ({
       createdDonation
     );
 
+  const terminalPaymentStatuses =
+    new Set([
+      'paid',
+      'failed',
+      'expired',
+      'cancelled',
+    ]);
+
+  const sleep = (
+    milliseconds
+  ) =>
+    new Promise(
+      (resolve) => {
+        window.setTimeout(
+          resolve,
+          milliseconds
+        );
+      }
+    );
+
   const refreshPaymentStatus =
     async (paymentPublicId) => {
       try {
@@ -138,7 +172,23 @@ const PublicDonation = ({
 
         if (payment) {
           setPaymentSession(
-            payment
+            (currentPayment) => ({
+              ...currentPayment,
+              ...payment,
+
+              snap_token:
+                currentPayment
+                  ?.snap_token ||
+                payment.snap_token ||
+                null,
+
+              snap_redirect_url:
+                currentPayment
+                  ?.snap_redirect_url ||
+                payment
+                  .snap_redirect_url ||
+                null,
+            })
           );
         }
 
@@ -149,9 +199,149 @@ const PublicDonation = ({
           error
         );
 
-      return null;
-    }
-  };
+        return null;
+      }
+    };
+
+  const confirmPaymentStatus =
+    async (
+      paymentPublicId,
+      {
+        maxAttempts = 5,
+        intervalMs = 1500,
+      } = {}
+    ) => {
+      const runId =
+        confirmationRunRef
+          .current + 1;
+
+      confirmationRunRef.current =
+        runId;
+
+      setStatusChecking(
+        true
+      );
+
+      let latestPayment =
+        null;
+
+      try {
+        for (
+          let attempt = 1;
+          attempt <=
+          maxAttempts;
+          attempt++
+        ) {
+          if (
+            confirmationRunRef
+              .current !==
+            runId
+          ) {
+            return latestPayment;
+          }
+
+          latestPayment =
+            await refreshPaymentStatus(
+              paymentPublicId
+            );
+
+          const status =
+            latestPayment?.status;
+
+          if (
+            status &&
+            terminalPaymentStatuses
+              .has(status)
+          ) {
+            if (
+              status ===
+              'paid'
+            ) {
+              setSnapMessage(
+                'Pembayaran telah terkonfirmasi oleh backend.'
+              );
+
+              setSubmissionError(
+                null
+              );
+            } else {
+              setSnapMessage(
+                null
+              );
+
+              setSubmissionError(
+                `Status pembayaran dari backend: ${status}.`
+              );
+            }
+
+            return latestPayment;
+          }
+
+          if (
+            attempt <
+            maxAttempts
+          ) {
+            await sleep(
+              intervalMs
+            );
+          }
+        }
+
+        if (
+          confirmationRunRef
+            .current ===
+          runId
+        ) {
+          const status =
+            latestPayment
+              ?.status ||
+            'pending';
+
+          setSnapMessage(
+            `Status backend masih ${status}. Pembayaran belum dianggap final. Anda dapat memperbarui status kembali beberapa saat lagi.`
+          );
+        }
+
+        return latestPayment;
+      } finally {
+        if (
+          confirmationRunRef
+            .current ===
+          runId
+        ) {
+          setStatusChecking(
+            false
+          );
+        }
+      }
+    };
+
+  const handleManualStatusRefresh =
+    async () => {
+      if (
+        !paymentSession
+          ?.public_id ||
+        statusChecking
+      ) {
+        return;
+      }
+
+      setSubmissionError(
+        null
+      );
+
+      setSnapMessage(
+        'Memeriksa status pembayaran dari backend...'
+      );
+
+      await confirmPaymentStatus(
+        paymentSession.public_id,
+        {
+          maxAttempts: 3,
+          intervalMs: 1500,
+        }
+      );
+    };
 
   const openSnap =
     async (payment) => {
@@ -184,33 +374,45 @@ const PublicDonation = ({
             onSuccess:
               async () => {
                 setSnapMessage(
-                  'Pembayaran selesai di Midtrans. Sistem sedang mengonfirmasi status dari backend.'
+                  'Midtrans menerima proses pembayaran. Sistem sedang menunggu konfirmasi authoritative dari backend.'
                 );
 
-                await refreshPaymentStatus(
-                  payment.public_id
+                await confirmPaymentStatus(
+                  payment.public_id,
+                  {
+                    maxAttempts: 6,
+                    intervalMs: 1500,
+                  }
                 );
               },
 
             onPending:
               async () => {
                 setSnapMessage(
-                  'Instruksi pembayaran telah dibuat. Status pembayaran masih menunggu penyelesaian.'
+                  'Instruksi pembayaran telah dibuat. Sistem sedang mengecek status terbaru dari backend.'
                 );
 
-                await refreshPaymentStatus(
-                  payment.public_id
+                await confirmPaymentStatus(
+                  payment.public_id,
+                  {
+                    maxAttempts: 3,
+                    intervalMs: 1500,
+                  }
                 );
               },
 
             onError:
               async () => {
                 setSubmissionError(
-                  'Midtrans melaporkan kegagalan pembayaran.'
+                  'Midtrans melaporkan kegagalan pada proses pembayaran. Sistem akan mengecek status backend.'
                 );
 
-                await refreshPaymentStatus(
-                  payment.public_id
+                await confirmPaymentStatus(
+                  payment.public_id,
+                  {
+                    maxAttempts: 2,
+                    intervalMs: 1000,
+                  }
                 );
               },
 
@@ -230,7 +432,7 @@ const PublicDonation = ({
 
         setSubmissionError(
           error?.message ||
-            'Gagal membuka Midtrans Snap.'
+          'Gagal membuka Midtrans Snap.'
         );
       } finally {
         setSnapOpening(
@@ -287,6 +489,12 @@ const PublicDonation = ({
       setSnapMessage(
         null
       );
+
+      setStatusChecking(
+        false
+      );
+
+      confirmationRunRef.current += 1;
 
       const donationData = {
         donorName:
@@ -367,6 +575,20 @@ const PublicDonation = ({
         );
       }
     };
+
+  const paymentStatus =
+    paymentSession
+      ?.status ||
+    null;
+
+  const paymentIsPaid =
+    paymentStatus ===
+    'paid';
+
+  const paymentIsTerminal =
+    paymentStatus !== null &&
+    terminalPaymentStatuses
+      .has(paymentStatus);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in space-y-8">
@@ -631,54 +853,136 @@ const PublicDonation = ({
           )}
 
           {paymentSession && (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div
+              className={`rounded-2xl border p-4 ${
+                paymentIsPaid
+                  ? 'border-emerald-300 bg-emerald-50'
+                  : paymentIsTerminal
+                  ? 'border-rose-200 bg-rose-50'
+                  : 'border-emerald-200 bg-emerald-50'
+              }`}
+            >
               <div className="flex items-start gap-3">
                 <LucideIcon
-                  name="check-circle-2"
-                  className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-700"
+                  name={
+                    paymentIsPaid
+                      ? 'badge-check'
+                      : paymentIsTerminal
+                      ? 'circle-alert'
+                      : 'check-circle-2'
+                  }
+                  className={`mt-0.5 h-5 w-5 flex-shrink-0 ${
+                    paymentIsPaid
+                      ? 'text-emerald-700'
+                      : paymentIsTerminal
+                      ? 'text-rose-700'
+                      : 'text-emerald-700'
+                  }`}
                 />
 
-                <div className="min-w-0 space-y-1">
-                  <div className="text-sm font-extrabold text-emerald-950">
-                    Sesi pembayaran berhasil dibuat
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div
+                    className={`text-sm font-extrabold ${
+                      paymentIsTerminal &&
+                      !paymentIsPaid
+                        ? 'text-rose-950'
+                        : 'text-emerald-950'
+                    }`}
+                  >
+                    {paymentIsPaid
+                      ? 'Pembayaran terkonfirmasi'
+                      : paymentIsTerminal
+                      ? 'Sesi pembayaran berakhir'
+                      : 'Sesi pembayaran berhasil dibuat'}
                   </div>
 
-                  <div className="break-all text-[11px] text-emerald-900">
+                  <div className="break-all text-[11px] text-slate-700">
                     Donation ID: {createdDonation?.public_id || '-'}
                   </div>
 
-                  <div className="break-all text-[11px] text-emerald-900">
+                  <div className="break-all text-[11px] text-slate-700">
                     Payment ID: {paymentSession?.public_id || '-'}
                   </div>
 
                   {paymentSession?.order_id && (
-                    <div className="break-all text-[11px] text-emerald-900">
+                    <div className="break-all text-[11px] text-slate-700">
                       Order ID: {paymentSession.order_id}
                     </div>
                   )}
 
-                  <div className="text-[11px] font-bold text-emerald-800">
-                    Status: {paymentSession?.status || 'pending'}
-                  </div>
-
-                  <div className="pt-1 text-[11px] text-emerald-800">
-                    Gunakan popup Midtrans untuk menyelesaikan pembayaran. Status browser tidak menjadi bukti pembayaran final.
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={snapOpening}
-                    onClick={() =>
-                      openSnap(
-                        paymentSession
-                      )
-                    }
-                    className="mt-3 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  <div
+                    className={`text-[11px] font-black ${
+                      paymentIsPaid
+                        ? 'text-emerald-800'
+                        : paymentIsTerminal
+                        ? 'text-rose-800'
+                        : 'text-amber-800'
+                    }`}
                   >
-                    {snapOpening
-                      ? 'Membuka Midtrans...'
-                      : 'Buka Pembayaran Midtrans'}
-                  </button>
+                    Status backend: {paymentStatus || 'pending'}
+                  </div>
+
+                  {statusChecking && (
+                    <div className="flex items-center gap-2 pt-1 text-[11px] font-bold text-blue-800">
+                      <LucideIcon
+                        name="loader-2"
+                        className="h-3.5 w-3.5 animate-spin"
+                      />
+
+                      <span>
+                        Mengonfirmasi status dari backend...
+                      </span>
+                    </div>
+                  )}
+
+                  {!paymentIsTerminal && (
+                    <>
+                      <div className="pt-1 text-[11px] text-emerald-800">
+                        Gunakan popup Midtrans untuk menyelesaikan pembayaran. Status final hanya mengikuti backend.
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          disabled={
+                            snapOpening ||
+                            statusChecking
+                          }
+                          onClick={() =>
+                            openSnap(
+                              paymentSession
+                            )
+                          }
+                          className="w-full rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {snapOpening
+                            ? 'Membuka Midtrans...'
+                            : 'Buka Pembayaran Midtrans'}
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={
+                            statusChecking
+                          }
+                          onClick={
+                            handleManualStatusRefresh
+                          }
+                          className="w-full rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-xs font-extrabold text-blue-800 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {statusChecking
+                            ? 'Memeriksa Status...'
+                            : 'Perbarui Status'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {paymentIsPaid && (
+                    <div className="pt-2 text-xs font-bold text-emerald-800">
+                      Donasi telah dikonfirmasi lunas oleh backend.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -731,7 +1035,11 @@ const PublicDonation = ({
               disabled={Boolean(paymentSession)}
               className={`w-full py-4 rounded-2xl font-black text-sm shadow-xl flex items-center justify-center space-x-2 transition-all ${
                 paymentSession
-                  ? 'bg-emerald-100 text-emerald-800 cursor-not-allowed shadow-none'
+                  ? paymentIsPaid
+                    ? 'bg-emerald-100 text-emerald-800 cursor-not-allowed shadow-none'
+                    : paymentIsTerminal
+                    ? 'bg-rose-100 text-rose-800 cursor-not-allowed shadow-none'
+                    : 'bg-emerald-100 text-emerald-800 cursor-not-allowed shadow-none'
                   : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-600/20 transform hover:-translate-y-0.5'
               }`}
             >
@@ -745,7 +1053,11 @@ const PublicDonation = ({
               />
 
               <span>
-                {paymentSession
+                {paymentIsPaid
+                  ? 'Pembayaran Terkonfirmasi'
+                  : paymentIsTerminal
+                  ? `Status Pembayaran: ${paymentStatus}`
+                  : paymentSession
                   ? 'Sesi Pembayaran Siap'
                   : createdDonation
                   ? 'Coba Lagi Sesi Pembayaran'
