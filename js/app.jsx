@@ -33,6 +33,42 @@ const App = () => {
   ] = React.useState(
     initialData.auditLogs || []
   );
+  
+  /*
+  |--------------------------------------------------------------------------
+  | Backend Financial Transaction State
+  |--------------------------------------------------------------------------
+  */
+
+  const [
+    financialTransactions,
+    setFinancialTransactions,
+  ] = React.useState([]);
+
+  const [
+    financialTransactionLoading,
+    setFinancialTransactionLoading,
+  ] = React.useState(false);
+
+  const [
+    financialTransactionError,
+    setFinancialTransactionError,
+  ] = React.useState(null);
+
+  const [
+    financialTransactionPagination,
+    setFinancialTransactionPagination,
+  ] = React.useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 20,
+    total: 0,
+  });
+
+  const [
+    financialTransactionRefreshKey,
+    setFinancialTransactionRefreshKey,
+  ] = React.useState(0);
 
   /*
   |--------------------------------------------------------------------------
@@ -454,6 +490,109 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Financial Transaction API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadFinancialTransactions =
+    React.useCallback(
+      async (
+        filters = {}
+      ) => {
+        if (
+          !currentUser ||
+          currentUser.role !==
+            'pengurus_harian'
+        ) {
+          setFinancialTransactions(
+            []
+          );
+
+          setFinancialTransactionError(
+            null
+          );
+
+          setFinancialTransactionPagination({
+            current_page: 1,
+            last_page: 1,
+            per_page: 20,
+            total: 0,
+          });
+
+          return;
+        }
+
+        try {
+          setFinancialTransactionLoading(
+            true
+          );
+
+          setFinancialTransactionError(
+            null
+          );
+
+          const response =
+            await FinancialApi
+              .getTransactions(
+                filters
+              );
+
+          const items =
+            Array.isArray(
+              response?.data?.items
+            )
+              ? response.data.items
+              : [];
+
+          const normalized =
+            items.map(
+              (
+                transaction
+              ) =>
+                FinancialApi
+                  .normalizeTransaction(
+                    transaction
+                  )
+            );
+
+          setFinancialTransactions(
+            normalized
+          );
+
+          setFinancialTransactionPagination(
+            response?.data
+              ?.pagination ||
+              {
+                current_page: 1,
+                last_page: 1,
+                per_page: 20,
+                total:
+                  normalized.length,
+              }
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load financial transactions:',
+            error
+          );
+
+          setFinancialTransactionError(
+            error?.message ||
+              'Gagal mengambil transaksi keuangan.'
+          );
+        } finally {
+          setFinancialTransactionLoading(
+            false
+          );
+        }
+      },
+      [
+        currentUser,
+      ]
+    );
+
+  /*
+  |--------------------------------------------------------------------------
   | Restore Authentication Session
   |--------------------------------------------------------------------------
   */
@@ -768,6 +907,21 @@ const App = () => {
           []
         );
 
+        setFinancialTransactions(
+          []
+        );
+
+        setFinancialTransactionError(
+          null
+        );
+
+        setFinancialTransactionPagination({
+          current_page: 1,
+          last_page: 1,
+          per_page: 20,
+          total: 0,
+        });
+
         setActiveTab(
           'beranda'
         );
@@ -933,151 +1087,154 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype Internal Transactions
+  | Financial Transactions
   |--------------------------------------------------------------------------
+  |
+  | Transaction Management sudah menggunakan backend sebagai source of truth.
+  | State prototype `transactions` masih dipertahankan sementara karena
+  | FinancialDashboard, PublicFinancialDashboard, dan FinancialReportPSAK45
+  | belum dimigrasikan pada step ini.
+  |
   */
 
   const handleSaveTransaction =
-    (trxData) => {
-      let targetTrxObj =
-        null;
-
-      const creator =
-        getCurrentUserName() ||
-        'Pengurus Harian';
-
-      if (trxData.id) {
-        targetTrxObj = {
-          ...trxData,
-
-          createdBy:
-            creator,
-        };
-
-        setTransactions(
-          (previous) =>
-            previous.map(
-              (transaction) =>
-                transaction.id ===
-                trxData.id
-                  ? targetTrxObj
-                  : transaction
-            )
-        );
-
-        logAudit(
-          'UPDATE_TRANSACTION',
-          `Prototype update transaksi ${trxData.id}.`
-        );
-
+    async (trxData) => {
+      if (
+        currentUser?.role !==
+        'pengurus_harian'
+      ) {
         showToast(
-          `Transaksi ${trxData.id} diperbarui pada mode prototype.`,
-          'success'
+          'Anda tidak memiliki izin untuk mengubah transaksi.',
+          'rose'
         );
-      } else {
-        const newId =
-          `TRX-${new Date()
-            .toISOString()
-            .substring(
-              0,
-              7
-            )
-            .replace(
-              '-',
-              ''
-            )}-${Math.floor(
-              Math.random() *
-                899 +
-                100
-            )}`;
 
-        targetTrxObj = {
-          id:
-            newId,
-
-          date:
-            trxData.date,
-
-          type:
-            trxData.type,
-
-          category:
-            trxData.category,
-
-          description:
-            trxData.description,
-
-          amount:
-            Number(
-              trxData.amount
-            ),
-
-          createdBy:
-            creator,
-
-          createdAt:
-            new Date()
-              .toISOString(),
+        return {
+          success: false,
         };
-
-        setTransactions(
-          (previous) => [
-            targetTrxObj,
-            ...previous,
-          ]
-        );
-
-        logAudit(
-          'CREATE_TRANSACTION',
-          `Prototype transaksi ${newId}.`
-        );
-
-        showToast(
-          `Transaksi ${newId} disimpan pada mode prototype.`,
-          'success'
-        );
       }
 
-      setIsAddTrxModalOpen(
-        false
-      );
+      try {
+        const payload =
+          FinancialApi
+            .buildTransactionPayload(
+              trxData
+            );
 
-      if (targetTrxObj) {
+        let response;
+
+        if (trxData.id) {
+          response =
+            await FinancialApi
+              .updateTransaction(
+                trxData.id,
+                payload
+              );
+        } else {
+          response =
+            await FinancialApi
+              .createTransaction(
+                payload
+              );
+        }
+
+        if (
+          !response?.data
+        ) {
+          throw new Error(
+            'Server tidak mengembalikan data transaksi.'
+          );
+        }
+
+        const transaction =
+          FinancialApi
+            .normalizeTransaction(
+              response.data
+            );
+
+        showToast(
+          trxData.id
+            ? `Transaksi ${transaction.id} berhasil diperbarui.`
+            : `Transaksi ${transaction.id} berhasil dicatat.`,
+          'success'
+        );
+
+        setEditingTrx(
+          null
+        );
+
+        setIsAddTrxModalOpen(
+          false
+        );
+
+        setFinancialTransactionRefreshKey(
+          (previous) =>
+            previous + 1
+        );
+
         setReceiptData({
           receiptNo:
-            targetTrxObj.id,
+            transaction.id,
 
           type:
-            targetTrxObj.type,
+            transaction.type,
 
           donorName:
-            targetTrxObj.description,
+            transaction.donorName,
 
           description:
-            targetTrxObj.description,
+            transaction.description,
 
           amount:
-            targetTrxObj.amount,
+            transaction.amount,
 
           category:
-            targetTrxObj.category,
+            transaction.category,
 
           paymentMethod:
-            targetTrxObj.type ===
-            'pemasukan'
-              ? 'Kas Masuk Bendahara'
-              : 'Kas Keluar Operasional',
+            transaction.paymentMethod,
 
           date:
-            targetTrxObj.date,
+            transaction.date,
 
           createdBy:
-            targetTrxObj.createdBy,
+            transaction.createdBy,
         });
 
         setIsReceiptModalOpen(
           true
         );
+
+        return {
+          success: true,
+          data:
+            transaction,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to save financial transaction:',
+          error
+        );
+
+        const validationMessage =
+          error?.errors
+            ? Object.values(
+                error.errors
+              )
+                .flat()
+                .join(' ')
+            : null;
+
+        showToast(
+          validationMessage ||
+            error?.message ||
+            'Transaksi gagal disimpan.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
       }
     };
 
@@ -1233,10 +1390,13 @@ const App = () => {
           trxObj.category,
 
         paymentMethod:
-          trxObj.type ===
-          'pemasukan'
-            ? 'Kas Masuk Bendahara'
-            : 'Kas Keluar Operasional',
+          trxObj.paymentMethod ||
+          (
+            trxObj.type ===
+            'pemasukan'
+              ? 'Kas Masuk Bendahara'
+              : 'Kas Keluar Operasional'
+          ),
 
         date:
           trxObj.date,
@@ -1251,36 +1411,84 @@ const App = () => {
     };
 
   const handleDeleteTransaction =
-    (trxId) => {
-      const targetTrx =
-        transactions.find(
-          (transaction) =>
-            transaction.id ===
-            trxId
+    async (trxId) => {
+      const target =
+        financialTransactions
+          .find(
+            (transaction) =>
+              transaction.id ===
+              trxId
+          );
+
+      if (!target) {
+        showToast(
+          'Transaksi tidak ditemukan.',
+          'rose'
         );
 
-      if (!targetTrx) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setTransactions(
-        (previous) =>
-          previous.filter(
-            (transaction) =>
-              transaction.id !==
-              trxId
-          )
-      );
+      if (
+        target.editable !==
+        true
+      ) {
+        showToast(
+          'Transaksi hasil donasi dikelola oleh sistem dan tidak dapat dihapus manual.',
+          'rose'
+        );
 
-      logAudit(
-        'DELETE_TRANSACTION',
-        `Prototype delete transaksi ${trxId}.`
-      );
+        return {
+          success: false,
+        };
+      }
 
-      showToast(
-        `Transaksi ${trxId} dihapus pada mode prototype.`,
-        'rose'
-      );
+      try {
+        await FinancialApi
+          .deleteTransaction(
+            trxId
+          );
+
+        showToast(
+          `Transaksi ${trxId} berhasil dihapus.`,
+          'success'
+        );
+
+        setTrxToDelete(
+          null
+        );
+
+        setIsDeleteModalOpen(
+          false
+        );
+
+        setFinancialTransactionRefreshKey(
+          (previous) =>
+            previous + 1
+        );
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to delete financial transaction:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Transaksi gagal dihapus.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      }
     };
 
   /*
@@ -1700,11 +1908,31 @@ const App = () => {
           'transactions' && (
           <TransactionManagement
             transactions={
-              transactions
+              financialTransactions
             }
 
             currentUser={
               currentUser
+            }
+
+            transactionLoading={
+              financialTransactionLoading
+            }
+
+            transactionError={
+              financialTransactionError
+            }
+
+            transactionPagination={
+              financialTransactionPagination
+            }
+
+            transactionRefreshKey={
+              financialTransactionRefreshKey
+            }
+
+            onLoadTransactions={
+              loadFinancialTransactions
             }
 
             onOpenAddModal={
@@ -1722,6 +1950,18 @@ const App = () => {
             onOpenEditModal={(
               transaction
             ) => {
+              if (
+                transaction.editable !==
+                true
+              ) {
+                showToast(
+                  'Transaksi sistem tidak dapat diedit manual.',
+                  'rose'
+                );
+
+                return;
+              }
+
               setEditingTrx(
                 transaction
               );
@@ -1734,6 +1974,18 @@ const App = () => {
             onConfirmDeleteTrx={(
               transaction
             ) => {
+              if (
+                transaction.editable !==
+                true
+              ) {
+                showToast(
+                  'Transaksi sistem tidak dapat dihapus manual.',
+                  'rose'
+                );
+
+                return;
+              }
+
               setTrxToDelete(
                 transaction
               );
