@@ -21,13 +21,6 @@ const App = () => {
     );
 
   const [
-    transactions,
-    setTransactions,
-  ] = React.useState(
-    initialData.transactions || []
-  );
-
-  const [
     auditLogs,
     setAuditLogs,
   ] = React.useState(
@@ -1090,10 +1083,8 @@ const App = () => {
   | Financial Transactions
   |--------------------------------------------------------------------------
   |
-  | Transaction Management sudah menggunakan backend sebagai source of truth.
-  | State prototype `transactions` masih dipertahankan sementara karena
-  | FinancialDashboard, PublicFinancialDashboard, dan FinancialReportPSAK45
-  | belum dimigrasikan pada step ini.
+  | Seluruh domain keuangan aktif menggunakan backend sebagai source of truth.
+  | Tidak ada lagi state transaksi keuangan dari mockData pada App.
   |
   */
 
@@ -1855,15 +1846,7 @@ const App = () => {
 
         {activeTab ===
           'public-dashboard' && (
-          <PublicFinancialDashboard
-            transactions={
-              transactions
-            }
-
-            onPrintTransactionReceipt={
-              handlePrintTransactionReceipt
-            }
-          />
+          <PublicFinancialDashboard />
         )}
 
         {activeTab ===
@@ -1890,10 +1873,6 @@ const App = () => {
         {activeTab ===
           'dashboard' && (
           <FinancialDashboard
-            transactions={
-              transactions
-            }
-
             currentUser={
               currentUser
             }
@@ -2063,10 +2042,6 @@ const App = () => {
         {activeTab ===
           'report' && (
           <FinancialReportPSAK45
-            transactions={
-              transactions
-            }
-
             currentUser={
               currentUser
             }
