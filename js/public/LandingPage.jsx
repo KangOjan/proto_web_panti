@@ -3,9 +3,10 @@ const LandingPage = ({
   onNavigateToDonation,
   onNavigateToLogin,
   onNavigateToProfile,
-  priorityPrograms = window.INITIAL_SIMK_DATA?.priorityPrograms || []
+  priorityPrograms = window.INITIAL_SIMK_DATA?.priorityPrograms || [],
+  organizationProfile = null
 }) => {
-  const profile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
+  const profile = organizationProfile || {};
   // Filter active priority programs
   const activePrograms = priorityPrograms.filter(
     (program) => program.status === 'active'

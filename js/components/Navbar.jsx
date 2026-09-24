@@ -219,6 +219,18 @@ const Navbar = ({
                     </button>
 
                     <button
+                      onClick={() => setActiveTab('organization-profile-management')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'organization-profile-management'
+                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <LucideIcon name="building-2" className="w-4 h-4" />
+                      <span>Kelola Profil</span>
+                    </button>
+
+                    <button
                       onClick={() => setActiveTab('audit')}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
                         activeTab === 'audit'
@@ -460,6 +472,18 @@ const Navbar = ({
                   >
                     <LucideIcon name="layers" className="w-4 h-4" />
                     <span>Program Prioritas (CRUD)</span>
+                  </button>
+
+                  <button
+                    onClick={() => { setActiveTab('organization-profile-management'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'organization-profile-management'
+                        ? 'bg-emerald-50 text-emerald-800'
+                        : 'text-slate-700'
+                    }`}
+                  >
+                    <LucideIcon name="building-2" className="w-4 h-4" />
+                    <span>Kelola Profil</span>
                   </button>
 
                   <button

@@ -84,6 +84,27 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Backend Organization Profile State
+  |--------------------------------------------------------------------------
+  */
+
+  const [
+    organizationProfile,
+    setOrganizationProfile,
+  ] = React.useState(null);
+
+  const [
+    organizationProfileLoading,
+    setOrganizationProfileLoading,
+  ] = React.useState(true);
+
+  const [
+    organizationProfileError,
+    setOrganizationProfileError,
+  ] = React.useState(null);
+
+  /*
+  |--------------------------------------------------------------------------
   | Authentication State
   |--------------------------------------------------------------------------
   */
@@ -476,6 +497,57 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Public Organization Profile API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadPublicOrganizationProfile =
+    React.useCallback(
+      async () => {
+        try {
+          setOrganizationProfileLoading(
+            true
+          );
+
+          setOrganizationProfileError(
+            null
+          );
+
+          const response =
+            await CmsApi
+              .getPublicProfile();
+
+          setOrganizationProfile(
+            CmsApi.normalizeProfile(
+              response?.data ||
+              null
+            )
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load public organization profile:',
+            error
+          );
+
+          setOrganizationProfile(
+            null
+          );
+
+          setOrganizationProfileError(
+            error?.message ||
+              'Gagal mengambil profil lembaga.'
+          );
+        } finally {
+          setOrganizationProfileLoading(
+            false
+          );
+        }
+      },
+      []
+    );
+
+  /*
+  |--------------------------------------------------------------------------
   | Financial Transaction API
   |--------------------------------------------------------------------------
   */
@@ -667,6 +739,18 @@ const App = () => {
       cancelled = true;
     };
   }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Load Public Organization Profile
+  |--------------------------------------------------------------------------
+  */
+
+  React.useEffect(() => {
+    loadPublicOrganizationProfile();
+  }, [
+    loadPublicOrganizationProfile,
+  ]);
 
   /*
   |--------------------------------------------------------------------------
@@ -1741,6 +1825,10 @@ const App = () => {
             priorityPrograms={
               publicPrograms
             }
+
+            organizationProfile={
+              organizationProfile
+            }
           />
         )}
 
@@ -1749,6 +1837,18 @@ const App = () => {
           <OrganizationProfile
             onNavigateToDonation={
               openPublicDonation
+            }
+
+            organizationProfile={
+              organizationProfile
+            }
+
+            organizationProfileLoading={
+              organizationProfileLoading
+            }
+
+            organizationProfileError={
+              organizationProfileError
             }
           />
         )}
@@ -1927,6 +2027,23 @@ const App = () => {
 
             currentUser={
               currentUser
+            }
+          />
+        )}
+
+        {activeTab ===
+          'organization-profile-management' && (
+          <OrganizationProfileManagement
+            currentUser={
+              currentUser
+            }
+
+            onProfileUpdated={
+              loadPublicOrganizationProfile
+            }
+
+            showToast={
+              showToast
             }
           />
         )}
