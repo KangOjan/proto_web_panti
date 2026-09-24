@@ -19,13 +19,6 @@ const App = () => {
     React.useState(
       initialData.users || []
     );
-
-  const [
-    auditLogs,
-    setAuditLogs,
-  ] = React.useState(
-    initialData.auditLogs || []
-  );
   
   /*
   |--------------------------------------------------------------------------
@@ -698,61 +691,6 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype Audit
-  |--------------------------------------------------------------------------
-  |
-  | Ini belum audit trail production.
-  | Akan dipindah ke backend Phase 6.
-  |
-  */
-
-  const logAudit = (
-    action,
-    details,
-    executorName = null
-  ) => {
-    const displayName =
-      executorName ||
-      getCurrentUserName() ||
-      'Donatur Publik';
-
-    const newLog = {
-      id:
-        `LOG-${Math.floor(
-          Math.random() *
-            9000 +
-            1000
-        )}`,
-
-      timestamp:
-        new Date()
-          .toISOString(),
-
-      userName:
-        displayName,
-
-      nik:
-        currentUser?.nik ||
-        '-',
-
-      userRole:
-        currentUser?.role ||
-        'Donatur Publik',
-
-      action,
-      details,
-    };
-
-    setAuditLogs(
-      (previous) => [
-        newLog,
-        ...previous,
-      ]
-    );
-  };
-
-  /*
-  |--------------------------------------------------------------------------
   | Evaluator Mode
   |--------------------------------------------------------------------------
   |
@@ -982,12 +920,6 @@ const App = () => {
         ]
       );
 
-      logAudit(
-        'REGISTER',
-        `Pendaftaran prototype oleh ${formData.fullName}.`,
-        formData.fullName
-      );
-
       showToast(
         'Pendaftaran prototype berhasil. Integrasi registrasi backend akan dilakukan pada fase terkait.',
         'info'
@@ -1028,11 +960,6 @@ const App = () => {
           )
       );
 
-      logAudit(
-        'APPROVE_USER',
-        `Prototype approval akun ${targetUser.fullName}.`
-      );
-
       showToast(
         `Akun ${targetUser.fullName} disetujui pada mode prototype.`,
         'success'
@@ -1065,11 +992,6 @@ const App = () => {
                   }
                 : user
           )
-      );
-
-      logAudit(
-        'REJECT_USER',
-        `Prototype rejection akun ${targetUser.fullName}.`
       );
 
       showToast(
@@ -2032,11 +1954,7 @@ const App = () => {
 
         {activeTab ===
           'audit' && (
-          <AuditTrailLog
-            auditLogs={
-              auditLogs
-            }
-          />
+          <AuditTrailLog />
         )}
 
         {activeTab ===

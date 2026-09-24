@@ -69,55 +69,6 @@ window.INITIAL_SIMK_DATA = {
     }
   ],
 
-  // Digital Audit Trail Logs
-  auditLogs: [
-    {
-      id: 'LOG-1005',
-      timestamp: '2026-07-25T14:20:00.000Z',
-      userName: 'Siti Rahmawati, A.Md.',
-      nik: '3201019283740003',
-      userRole: 'Pengurus Harian',
-      action: 'REGISTER',
-      details: 'Mendaftar akun baru dengan username "harian2" (Status: Pending Approval).'
-    },
-    {
-      id: 'LOG-1004',
-      timestamp: '2026-07-25T08:30:00.000Z',
-      userName: 'Budi Santoso, S.E.',
-      nik: '3201019283740001',
-      userRole: 'Pengurus Harian',
-      action: 'CREATE_TRANSACTION',
-      details: 'Menambahkan transaksi Pemasukan (Donasi Rutin) sebesar Rp 15.000.000.'
-    },
-    {
-      id: 'LOG-1003',
-      timestamp: '2026-07-22T10:15:00.000Z',
-      userName: 'Budi Santoso, S.E.',
-      nik: '3201019283740001',
-      userRole: 'Pengurus Harian',
-      action: 'CREATE_TRANSACTION',
-      details: 'Menambahkan transaksi Pemasukan (Infak/Zakat) sebesar Rp 8.500.000.'
-    },
-    {
-      id: 'LOG-1002',
-      timestamp: '2026-07-20T11:00:00.000Z',
-      userName: 'Budi Santoso, S.E.',
-      nik: '3201019283740001',
-      userRole: 'Pengurus Harian',
-      action: 'CREATE_TRANSACTION',
-      details: 'Menambahkan transaksi Pengeluaran (Konsumsi) sebesar Rp 6.200.000.'
-    },
-    {
-      id: 'LOG-1001',
-      timestamp: '2026-07-20T11:00:00.000Z',
-      userName: 'H. Ahmad Dahlan, M.Ag.',
-      nik: '3201019283740002',
-      userRole: 'Pemimpin Lembaga',
-      action: 'REJECT_USER',
-      details: 'Menolak permohonan pendaftaran akun Pengurus Harian atas nama "Rahmat Hidayat".'
-    }
-  ],
-
   // 1. Profil & Informasi Umum Panti Asuhan
   orphanageProfile: {
     name: 'Panti Asuhan Kasih Bunda',

@@ -217,6 +217,18 @@ const Navbar = ({
                       <LucideIcon name="layers" className="w-4 h-4" />
                       <span>Program Prioritas (CRUD)</span>
                     </button>
+
+                    <button
+                      onClick={() => setActiveTab('audit')}
+                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
+                        activeTab === 'audit'
+                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <LucideIcon name="history" className="w-4 h-4" />
+                      <span>Audit Trail</span>
+                    </button>
                   </>
                 )}
 
@@ -240,18 +252,6 @@ const Navbar = ({
                       )}
                     </button>
 
-                    <button
-                      onClick={() => setActiveTab('audit')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'audit'
-                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="history" className="w-4 h-4" />
-                      <span>Digital Audit Trail</span>
-                    </button>
-
                     {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan sesuai arahan mitra]
                     <button
                       onClick={() => setActiveTab('report')}
@@ -268,26 +268,7 @@ const Navbar = ({
                   </>
                 )}
 
-                {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan sesuai arahan mitra]
-                {currentUser.role === 'pengurus_harian' && (
-                  <>
-                    <button
-                      onClick={() => setActiveTab('audit')}
-                      className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
-                    >
-                      <LucideIcon name="history" className="w-4 h-4" />
-                      <span>Digital Audit Trail</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('report')}
-                      className="px-3 py-2 rounded-lg text-sm font-semibold text-slate-600"
-                    >
-                      <LucideIcon name="printer" className="w-4 h-4" />
-                      <span>Cetak Laporan PSAK 45</span>
-                    </button>
-                  </>
-                )}
-                */}
+
               </>
             )}
 
@@ -480,6 +461,16 @@ const Navbar = ({
                     <LucideIcon name="layers" className="w-4 h-4" />
                     <span>Program Prioritas (CRUD)</span>
                   </button>
+
+                  <button
+                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
+                      activeTab === 'audit' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
+                    }`}
+                  >
+                    <LucideIcon name="history" className="w-4 h-4" />
+                    <span>Audit Trail</span>
+                  </button>
                 </>
               )}
 
@@ -493,16 +484,6 @@ const Navbar = ({
                   >
                     <LucideIcon name="user-check" className="w-4 h-4" />
                     <span>Persetujuan Akun (Approval)</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'audit' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="history" className="w-4 h-4" />
-                    <span>Digital Audit Trail</span>
                   </button>
 
                   {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan pada menu mobile sesuai arahan mitra]
@@ -519,26 +500,7 @@ const Navbar = ({
                 </>
               )}
 
-              {/* [COMMENTED: Menu Digital Audit Trail & Cetak Laporan PSAK 45 untuk Pengurus Harian dinonaktifkan pada menu mobile]
-              {currentUser.role === 'pengurus_harian' && (
-                <>
-                  <button
-                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
-                  >
-                    <LucideIcon name="history" className="w-4 h-4" />
-                    <span>Digital Audit Trail</span>
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2 rounded-xl text-sm font-semibold text-slate-700"
-                  >
-                    <LucideIcon name="printer" className="w-4 h-4" />
-                    <span>Cetak Laporan PSAK 45</span>
-                  </button>
-                </>
-              )}
-              */}
+
 
               <button
                 onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
