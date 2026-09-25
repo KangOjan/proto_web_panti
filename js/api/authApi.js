@@ -1,5 +1,21 @@
 const AuthApi = {
-  login(username, password) {
+  register(payload) {
+    return apiRequest(
+      '/auth/register',
+      {
+        method: 'POST',
+        auth: false,
+        body: JSON.stringify(
+          payload
+        ),
+      }
+    );
+  },
+
+  login(
+    username,
+    password
+  ) {
     return apiRequest(
       '/auth/login',
       {
@@ -29,4 +45,5 @@ const AuthApi = {
   },
 };
 
-window.AuthApi = AuthApi;
+window.AuthApi =
+  AuthApi;

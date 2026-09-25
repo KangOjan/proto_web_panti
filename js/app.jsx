@@ -2,24 +2,6 @@
 // SIMK-Panti
 
 const App = () => {
-  const initialData =
-    window.INITIAL_SIMK_DATA || {};
-
-  /*
-  |--------------------------------------------------------------------------
-  | Prototype Domain State
-  |--------------------------------------------------------------------------
-  |
-  | Domain-domain ini belum terintegrasi
-  | dengan backend pada fase sekarang.
-  |
-  */
-
-  const [users, setUsers] =
-    React.useState(
-      initialData.users || []
-    );
-  
   /*
   |--------------------------------------------------------------------------
   | Backend Financial Transaction State
@@ -112,6 +94,42 @@ const App = () => {
   const [
     currentUser,
     setCurrentUser,
+  ] = React.useState(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Backend User Approval State
+  |--------------------------------------------------------------------------
+  */
+
+  const [
+    approvalUsers,
+    setApprovalUsers,
+  ] = React.useState([]);
+
+  const [
+    approvalSummary,
+    setApprovalSummary,
+  ] = React.useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    total: 0,
+  });
+
+  const [
+    approvalLoading,
+    setApprovalLoading,
+  ] = React.useState(false);
+
+  const [
+    approvalError,
+    setApprovalError,
+  ] = React.useState(null);
+
+  const [
+    approvalActionUserId,
+    setApprovalActionUserId,
   ] = React.useState(null);
 
   /*
@@ -548,6 +566,110 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Pemimpin Lembaga User Approval API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadUserApprovals =
+    React.useCallback(
+      async () => {
+        if (
+          !currentUser ||
+          currentUser.role !==
+            'pemimpin_lembaga'
+        ) {
+          setApprovalUsers(
+            []
+          );
+
+          setApprovalSummary({
+            pending: 0,
+            approved: 0,
+            rejected: 0,
+            total: 0,
+          });
+
+          setApprovalError(
+            null
+          );
+
+          return;
+        }
+
+        try {
+          setApprovalLoading(
+            true
+          );
+
+          setApprovalError(
+            null
+          );
+
+          const response =
+            await UserApprovalApi
+              .getUsers({
+                per_page: 100,
+              });
+
+          const items =
+            Array.isArray(
+              response?.data?.items
+            )
+              ? response.data.items
+              : [];
+
+          setApprovalUsers(
+            items.map(
+              UserApprovalApi
+                .normalizeUser
+            )
+          );
+
+          setApprovalSummary(
+            response?.data
+              ?.summary ||
+              {
+                pending: 0,
+                approved: 0,
+                rejected: 0,
+                total:
+                  items.length,
+              }
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load user approval data:',
+            error
+          );
+
+          setApprovalUsers(
+            []
+          );
+
+          setApprovalSummary({
+            pending: 0,
+            approved: 0,
+            rejected: 0,
+            total: 0,
+          });
+
+          setApprovalError(
+            error?.message ||
+              'Gagal mengambil data persetujuan akun.'
+          );
+        } finally {
+          setApprovalLoading(
+            false
+          );
+        }
+      },
+      [
+        currentUser,
+      ]
+    );
+
+  /*
+  |--------------------------------------------------------------------------
   | Financial Transaction API
   |--------------------------------------------------------------------------
   */
@@ -700,6 +822,18 @@ const App = () => {
       cancelled = true;
     };
   }, []);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Load Pemimpin Lembaga Approval Summary
+  |--------------------------------------------------------------------------
+  */
+
+  React.useEffect(() => {
+    loadUserApprovals();
+  }, [
+    loadUserApprovals,
+  ]);
 
   /*
   |--------------------------------------------------------------------------
@@ -918,6 +1052,25 @@ const App = () => {
           null
         );
 
+        setApprovalUsers(
+          []
+        );
+
+        setApprovalSummary({
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          total: 0,
+        });
+
+        setApprovalError(
+          null
+        );
+
+        setApprovalActionUserId(
+          null
+        );
+
         setManagedPrograms(
           []
         );
@@ -950,138 +1103,221 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype Registration
+  | Account Registration
   |--------------------------------------------------------------------------
-  |
-  | Belum backend-connected.
-  |
   */
 
   const handleRegisterSubmit =
-    (formData) => {
-      const newUser = {
-        id:
-          `USR-${Math.floor(
-            Math.random() *
-              900 +
-              100
-          )}`,
+    async (
+      formData
+    ) => {
+      try {
+        const payload = {
+          name:
+            formData.fullName
+              .trim(),
 
-        nik:
-          formData.nik,
+          username:
+            formData.username
+              .trim(),
 
-        fullName:
-          formData.fullName,
+          nik:
+            formData.nik
+              .trim(),
 
-        address:
-          formData.address,
+          email:
+            formData.email
+              .trim(),
 
-        phone:
-          formData.phone,
+          phone:
+            formData.phone
+              .trim(),
 
-        role:
-          formData.role,
+          address:
+            formData.address
+              ?.trim() ||
+            null,
 
-        username:
-          formData.username,
+          role:
+            formData.role,
 
-        status:
-          'Pending Approval',
+          password:
+            formData.password,
+        };
 
-        registrationDate:
-          new Date()
-            .toISOString()
-            .substring(
-              0,
-              10
-            ),
-      };
+        const response =
+          await AuthApi.register(
+            payload
+          );
 
-      setUsers(
-        (previous) => [
-          newUser,
-          ...previous,
-        ]
-      );
+        showToast(
+          'Pendaftaran berhasil dikirim dan sedang menunggu persetujuan Pemimpin Lembaga.',
+          'success'
+        );
 
-      showToast(
-        'Pendaftaran prototype berhasil. Integrasi registrasi backend akan dilakukan pada fase terkait.',
-        'info'
-      );
+        return {
+          success: true,
+          data:
+            response?.data ||
+            null,
+          message:
+            response?.message ||
+            'Pendaftaran berhasil dikirim.',
+        };
+      } catch (error) {
+        const validationMessage =
+          error?.errors
+            ? Object.values(
+                error.errors
+              )
+                .flat()
+                .join(' ')
+            : null;
+
+        const message =
+          validationMessage ||
+          error?.message ||
+          'Pendaftaran akun gagal.';
+
+        showToast(
+          message,
+          'rose'
+        );
+
+        return {
+          success: false,
+          message,
+          errors:
+            error?.errors ||
+            null,
+        };
+      }
     };
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype User Approval
+  | Pemimpin Lembaga Account Approval
   |--------------------------------------------------------------------------
   */
 
   const handleApproveUser =
-    (userId) => {
+    async (
+      userId
+    ) => {
       const targetUser =
-        users.find(
+        approvalUsers.find(
           (user) =>
             user.id ===
             userId
         );
 
       if (!targetUser) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setUsers(
-        (previous) =>
-          previous.map(
-            (user) =>
-              user.id ===
-              userId
-                ? {
-                    ...user,
-                    status:
-                      'Approved',
-                  }
-                : user
-          )
-      );
+      try {
+        setApprovalActionUserId(
+          userId
+        );
 
-      showToast(
-        `Akun ${targetUser.fullName} disetujui pada mode prototype.`,
-        'success'
-      );
+        await UserApprovalApi
+          .approveUser(
+            userId
+          );
+
+        showToast(
+          `Akun ${targetUser.fullName} berhasil disetujui.`,
+          'success'
+        );
+
+        await loadUserApprovals();
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to approve user:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Akun gagal disetujui.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      } finally {
+        setApprovalActionUserId(
+          null
+        );
+      }
     };
 
   const handleRejectUser =
-    (userId) => {
+    async (
+      userId
+    ) => {
       const targetUser =
-        users.find(
+        approvalUsers.find(
           (user) =>
             user.id ===
             userId
         );
 
       if (!targetUser) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setUsers(
-        (previous) =>
-          previous.map(
-            (user) =>
-              user.id ===
-              userId
-                ? {
-                    ...user,
-                    status:
-                      'Rejected',
-                  }
-                : user
-          )
-      );
+      try {
+        setApprovalActionUserId(
+          userId
+        );
 
-      showToast(
-        `Akun ${targetUser.fullName} ditolak pada mode prototype.`,
-        'rose'
-      );
+        await UserApprovalApi
+          .rejectUser(
+            userId
+          );
+
+        showToast(
+          `Akun ${targetUser.fullName} berhasil ditolak.`,
+          'info'
+        );
+
+        await loadUserApprovals();
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to reject user:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Akun gagal ditolak.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      } finally {
+        setApprovalActionUserId(
+          null
+        );
+      }
     };
 
   /*
@@ -1711,11 +1947,11 @@ const App = () => {
   */
 
   const pendingApprovalCount =
-    users.filter(
-      (user) =>
-        user.status ===
-        'Pending Approval'
-    ).length;
+    Number(
+      approvalSummary
+        ?.pending ||
+      0
+    );
 
   /*
   |--------------------------------------------------------------------------
@@ -2052,7 +2288,27 @@ const App = () => {
           'approval' && (
           <UserApproval
             users={
-              users
+              approvalUsers
+            }
+
+            summary={
+              approvalSummary
+            }
+
+            loading={
+              approvalLoading
+            }
+
+            error={
+              approvalError
+            }
+
+            actionUserId={
+              approvalActionUserId
+            }
+
+            onReload={
+              loadUserApprovals
             }
 
             onApproveUser={
