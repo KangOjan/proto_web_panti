@@ -3,7 +3,7 @@ const LandingPage = ({
   onNavigateToDonation,
   onNavigateToLogin,
   onNavigateToProfile,
-  priorityPrograms = window.INITIAL_SIMK_DATA?.priorityPrograms || [],
+  priorityPrograms = [],
   organizationProfile = null
 }) => {
   const profile = organizationProfile || {};

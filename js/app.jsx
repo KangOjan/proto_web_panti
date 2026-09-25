@@ -909,32 +909,6 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | Evaluator Mode
-  |--------------------------------------------------------------------------
-  |
-  | Tidak boleh membuat fake authenticated user.
-  | Authentication authority tetap backend.
-  |
-  */
-
-  const handleSwitchUserRole =
-    () => {
-      showToast(
-        'Untuk mengakses area pengurus, silakan login menggunakan akun yang telah disetujui.',
-        'info'
-      );
-
-      setActiveTab(
-        'auth'
-      );
-
-      setAuthView(
-        'login'
-      );
-    };
-
-  /*
-  |--------------------------------------------------------------------------
   | Authentication
   |--------------------------------------------------------------------------
   */
@@ -1326,7 +1300,7 @@ const App = () => {
   |--------------------------------------------------------------------------
   |
   | Seluruh domain keuangan aktif menggunakan backend sebagai source of truth.
-  | Tidak ada lagi state transaksi keuangan dari mockData pada App.
+  | Backend menjadi source of truth untuk state transaksi keuangan pada App.
   |
   */
 
@@ -2005,10 +1979,6 @@ const App = () => {
           setActiveTab
         }
 
-        onSwitchUser={
-          handleSwitchUserRole
-        }
-
         onLogout={
           handleLogout
         }
@@ -2120,10 +2090,6 @@ const App = () => {
 
             onRegisterSubmit={
               handleRegisterSubmit
-            }
-
-            onQuickSimulateRole={
-              handleSwitchUserRole
             }
           />
         )}
