@@ -126,12 +126,6 @@
     src="https://unpkg.com/@babel/standalone/babel.min.js"
   ></script>
 
-  <!-- Prototype data for domains
-       that have not been connected
-       to the backend yet. -->
-  <script
-    src="js/data/mockData.js?v=5.0"
-  ></script>
 </head>
 
 <body
@@ -143,32 +137,63 @@
   <!--
     Runtime configuration.
 
-    API URL is public configuration,
-    NOT a secret.
-
-    Midtrans Server Key and other
-    server-side credentials MUST NEVER
-    be stored here.
+    API URL and Midtrans Client Key are public client configuration.
+    Midtrans Server Key MUST NEVER be stored in the frontend.
   -->
   <script>
     window.SIMK_CONFIG =
       Object.freeze({
         API_BASE_URL:
-          'http://127.0.0.1:8000/api/v1'
+          '/api/v1',
+
+        MIDTRANS_ENVIRONMENT:
+          'sandbox',
+
+        MIDTRANS_CLIENT_KEY:
+          'SB-Mid-client-PJlSZds48c8OdeaW'
       });
   </script>
 
+  <!-- Midtrans Snap loader -->
+  <script
+    src="js/payments/midtransSnap.js?v=1.0"
+  ></script>
+
   <!-- Backend API Layer -->
   <script
-    src="js/api/apiClient.js?v=1.1"
+    src="js/api/apiClient.js?v=1.2"
   ></script>
 
   <script
-    src="js/api/authApi.js?v=1.1"
+    src="js/api/authApi.js?v=1.2"
+  ></script>
+
+  <script
+    src="js/api/userApprovalApi.js?v=1.0"
   ></script>
 
   <script
     src="js/api/campaignApi.js?v=1.1"
+  ></script>
+
+  <script
+    src="js/api/donationApi.js?v=1.0"
+  ></script>
+
+  <script
+    src="js/api/paymentApi.js?v=1.0"
+  ></script>
+
+  <script
+    src="js/api/financialApi.js?v=1.0"
+  ></script>
+
+  <script
+    src="js/api/auditApi.js?v=1.0"
+  ></script>
+
+  <script
+    src="js/api/cmsApi.js?v=1.0"
   ></script>
 
   <!-- React-safe Lucide wrapper -->
@@ -180,12 +205,12 @@
   <!-- Public Components -->
   <script
     type="text/babel"
-    src="js/public/LandingPage.jsx?v=5.0"
+    src="js/public/LandingPage.jsx?v=5.2"
   ></script>
 
   <script
     type="text/babel"
-    src="js/public/OrganizationProfile.jsx?v=5.0"
+    src="js/public/OrganizationProfile.jsx?v=5.3"
   ></script>
 
   <script
@@ -196,12 +221,12 @@
   <!-- Shared Components -->
   <script
     type="text/babel"
-    src="js/components/Navbar.jsx?v=5.0"
+    src="js/components/Navbar.jsx?v=5.4"
   ></script>
 
   <script
     type="text/babel"
-    src="js/components/AuthPages.jsx?v=5.0"
+    src="js/components/AuthPages.jsx?v=5.2"
   ></script>
 
   <script
@@ -217,7 +242,7 @@
   <!-- Pengurus Components -->
   <script
     type="text/babel"
-    src="js/admin/UserApproval.jsx?v=5.0"
+    src="js/admin/UserApproval.jsx?v=5.1"
   ></script>
 
   <script
@@ -228,6 +253,11 @@
   <script
     type="text/babel"
     src="js/admin/ProgramManagement.jsx?v=5.0"
+  ></script>
+
+  <script
+    type="text/babel"
+    src="js/admin/OrganizationProfileManagement.jsx?v=1.1"
   ></script>
 
   <script
@@ -247,13 +277,13 @@
 
   <script
     type="text/babel"
-    src="js/admin/PublicDonation.jsx?v=5.0"
+    src="js/admin/PublicDonation.jsx?v=5.1"
   ></script>
 
   <!-- Application -->
   <script
     type="text/babel"
-    src="js/app.jsx?v=5.1"
+    src="js/app.jsx?v=5.5"
   ></script>
 
   <script type="text/babel">

@@ -2,37 +2,41 @@
 // SIMK-Panti
 
 const App = () => {
-  const initialData =
-    window.INITIAL_SIMK_DATA || {};
-
   /*
   |--------------------------------------------------------------------------
-  | Prototype Domain State
+  | Backend Financial Transaction State
   |--------------------------------------------------------------------------
-  |
-  | Domain-domain ini belum terintegrasi
-  | dengan backend pada fase sekarang.
-  |
   */
 
-  const [users, setUsers] =
-    React.useState(
-      initialData.users || []
-    );
+  const [
+    financialTransactions,
+    setFinancialTransactions,
+  ] = React.useState([]);
 
   const [
-    transactions,
-    setTransactions,
-  ] = React.useState(
-    initialData.transactions || []
-  );
+    financialTransactionLoading,
+    setFinancialTransactionLoading,
+  ] = React.useState(false);
 
   const [
-    auditLogs,
-    setAuditLogs,
-  ] = React.useState(
-    initialData.auditLogs || []
-  );
+    financialTransactionError,
+    setFinancialTransactionError,
+  ] = React.useState(null);
+
+  const [
+    financialTransactionPagination,
+    setFinancialTransactionPagination,
+  ] = React.useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 20,
+    total: 0,
+  });
+
+  const [
+    financialTransactionRefreshKey,
+    setFinancialTransactionRefreshKey,
+  ] = React.useState(0);
 
   /*
   |--------------------------------------------------------------------------
@@ -62,6 +66,27 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Backend Organization Profile State
+  |--------------------------------------------------------------------------
+  */
+
+  const [
+    organizationProfile,
+    setOrganizationProfile,
+  ] = React.useState(null);
+
+  const [
+    organizationProfileLoading,
+    setOrganizationProfileLoading,
+  ] = React.useState(true);
+
+  const [
+    organizationProfileError,
+    setOrganizationProfileError,
+  ] = React.useState(null);
+
+  /*
+  |--------------------------------------------------------------------------
   | Authentication State
   |--------------------------------------------------------------------------
   */
@@ -69,6 +94,42 @@ const App = () => {
   const [
     currentUser,
     setCurrentUser,
+  ] = React.useState(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Backend User Approval State
+  |--------------------------------------------------------------------------
+  */
+
+  const [
+    approvalUsers,
+    setApprovalUsers,
+  ] = React.useState([]);
+
+  const [
+    approvalSummary,
+    setApprovalSummary,
+  ] = React.useState({
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    total: 0,
+  });
+
+  const [
+    approvalLoading,
+    setApprovalLoading,
+  ] = React.useState(false);
+
+  const [
+    approvalError,
+    setApprovalError,
+  ] = React.useState(null);
+
+  const [
+    approvalActionUserId,
+    setApprovalActionUserId,
   ] = React.useState(null);
 
   /*
@@ -88,11 +149,21 @@ const App = () => {
   ] = React.useState('login');
 
   const [
-    selectedDonationCategory,
-    setSelectedDonationCategory,
-  ] = React.useState(
-    'Konsumsi'
-  );
+    selectedDonationContext,
+    setSelectedDonationContext,
+  ] = React.useState({
+    allocationCategory:
+      'konsumsi',
+
+    campaignId:
+      null,
+
+    campaignTitle:
+      null,
+
+    campaignSlug:
+      null,
+  });
 
   /*
   |--------------------------------------------------------------------------
@@ -157,6 +228,137 @@ const App = () => {
       4000
     );
   };
+
+  const mapCampaignCategoryToDonationAllocation =
+    (categoryName = '') => {
+      const normalized =
+        String(categoryName)
+          .trim()
+          .toLowerCase();
+
+      if (
+        normalized.includes(
+          'kebutuhan harian'
+        ) ||
+        normalized.includes(
+          'konsumsi'
+        ) ||
+        normalized.includes(
+          'gizi'
+        )
+      ) {
+        return 'konsumsi';
+      }
+
+      if (
+        normalized.includes(
+          'perlengkapan anak'
+        ) ||
+        normalized.includes(
+          'pendidikan'
+        ) ||
+        normalized.includes(
+          'spp'
+        ) ||
+        normalized.includes(
+          'sekolah'
+        )
+      ) {
+        return 'spp_pendidikan';
+      }
+
+      if (
+        normalized.includes(
+          'operasional'
+        ) ||
+        normalized.includes(
+          'asrama'
+        )
+      ) {
+        return 'operasional';
+      }
+
+      if (
+        normalized.includes(
+          'donasi rutin'
+        ) ||
+        normalized.includes(
+          'rutin'
+        )
+      ) {
+        return 'donasi_rutin';
+      }
+
+      if (
+        normalized.includes(
+          'infak'
+        ) ||
+        normalized.includes(
+          'zakat'
+        )
+      ) {
+        return 'infak_zakat';
+      }
+
+      return 'lainnya';
+    };
+
+  const openPublicDonation =
+    (
+      contextOrCategory =
+        'Konsumsi'
+    ) => {
+      if (
+        typeof contextOrCategory ===
+        'string'
+      ) {
+        setSelectedDonationContext({
+          allocationCategory:
+            mapCampaignCategoryToDonationAllocation(
+              contextOrCategory
+            ),
+
+          campaignId:
+            null,
+
+          campaignTitle:
+            null,
+
+          campaignSlug:
+            null,
+        });
+      } else {
+        setSelectedDonationContext({
+          allocationCategory:
+            mapCampaignCategoryToDonationAllocation(
+              contextOrCategory
+                ?.campaignCategory ||
+              contextOrCategory
+                ?.allocationCategory ||
+              ''
+            ),
+
+          campaignId:
+            contextOrCategory
+              ?.campaignId ??
+            null,
+
+          campaignTitle:
+            contextOrCategory
+              ?.campaignTitle ||
+            null,
+
+          campaignSlug:
+            contextOrCategory
+              ?.campaignSlug ||
+            null,
+        });
+      }
+
+      setActiveTab(
+        'public-donation'
+      );
+    };
 
   const getCurrentUserName =
     () => {
@@ -313,6 +515,264 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Public Organization Profile API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadPublicOrganizationProfile =
+    React.useCallback(
+      async () => {
+        try {
+          setOrganizationProfileLoading(
+            true
+          );
+
+          setOrganizationProfileError(
+            null
+          );
+
+          const response =
+            await CmsApi
+              .getPublicProfile();
+
+          setOrganizationProfile(
+            CmsApi.normalizeProfile(
+              response?.data ||
+              null
+            )
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load public organization profile:',
+            error
+          );
+
+          setOrganizationProfile(
+            null
+          );
+
+          setOrganizationProfileError(
+            error?.message ||
+              'Gagal mengambil profil lembaga.'
+          );
+        } finally {
+          setOrganizationProfileLoading(
+            false
+          );
+        }
+      },
+      []
+    );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Pemimpin Lembaga User Approval API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadUserApprovals =
+    React.useCallback(
+      async () => {
+        if (
+          !currentUser ||
+          currentUser.role !==
+            'pemimpin_lembaga'
+        ) {
+          setApprovalUsers(
+            []
+          );
+
+          setApprovalSummary({
+            pending: 0,
+            approved: 0,
+            rejected: 0,
+            total: 0,
+          });
+
+          setApprovalError(
+            null
+          );
+
+          return;
+        }
+
+        try {
+          setApprovalLoading(
+            true
+          );
+
+          setApprovalError(
+            null
+          );
+
+          const response =
+            await UserApprovalApi
+              .getUsers({
+                per_page: 100,
+              });
+
+          const items =
+            Array.isArray(
+              response?.data?.items
+            )
+              ? response.data.items
+              : [];
+
+          setApprovalUsers(
+            items.map(
+              UserApprovalApi
+                .normalizeUser
+            )
+          );
+
+          setApprovalSummary(
+            response?.data
+              ?.summary ||
+              {
+                pending: 0,
+                approved: 0,
+                rejected: 0,
+                total:
+                  items.length,
+              }
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load user approval data:',
+            error
+          );
+
+          setApprovalUsers(
+            []
+          );
+
+          setApprovalSummary({
+            pending: 0,
+            approved: 0,
+            rejected: 0,
+            total: 0,
+          });
+
+          setApprovalError(
+            error?.message ||
+              'Gagal mengambil data persetujuan akun.'
+          );
+        } finally {
+          setApprovalLoading(
+            false
+          );
+        }
+      },
+      [
+        currentUser,
+      ]
+    );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Financial Transaction API
+  |--------------------------------------------------------------------------
+  */
+
+  const loadFinancialTransactions =
+    React.useCallback(
+      async (
+        filters = {}
+      ) => {
+        if (
+          !currentUser ||
+          currentUser.role !==
+            'pengurus_harian'
+        ) {
+          setFinancialTransactions(
+            []
+          );
+
+          setFinancialTransactionError(
+            null
+          );
+
+          setFinancialTransactionPagination({
+            current_page: 1,
+            last_page: 1,
+            per_page: 20,
+            total: 0,
+          });
+
+          return;
+        }
+
+        try {
+          setFinancialTransactionLoading(
+            true
+          );
+
+          setFinancialTransactionError(
+            null
+          );
+
+          const response =
+            await FinancialApi
+              .getTransactions(
+                filters
+              );
+
+          const items =
+            Array.isArray(
+              response?.data?.items
+            )
+              ? response.data.items
+              : [];
+
+          const normalized =
+            items.map(
+              (
+                transaction
+              ) =>
+                FinancialApi
+                  .normalizeTransaction(
+                    transaction
+                  )
+            );
+
+          setFinancialTransactions(
+            normalized
+          );
+
+          setFinancialTransactionPagination(
+            response?.data
+              ?.pagination ||
+              {
+                current_page: 1,
+                last_page: 1,
+                per_page: 20,
+                total:
+                  normalized.length,
+              }
+          );
+        } catch (error) {
+          console.error(
+            'Failed to load financial transactions:',
+            error
+          );
+
+          setFinancialTransactionError(
+            error?.message ||
+              'Gagal mengambil transaksi keuangan.'
+          );
+        } finally {
+          setFinancialTransactionLoading(
+            false
+          );
+        }
+      },
+      [
+        currentUser,
+      ]
+    );
+
+  /*
+  |--------------------------------------------------------------------------
   | Restore Authentication Session
   |--------------------------------------------------------------------------
   */
@@ -365,6 +825,18 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Load Pemimpin Lembaga Approval Summary
+  |--------------------------------------------------------------------------
+  */
+
+  React.useEffect(() => {
+    loadUserApprovals();
+  }, [
+    loadUserApprovals,
+  ]);
+
+  /*
+  |--------------------------------------------------------------------------
   | Load Public Campaigns
   |--------------------------------------------------------------------------
   */
@@ -404,6 +876,18 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
+  | Load Public Organization Profile
+  |--------------------------------------------------------------------------
+  */
+
+  React.useEffect(() => {
+    loadPublicOrganizationProfile();
+  }, [
+    loadPublicOrganizationProfile,
+  ]);
+
+  /*
+  |--------------------------------------------------------------------------
   | Load Pengurus Campaigns
   |--------------------------------------------------------------------------
   */
@@ -422,87 +906,6 @@ const App = () => {
     activeTab,
     currentUser,
   ]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Prototype Audit
-  |--------------------------------------------------------------------------
-  |
-  | Ini belum audit trail production.
-  | Akan dipindah ke backend Phase 6.
-  |
-  */
-
-  const logAudit = (
-    action,
-    details,
-    executorName = null
-  ) => {
-    const displayName =
-      executorName ||
-      getCurrentUserName() ||
-      'Donatur Publik';
-
-    const newLog = {
-      id:
-        `LOG-${Math.floor(
-          Math.random() *
-            9000 +
-            1000
-        )}`,
-
-      timestamp:
-        new Date()
-          .toISOString(),
-
-      userName:
-        displayName,
-
-      nik:
-        currentUser?.nik ||
-        '-',
-
-      userRole:
-        currentUser?.role ||
-        'Donatur Publik',
-
-      action,
-      details,
-    };
-
-    setAuditLogs(
-      (previous) => [
-        newLog,
-        ...previous,
-      ]
-    );
-  };
-
-  /*
-  |--------------------------------------------------------------------------
-  | Evaluator Mode
-  |--------------------------------------------------------------------------
-  |
-  | Tidak boleh membuat fake authenticated user.
-  | Authentication authority tetap backend.
-  |
-  */
-
-  const handleSwitchUserRole =
-    () => {
-      showToast(
-        'Untuk mengakses area pengurus, silakan login menggunakan akun yang telah disetujui.',
-        'info'
-      );
-
-      setActiveTab(
-        'auth'
-      );
-
-      setAuthView(
-        'login'
-      );
-    };
 
   /*
   |--------------------------------------------------------------------------
@@ -623,9 +1026,43 @@ const App = () => {
           null
         );
 
+        setApprovalUsers(
+          []
+        );
+
+        setApprovalSummary({
+          pending: 0,
+          approved: 0,
+          rejected: 0,
+          total: 0,
+        });
+
+        setApprovalError(
+          null
+        );
+
+        setApprovalActionUserId(
+          null
+        );
+
         setManagedPrograms(
           []
         );
+
+        setFinancialTransactions(
+          []
+        );
+
+        setFinancialTransactionError(
+          null
+        );
+
+        setFinancialTransactionPagination({
+          current_page: 1,
+          last_page: 1,
+          per_page: 20,
+          total: 0,
+        });
 
         setActiveTab(
           'beranda'
@@ -640,303 +1077,371 @@ const App = () => {
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype Registration
+  | Account Registration
   |--------------------------------------------------------------------------
-  |
-  | Belum backend-connected.
-  |
   */
 
   const handleRegisterSubmit =
-    (formData) => {
-      const newUser = {
-        id:
-          `USR-${Math.floor(
-            Math.random() *
-              900 +
-              100
-          )}`,
+    async (
+      formData
+    ) => {
+      try {
+        const payload = {
+          name:
+            formData.fullName
+              .trim(),
 
-        nik:
-          formData.nik,
+          username:
+            formData.username
+              .trim(),
 
-        fullName:
-          formData.fullName,
+          nik:
+            formData.nik
+              .trim(),
 
-        address:
-          formData.address,
+          email:
+            formData.email
+              .trim(),
 
-        phone:
-          formData.phone,
+          phone:
+            formData.phone
+              .trim(),
 
-        role:
-          formData.role,
+          address:
+            formData.address
+              ?.trim() ||
+            null,
 
-        username:
-          formData.username,
+          role:
+            formData.role,
 
-        status:
-          'Pending Approval',
+          password:
+            formData.password,
+        };
 
-        registrationDate:
-          new Date()
-            .toISOString()
-            .substring(
-              0,
-              10
-            ),
-      };
+        const response =
+          await AuthApi.register(
+            payload
+          );
 
-      setUsers(
-        (previous) => [
-          newUser,
-          ...previous,
-        ]
-      );
+        showToast(
+          'Pendaftaran berhasil dikirim dan sedang menunggu persetujuan Pemimpin Lembaga.',
+          'success'
+        );
 
-      logAudit(
-        'REGISTER',
-        `Pendaftaran prototype oleh ${formData.fullName}.`,
-        formData.fullName
-      );
+        return {
+          success: true,
+          data:
+            response?.data ||
+            null,
+          message:
+            response?.message ||
+            'Pendaftaran berhasil dikirim.',
+        };
+      } catch (error) {
+        const validationMessage =
+          error?.errors
+            ? Object.values(
+                error.errors
+              )
+                .flat()
+                .join(' ')
+            : null;
 
-      showToast(
-        'Pendaftaran prototype berhasil. Integrasi registrasi backend akan dilakukan pada fase terkait.',
-        'info'
-      );
+        const message =
+          validationMessage ||
+          error?.message ||
+          'Pendaftaran akun gagal.';
+
+        showToast(
+          message,
+          'rose'
+        );
+
+        return {
+          success: false,
+          message,
+          errors:
+            error?.errors ||
+            null,
+        };
+      }
     };
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype User Approval
+  | Pemimpin Lembaga Account Approval
   |--------------------------------------------------------------------------
   */
 
   const handleApproveUser =
-    (userId) => {
+    async (
+      userId
+    ) => {
       const targetUser =
-        users.find(
+        approvalUsers.find(
           (user) =>
             user.id ===
             userId
         );
 
       if (!targetUser) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setUsers(
-        (previous) =>
-          previous.map(
-            (user) =>
-              user.id ===
-              userId
-                ? {
-                    ...user,
-                    status:
-                      'Approved',
-                  }
-                : user
-          )
-      );
+      try {
+        setApprovalActionUserId(
+          userId
+        );
 
-      logAudit(
-        'APPROVE_USER',
-        `Prototype approval akun ${targetUser.fullName}.`
-      );
+        await UserApprovalApi
+          .approveUser(
+            userId
+          );
 
-      showToast(
-        `Akun ${targetUser.fullName} disetujui pada mode prototype.`,
-        'success'
-      );
+        showToast(
+          `Akun ${targetUser.fullName} berhasil disetujui.`,
+          'success'
+        );
+
+        await loadUserApprovals();
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to approve user:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Akun gagal disetujui.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      } finally {
+        setApprovalActionUserId(
+          null
+        );
+      }
     };
 
   const handleRejectUser =
-    (userId) => {
+    async (
+      userId
+    ) => {
       const targetUser =
-        users.find(
+        approvalUsers.find(
           (user) =>
             user.id ===
             userId
         );
 
       if (!targetUser) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setUsers(
-        (previous) =>
-          previous.map(
-            (user) =>
-              user.id ===
-              userId
-                ? {
-                    ...user,
-                    status:
-                      'Rejected',
-                  }
-                : user
-          )
-      );
+      try {
+        setApprovalActionUserId(
+          userId
+        );
 
-      logAudit(
-        'REJECT_USER',
-        `Prototype rejection akun ${targetUser.fullName}.`
-      );
+        await UserApprovalApi
+          .rejectUser(
+            userId
+          );
 
-      showToast(
-        `Akun ${targetUser.fullName} ditolak pada mode prototype.`,
-        'rose'
-      );
+        showToast(
+          `Akun ${targetUser.fullName} berhasil ditolak.`,
+          'info'
+        );
+
+        await loadUserApprovals();
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to reject user:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Akun gagal ditolak.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      } finally {
+        setApprovalActionUserId(
+          null
+        );
+      }
     };
 
   /*
   |--------------------------------------------------------------------------
-  | Prototype Internal Transactions
+  | Financial Transactions
   |--------------------------------------------------------------------------
+  |
+  | Seluruh domain keuangan aktif menggunakan backend sebagai source of truth.
+  | Backend menjadi source of truth untuk state transaksi keuangan pada App.
+  |
   */
 
   const handleSaveTransaction =
-    (trxData) => {
-      let targetTrxObj =
-        null;
-
-      const creator =
-        getCurrentUserName() ||
-        'Pengurus Harian';
-
-      if (trxData.id) {
-        targetTrxObj = {
-          ...trxData,
-
-          createdBy:
-            creator,
-        };
-
-        setTransactions(
-          (previous) =>
-            previous.map(
-              (transaction) =>
-                transaction.id ===
-                trxData.id
-                  ? targetTrxObj
-                  : transaction
-            )
-        );
-
-        logAudit(
-          'UPDATE_TRANSACTION',
-          `Prototype update transaksi ${trxData.id}.`
-        );
-
+    async (trxData) => {
+      if (
+        currentUser?.role !==
+        'pengurus_harian'
+      ) {
         showToast(
-          `Transaksi ${trxData.id} diperbarui pada mode prototype.`,
-          'success'
+          'Anda tidak memiliki izin untuk mengubah transaksi.',
+          'rose'
         );
-      } else {
-        const newId =
-          `TRX-${new Date()
-            .toISOString()
-            .substring(
-              0,
-              7
-            )
-            .replace(
-              '-',
-              ''
-            )}-${Math.floor(
-              Math.random() *
-                899 +
-                100
-            )}`;
 
-        targetTrxObj = {
-          id:
-            newId,
-
-          date:
-            trxData.date,
-
-          type:
-            trxData.type,
-
-          category:
-            trxData.category,
-
-          description:
-            trxData.description,
-
-          amount:
-            Number(
-              trxData.amount
-            ),
-
-          createdBy:
-            creator,
-
-          createdAt:
-            new Date()
-              .toISOString(),
+        return {
+          success: false,
         };
-
-        setTransactions(
-          (previous) => [
-            targetTrxObj,
-            ...previous,
-          ]
-        );
-
-        logAudit(
-          'CREATE_TRANSACTION',
-          `Prototype transaksi ${newId}.`
-        );
-
-        showToast(
-          `Transaksi ${newId} disimpan pada mode prototype.`,
-          'success'
-        );
       }
 
-      setIsAddTrxModalOpen(
-        false
-      );
+      try {
+        const payload =
+          FinancialApi
+            .buildTransactionPayload(
+              trxData
+            );
 
-      if (targetTrxObj) {
+        let response;
+
+        if (trxData.id) {
+          response =
+            await FinancialApi
+              .updateTransaction(
+                trxData.id,
+                payload
+              );
+        } else {
+          response =
+            await FinancialApi
+              .createTransaction(
+                payload
+              );
+        }
+
+        if (
+          !response?.data
+        ) {
+          throw new Error(
+            'Server tidak mengembalikan data transaksi.'
+          );
+        }
+
+        const transaction =
+          FinancialApi
+            .normalizeTransaction(
+              response.data
+            );
+
+        showToast(
+          trxData.id
+            ? `Transaksi ${transaction.id} berhasil diperbarui.`
+            : `Transaksi ${transaction.id} berhasil dicatat.`,
+          'success'
+        );
+
+        setEditingTrx(
+          null
+        );
+
+        setIsAddTrxModalOpen(
+          false
+        );
+
+        setFinancialTransactionRefreshKey(
+          (previous) =>
+            previous + 1
+        );
+
         setReceiptData({
           receiptNo:
-            targetTrxObj.id,
+            transaction.id,
 
           type:
-            targetTrxObj.type,
+            transaction.type,
 
           donorName:
-            targetTrxObj.description,
+            transaction.donorName,
 
           description:
-            targetTrxObj.description,
+            transaction.description,
 
           amount:
-            targetTrxObj.amount,
+            transaction.amount,
 
           category:
-            targetTrxObj.category,
+            transaction.category,
 
           paymentMethod:
-            targetTrxObj.type ===
-            'pemasukan'
-              ? 'Kas Masuk Bendahara'
-              : 'Kas Keluar Operasional',
+            transaction.paymentMethod,
 
           date:
-            targetTrxObj.date,
+            transaction.date,
 
           createdBy:
-            targetTrxObj.createdBy,
+            transaction.createdBy,
         });
 
         setIsReceiptModalOpen(
           true
         );
+
+        return {
+          success: true,
+          data:
+            transaction,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to save financial transaction:',
+          error
+        );
+
+        const validationMessage =
+          error?.errors
+            ? Object.values(
+                error.errors
+              )
+                .flat()
+                .join(' ')
+            : null;
+
+        showToast(
+          validationMessage ||
+            error?.message ||
+            'Transaksi gagal disimpan.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
       }
     };
 
@@ -945,22 +1450,128 @@ const App = () => {
   | Public Donation
   |--------------------------------------------------------------------------
   |
-  | Tidak membuat transaksi finansial palsu.
-  | Aktivasi dilakukan pada Phase 3 + Phase 4.
+  | Donation dibuat terlebih dahulu di backend.
+  | Payment initiation kemudian memakai public_id donation tersebut.
+  | Jika payment initiation gagal setelah donation tercatat, retry memakai
+  | donation yang sama agar tidak membuat duplicate donation record.
   |
   */
 
   const handlePublicDonationSubmit =
-    () => {
-      showToast(
-        'Donasi online belum diaktifkan. Modul ini akan menggunakan backend Donation dan Midtrans pada Phase 3 dan Phase 4.',
-        'info'
-      );
+    async (
+      donationData,
+      existingDonation = null
+    ) => {
+      let donation =
+        existingDonation;
 
-      return {
-        success: false,
-        integrationPending: true,
-      };
+      try {
+        if (!donation?.public_id) {
+          const donationPayload = {
+            campaign_id:
+              donationData
+                .campaignId ??
+              null,
+
+            allocation_category:
+              donationData.category,
+
+            donor_name:
+              donationData
+                .donorName
+                .trim(),
+
+            phone:
+              donationData.phone
+                ?.trim() ||
+              null,
+
+            email:
+              donationData.email
+                ?.trim() ||
+              null,
+
+            amount:
+              Number(
+                donationData.amount
+              ),
+
+            note:
+              donationData.note
+                ?.trim() ||
+              null,
+
+            publish_identity:
+              false,
+          };
+
+          const donationResponse =
+            await DonationApi
+              .createPublicDonation(
+                donationPayload
+              );
+
+          donation =
+            donationResponse?.data;
+
+          if (!donation?.public_id) {
+            throw new Error(
+              'Server tidak mengembalikan public ID donasi.'
+            );
+          }
+        }
+
+        const paymentResponse =
+          await PaymentApi
+            .initiate(
+              donation.public_id
+            );
+
+        const payment =
+          paymentResponse?.data;
+
+        if (!payment?.public_id) {
+          throw new Error(
+            'Server tidak mengembalikan public ID pembayaran.'
+          );
+        }
+
+        showToast(
+          'Donasi tercatat dan sesi pembayaran Midtrans berhasil dibuat. Pembayaran belum dianggap lunas sebelum dikonfirmasi backend.',
+          'success'
+        );
+
+        return {
+          success: true,
+          donation,
+          payment,
+        };
+      } catch (error) {
+        console.error(
+          'Public donation submission failed:',
+          error
+        );
+
+        const message =
+          error?.message ||
+          'Gagal menyiapkan donasi dan sesi pembayaran.';
+
+        showToast(
+          message,
+          'rose'
+        );
+
+        return {
+          success: false,
+          donation,
+          payment:
+            null,
+          message,
+          errors:
+            error?.errors ||
+            null,
+        };
+      }
     };
 
   const handlePrintTransactionReceipt =
@@ -986,10 +1597,13 @@ const App = () => {
           trxObj.category,
 
         paymentMethod:
-          trxObj.type ===
-          'pemasukan'
-            ? 'Kas Masuk Bendahara'
-            : 'Kas Keluar Operasional',
+          trxObj.paymentMethod ||
+          (
+            trxObj.type ===
+            'pemasukan'
+              ? 'Kas Masuk Bendahara'
+              : 'Kas Keluar Operasional'
+          ),
 
         date:
           trxObj.date,
@@ -1004,36 +1618,84 @@ const App = () => {
     };
 
   const handleDeleteTransaction =
-    (trxId) => {
-      const targetTrx =
-        transactions.find(
-          (transaction) =>
-            transaction.id ===
-            trxId
+    async (trxId) => {
+      const target =
+        financialTransactions
+          .find(
+            (transaction) =>
+              transaction.id ===
+              trxId
+          );
+
+      if (!target) {
+        showToast(
+          'Transaksi tidak ditemukan.',
+          'rose'
         );
 
-      if (!targetTrx) {
-        return;
+        return {
+          success: false,
+        };
       }
 
-      setTransactions(
-        (previous) =>
-          previous.filter(
-            (transaction) =>
-              transaction.id !==
-              trxId
-          )
-      );
+      if (
+        target.editable !==
+        true
+      ) {
+        showToast(
+          'Transaksi hasil donasi dikelola oleh sistem dan tidak dapat dihapus manual.',
+          'rose'
+        );
 
-      logAudit(
-        'DELETE_TRANSACTION',
-        `Prototype delete transaksi ${trxId}.`
-      );
+        return {
+          success: false,
+        };
+      }
 
-      showToast(
-        `Transaksi ${trxId} dihapus pada mode prototype.`,
-        'rose'
-      );
+      try {
+        await FinancialApi
+          .deleteTransaction(
+            trxId
+          );
+
+        showToast(
+          `Transaksi ${trxId} berhasil dihapus.`,
+          'success'
+        );
+
+        setTrxToDelete(
+          null
+        );
+
+        setIsDeleteModalOpen(
+          false
+        );
+
+        setFinancialTransactionRefreshKey(
+          (previous) =>
+            previous + 1
+        );
+
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error(
+          'Failed to delete financial transaction:',
+          error
+        );
+
+        showToast(
+          error?.message ||
+            'Transaksi gagal dihapus.',
+          'rose'
+        );
+
+        return {
+          success: false,
+          error,
+        };
+      }
     };
 
   /*
@@ -1259,11 +1921,11 @@ const App = () => {
   */
 
   const pendingApprovalCount =
-    users.filter(
-      (user) =>
-        user.status ===
-        'Pending Approval'
-    ).length;
+    Number(
+      approvalSummary
+        ?.pending ||
+      0
+    );
 
   /*
   |--------------------------------------------------------------------------
@@ -1317,10 +1979,6 @@ const App = () => {
           setActiveTab
         }
 
-        onSwitchUser={
-          handleSwitchUserRole
-        }
-
         onLogout={
           handleLogout
         }
@@ -1347,18 +2005,9 @@ const App = () => {
         {activeTab ===
           'beranda' && (
           <LandingPage
-            onNavigateToDonation={(
-              category
-            ) => {
-              setSelectedDonationCategory(
-                category ||
-                  'Konsumsi'
-              );
-
-              setActiveTab(
-                'public-donation'
-              );
-            }}
+            onNavigateToDonation={
+              openPublicDonation
+            }
 
             onNavigateToLogin={
               () => {
@@ -1382,32 +2031,39 @@ const App = () => {
             priorityPrograms={
               publicPrograms
             }
+
+            organizationProfile={
+              organizationProfile
+            }
           />
         )}
 
         {activeTab ===
           'profil' && (
           <OrganizationProfile
-            onNavigateToDonation={(
-              category
-            ) => {
-              setSelectedDonationCategory(
-                category ||
-                  'Konsumsi'
-              );
+            onNavigateToDonation={
+              openPublicDonation
+            }
 
-              setActiveTab(
-                'public-donation'
-              );
-            }}
+            organizationProfile={
+              organizationProfile
+            }
+
+            organizationProfileLoading={
+              organizationProfileLoading
+            }
+
+            organizationProfileError={
+              organizationProfileError
+            }
           />
         )}
 
         {activeTab ===
           'public-donation' && (
           <PublicDonation
-            initialCategory={
-              selectedDonationCategory
+            donationContext={
+              selectedDonationContext
             }
 
             onSubmitPublicDonation={
@@ -1418,15 +2074,7 @@ const App = () => {
 
         {activeTab ===
           'public-dashboard' && (
-          <PublicFinancialDashboard
-            transactions={
-              transactions
-            }
-
-            onPrintTransactionReceipt={
-              handlePrintTransactionReceipt
-            }
-          />
+          <PublicFinancialDashboard />
         )}
 
         {activeTab ===
@@ -1443,20 +2091,12 @@ const App = () => {
             onRegisterSubmit={
               handleRegisterSubmit
             }
-
-            onQuickSimulateRole={
-              handleSwitchUserRole
-            }
           />
         )}
 
         {activeTab ===
           'dashboard' && (
           <FinancialDashboard
-            transactions={
-              transactions
-            }
-
             currentUser={
               currentUser
             }
@@ -1471,11 +2111,31 @@ const App = () => {
           'transactions' && (
           <TransactionManagement
             transactions={
-              transactions
+              financialTransactions
             }
 
             currentUser={
               currentUser
+            }
+
+            transactionLoading={
+              financialTransactionLoading
+            }
+
+            transactionError={
+              financialTransactionError
+            }
+
+            transactionPagination={
+              financialTransactionPagination
+            }
+
+            transactionRefreshKey={
+              financialTransactionRefreshKey
+            }
+
+            onLoadTransactions={
+              loadFinancialTransactions
             }
 
             onOpenAddModal={
@@ -1493,6 +2153,18 @@ const App = () => {
             onOpenEditModal={(
               transaction
             ) => {
+              if (
+                transaction.editable !==
+                true
+              ) {
+                showToast(
+                  'Transaksi sistem tidak dapat diedit manual.',
+                  'rose'
+                );
+
+                return;
+              }
+
               setEditingTrx(
                 transaction
               );
@@ -1505,6 +2177,18 @@ const App = () => {
             onConfirmDeleteTrx={(
               transaction
             ) => {
+              if (
+                transaction.editable !==
+                true
+              ) {
+                showToast(
+                  'Transaksi sistem tidak dapat dihapus manual.',
+                  'rose'
+                );
+
+                return;
+              }
+
               setTrxToDelete(
                 transaction
               );
@@ -1550,10 +2234,47 @@ const App = () => {
         )}
 
         {activeTab ===
+          'organization-profile-management' && (
+          <OrganizationProfileManagement
+            currentUser={
+              currentUser
+            }
+
+            onProfileUpdated={
+              loadPublicOrganizationProfile
+            }
+
+            showToast={
+              showToast
+            }
+          />
+        )}
+
+        {activeTab ===
           'approval' && (
           <UserApproval
             users={
-              users
+              approvalUsers
+            }
+
+            summary={
+              approvalSummary
+            }
+
+            loading={
+              approvalLoading
+            }
+
+            error={
+              approvalError
+            }
+
+            actionUserId={
+              approvalActionUserId
+            }
+
+            onReload={
+              loadUserApprovals
             }
 
             onApproveUser={
@@ -1572,20 +2293,12 @@ const App = () => {
 
         {activeTab ===
           'audit' && (
-          <AuditTrailLog
-            auditLogs={
-              auditLogs
-            }
-          />
+          <AuditTrailLog />
         )}
 
         {activeTab ===
           'report' && (
           <FinancialReportPSAK45
-            transactions={
-              transactions
-            }
-
             currentUser={
               currentUser
             }

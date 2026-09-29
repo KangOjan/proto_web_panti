@@ -3,9 +3,10 @@ const LandingPage = ({
   onNavigateToDonation,
   onNavigateToLogin,
   onNavigateToProfile,
-  priorityPrograms = window.INITIAL_SIMK_DATA?.priorityPrograms || []
+  priorityPrograms = [],
+  organizationProfile = null
 }) => {
-  const profile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
+  const profile = organizationProfile || {};
   // Filter active priority programs
   const activePrograms = priorityPrograms.filter(
     (program) => program.status === 'active'
@@ -112,13 +113,13 @@ const LandingPage = ({
 
   return (
     <div className="space-y-16 pb-16 animate-fade-in">
-      
+
       {/* ========================================================================= */}
       {/* 1. HERO SECTION (BACKGROUND HIJAU DI BAWAH MENU BERANDA):                */}
       {/*    LANGSUNG MENYUGUHKAN PROGRAM PRIORITAS PANTI & KEBUTUHAN OPERASIONAL   */}
       {/* ========================================================================= */}
       <section className="relative bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden rounded-b-3xl shadow-xl space-y-10">
-        
+
         {/* Background Decorative Glows */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -130,7 +131,7 @@ const LandingPage = ({
               <LucideIcon name="layers" className="w-4 h-4 text-emerald-400" />
               <span>Program Prioritas Panti Asuhan Kasih Bunda</span>
             </div>
-            
+
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
               Program Kebutuhan Operasional & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Pembinaan 45 Anak Asuh</span>
             </h1>
@@ -193,8 +194,8 @@ const LandingPage = ({
                     : 0;
 
                 return (
-                  <div 
-                    key={prog.id} 
+                  <div
+                    key={prog.id}
                     className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-4 flex flex-col justify-between hover:scale-[1.01] transition-all"
                   >
                     <div className="space-y-3">
@@ -223,7 +224,7 @@ const LandingPage = ({
                           <span className="text-slate-800 font-extrabold">{percent}%</span>
                         </div>
                         <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                          <div 
+                          <div
                             className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
                             style={{ width: `${percent}%` }}
                           ></div>
@@ -235,7 +236,25 @@ const LandingPage = ({
                     </div>
 
                     <button
-                      onClick={() => onNavigateToDonation(prog.category)}
+                      onClick={() =>
+                        onNavigateToDonation({
+                          campaignCategory:
+                            prog.category ||
+                            '',
+
+                          campaignId:
+                            prog.id ??
+                            null,
+
+                          campaignTitle:
+                            prog.title ||
+                            null,
+
+                          campaignSlug:
+                            prog.slug ||
+                            null,
+                        })
+                      }
                       className="w-full py-3 bg-slate-900 hover:bg-emerald-700 hover:shadow-lg text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center space-x-1"
                     >
                       <span>Donasi {prog.category} Sekarang →</span>
@@ -466,7 +485,7 @@ const LandingPage = ({
       {/* 4. SEKSI PRESTASI ANAK ASUH PANTI & LEGALITAS / AKREDITASI LEMBAGA        */}
       {/* ========================================================================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Prestasi */}
         <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
           <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
@@ -517,7 +536,7 @@ const LandingPage = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
+
             <div className="lg:col-span-7 space-y-4">
               <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full">
                 Kunjungan & Informasi
