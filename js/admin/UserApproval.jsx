@@ -140,10 +140,12 @@ const UserApproval = ({
    * Frontend guard hanya untuk UX.
    * Authorization authority tetap backend.
    */
-  if (
-    currentUser?.role !==
-    'pemimpin_lembaga'
-  ) {
+  const isPemimpin =
+    currentUser?.role === 'pemimpin_lembaga' ||
+    currentUser?.role === 'Pemimpin Lembaga' ||
+    currentUser?.role === 'evaluator';
+
+  if (!isPemimpin) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-fade-in">
         <div className="bg-white rounded-3xl border border-rose-200 shadow-sm p-8 text-center">

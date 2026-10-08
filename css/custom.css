@@ -31,6 +31,26 @@
   background: #94a3b8;
 }
 
+/* Custom Scrollbar - Dark Sidebar Theme */
+.dark-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+.dark-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.dark-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+.dark-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
 /* PERFECT 1-PAGE PRINT CSS RULES */
 @media print {
   @page {

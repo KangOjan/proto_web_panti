@@ -1,626 +1,565 @@
-// Public Landing Page Component (Beranda Utama - Menampilkan Program Prioritas Panti Langsung di Area Atas Hero)
+// Modern Public Landing Page Component (Beranda Utama)
 const LandingPage = ({
-  onNavigateToDonation,
-  onNavigateToLogin,
-  onNavigateToProfile,
+  organizationProfile = null,
   priorityPrograms = [],
-  organizationProfile = null
+  articles = [],
+  faqs = [],
+  onNavigateToDonation,
+  onNavigateToProfile,
+  onNavigateToCampaign,
+  onNavigateToArticle,
+  onNavigateToFaq,
 }) => {
-  const profile = organizationProfile || {};
-  // Filter active priority programs
-  const activePrograms = priorityPrograms.filter(
-    (program) => program.status === 'active'
-  );
+  const defaultProfile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
+  const currentProfile = organizationProfile || defaultProfile;
 
-  const getCategoryPresentation = (categoryName = '') => {
-    const category = categoryName.toLowerCase();
-
-    if (category.includes('konsumsi')) {
-      return {
-        icon: 'utensils',
-        badge:
-          'bg-amber-100 text-amber-800 border-amber-300',
-        iconClass:
-          'bg-amber-100 text-amber-700',
-      };
-    }
-
-    if (
-      category.includes('pendidikan') ||
-      category.includes('spp') ||
-      category.includes('sekolah') ||
-      category.includes('perlengkapan')
-    ) {
-      return {
-        icon: 'graduation-cap',
-        badge:
-          'bg-emerald-100 text-emerald-800 border-emerald-300',
-        iconClass:
-          'bg-emerald-100 text-emerald-700',
-      };
-    }
-
-    if (
-      category.includes('operasional') ||
-      category.includes('asrama')
-    ) {
-      return {
-        icon: 'home',
-        badge:
-          'bg-teal-100 text-teal-800 border-teal-300',
-        iconClass:
-          'bg-teal-100 text-teal-700',
-      };
-    }
-
-    if (category.includes('kesehatan')) {
-      return {
-        icon: 'heart',
-        badge:
-          'bg-rose-100 text-rose-800 border-rose-300',
-        iconClass:
-          'bg-rose-100 text-rose-700',
-      };
-    }
-
-    return {
-      icon: 'heart-handshake',
-      badge:
-        'bg-indigo-100 text-indigo-800 border-indigo-300',
-      iconClass:
-        'bg-indigo-100 text-indigo-700',
-    };
-  };
-
-  const getIconElement = (iconName) => {
-    switch (iconName) {
-      case 'utensils':
-        return <LucideIcon name="utensils" className="w-6 h-6" />;
-      case 'graduation-cap':
-        return <LucideIcon name="graduation-cap" className="w-6 h-6" />;
-      case 'home':
-        return <LucideIcon name="home" className="w-6 h-6" />;
-      case 'heart-pulse':
-      case 'heart':
-        return <LucideIcon name="heart" className="w-6 h-6" />;
-      case 'book-open':
-        return <LucideIcon name="book-open" className="w-6 h-6" />;
-      case 'laptop':
-        return <LucideIcon name="laptop" className="w-6 h-6" />;
-      case 'heart-handshake':
-        return <LucideIcon name="heart-handshake" className="w-6 h-6" />
-      default:
-        return <LucideIcon name="sparkles" className="w-6 h-6" />;
+  const profile = {
+    name: currentProfile.name || 'Panti Asuhan Kasih Bunda',
+    tagline: currentProfile.tagline || 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
+    foundedYear: currentProfile.foundedYear || '2012',
+    history: currentProfile.history || '',
+    facilities: currentProfile.facilities || [],
+    achievements: currentProfile.achievements || [],
+    contactInfo: currentProfile.contactInfo || {
+      address: 'Jl. Merdeka Kasih Bunda No. 45, Jakarta Selatan',
+      phone: '(021) 7829-1029',
+      whatsapp: '0812-3456-7890',
+      email: 'kontak@pantikasihbunda.or.id'
     }
   };
 
-  const getBadgeClass = (color) => {
-    switch (color) {
-      case 'amber':
-        return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'emerald':
-        return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      case 'teal':
-        return 'bg-teal-100 text-teal-800 border-teal-300';
-      case 'indigo':
-        return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-      case 'rose':
-        return 'bg-rose-100 text-rose-800 border-rose-300';
-      default:
-        return 'bg-slate-100 text-slate-800 border-slate-300';
+  const activeCampaigns = (priorityPrograms && priorityPrograms.length > 0)
+    ? priorityPrograms
+    : (window.INITIAL_SIMK_DATA?.campaigns || []);
+
+  const displayArticles = (articles && articles.length > 0)
+    ? articles
+    : (window.INITIAL_SIMK_DATA?.articles || []);
+
+  const displayFaqs = (faqs && faqs.length > 0)
+    ? faqs
+    : (window.INITIAL_SIMK_DATA?.faqs || []);
+
+  const [openFaqId, setOpenFaqId] = React.useState('FAQ-001');
+
+  const impactStats = [
+    { label: 'Anak Asuh Terbina', value: '45+', desc: 'Yatim, Piatu & Dhuafa Aktif', icon: window.Users, color: 'emerald' },
+    { label: 'Donasi Tersalurkan', value: 'Rp 450Jt+', desc: '100% Diaudit & Terverifikasi', icon: window.TrendingUp, color: 'teal' },
+    { label: 'Tahun Pengabdian', value: '14 Tahun', desc: 'Melayani Sejak 2012', icon: window.Building2, color: 'amber' },
+    { label: 'Akreditasi Lembaga', value: 'Terakreditasi A', desc: 'Resmi Kemenkumham & Dinsos', icon: window.ShieldCheck, color: 'blue' }
+  ];
+
+  const trustPillars = [
+    {
+      title: 'Legalitas Berbadan Hukum',
+      desc: 'Terdaftar resmi di Kemenkumham RI (No. AHU-0012847.AH.01.04) dan Dinas Sosial sebagai Lembaga Kesejahteraan Sosial (LKS).',
+      icon: window.ShieldCheck,
+      badge: 'SK Kemenkumham Aktif'
+    },
+    {
+      title: 'Penyaluran Terdokumentasi',
+      desc: 'Setiap pengadaan dana dipublikasikan secara terbuka melalui laporan foto, nota belanja, dan linimasa perkembangan program.',
+      icon: window.FileCheck,
+      badge: 'Laporan Terbuka'
+    },
+    {
+      title: 'Kuitansi Digital Otomatis',
+      desc: 'Setiap donasi yang diverifikasi langsung menerbitkan tanda terima resmi (digital receipt) ber-ID unik yang dapat diunduh.',
+      icon: window.Receipt,
+      badge: 'Receipt Otomatis'
+    },
+    {
+      title: 'Rekening Resmi Yayasan',
+      desc: 'Seluruh transaksi masuk langsung ke rekening bank berbadan hukum atas nama yayasan, tanpa perantara rekening pribadi.',
+      icon: window.CreditCard,
+      badge: 'Rek. Badan Hukum'
     }
-  };
+  ];
+
+  const recentDonorWishes = [
+    { name: 'Hamba Allah', initials: 'HA', amount: 'Rp 500.000', program: 'Pemenuhan Gizi Harian', message: 'Semoga anak-anak panti selalu sehat, cerdas, dan dilimpahi keberkahan.', time: '2 jam lalu' },
+    { name: 'Keluarga Bpk. Hendra S.', initials: 'HS', amount: 'Rp 1.000.000', program: 'Beasiswa Pendidikan', message: 'Doa terbaik untuk kelancaran sekolah adik-adik sekalian. Terus semangat mengejar cita-cita.', time: '5 jam lalu' },
+    { name: 'Ibu Ratna Dewi', initials: 'RD', amount: 'Rp 250.000', program: 'Kamar Asrama & Komputer', message: 'Semoga fasilitas belajar barunya bermanfaat dan melahirkan programmer hebat!', time: '1 hari lalu' }
+  ];
 
   return (
-    <div className="space-y-16 pb-16 animate-fade-in">
+    <div className="animate-fade-in pb-0">
+      {/* 1. FULL-WIDTH HERO SECTION */}
+      <section className="w-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white relative overflow-hidden pt-12 pb-28 sm:pt-16 sm:pb-36 lg:pt-20 lg:pb-40 border-b border-slate-800">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[128px] pointer-events-none"></div>
+        <div className="absolute bottom-0 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20 pointer-events-none"></div>
 
-      {/* ========================================================================= */}
-      {/* 1. HERO SECTION (BACKGROUND HIJAU DI BAWAH MENU BERANDA):                */}
-      {/*    LANGSUNG MENYUGUHKAN PROGRAM PRIORITAS PANTI & KEBUTUHAN OPERASIONAL   */}
-      {/* ========================================================================= */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden rounded-b-3xl shadow-xl space-y-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+            {/* Left Column (7 cols) */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center space-x-2 bg-emerald-500/15 px-4 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner tracking-wide">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <window.Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Lembaga Kesejahteraan Sosial Resmi • Akreditasi A</span>
+              </div>
 
-        {/* Background Decorative Glows */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.1]">
+                Menebar Kasih, Membina Generasi{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-200">
+                  Mandiri & Berakhlak Mulia
+                </span>
+              </h1>
 
-        {/* 1.1 Header Banner Utama: Program Prioritas Panti */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
-          <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner">
-              <LucideIcon name="layers" className="w-4 h-4 text-emerald-400" />
-              <span>Program Prioritas Panti Asuhan Kasih Bunda</span>
+              <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                {profile.name} membina 45 anak yatim piatu & dhuafa. Bersama wujudkan masa depan mereka lewat donasi yang{' '}
+                <span className="text-emerald-300 font-semibold">100% transparan, terverifikasi, dan tercatat resmi</span>.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-1">
+                <window.Link
+                  href="/donasi"
+                  onClick={() => onNavigateToDonation && onNavigateToDonation()}
+                  className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center space-x-2.5 transition-all transform hover:-translate-y-0.5"
+                >
+                  <window.Heart className="w-4.5 h-4.5 fill-slate-950" />
+                  <span>Donasi Sekarang (Bebas Login)</span>
+                </window.Link>
+
+                <window.Link
+                  href="/profil"
+                  onClick={() => onNavigateToProfile && onNavigateToProfile()}
+                  className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-sm flex items-center justify-center space-x-2 backdrop-blur-md border border-white/15 transition-all"
+                >
+                  <window.Building2 className="w-4 h-4 text-emerald-300" />
+                  <span>Profil & Legalitas Panti</span>
+                </window.Link>
+              </div>
+
+              <div className="pt-5 flex flex-wrap items-center justify-center lg:justify-start gap-y-2 gap-x-5 text-xs text-slate-400 font-medium border-t border-slate-800/60">
+                {['Izin Kemenkumham RI', 'Dinas Sosial Terdaftar', 'Kuitansi Donasi Sah', '100% Diaudit'].map((item) => (
+                  <div key={item} className="flex items-center space-x-1.5">
+                    <window.CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Program Kebutuhan Operasional & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Pembinaan 45 Anak Asuh</span>
-            </h1>
+            {/* Right Column (5 cols) */}
+            <div className="lg:col-span-5 flex justify-center">
+              <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 group">
+                <img
+                  src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60"
+                  alt="Anak Panti Asuhan Kasih Bunda"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
 
-            <p className="text-xs sm:text-base text-slate-300 leading-relaxed font-medium">
-              Bantuan dan donasi Anda langsung dialokasikan untuk pemenuhan gizi makan harian, beasiswa sekolah, serta operasional fasilitas asrama dengan laporan keuangan nirlaba transparan berbasis PSAK 45.
+                <div className="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-xl rounded-xl p-3 shadow-2xl border border-white/15 flex items-center space-x-3 text-white">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 flex-shrink-0">
+                    <window.Heart className="w-4 h-4 fill-emerald-400 text-emerald-400" />
+                  </div>
+                  <div className="text-xs min-w-0">
+                    <div className="font-bold text-white truncate">Hamba Allah baru berdonasi</div>
+                    <div className="text-[11px] text-emerald-300/80 font-medium truncate">Rp 250.000 • Untuk Pemenuhan Gizi Harian</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. IMPACT STATS STRIP */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 relative z-20 mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {impactStats.map((stat, idx) => {
+            const IconComp = stat.icon;
+            return (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-5 sm:p-6 shadow-lg shadow-slate-200/60 border border-slate-100 hover:-translate-y-1 transition-all duration-300 space-y-2.5 group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                  <IconComp className="w-5 h-5" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
+                  {stat.value}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-700">{stat.label}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">{stat.desc}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 3. 4 PILLARS OF TRUST */}
+      <section className="bg-slate-50/70 border-y border-slate-100 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-700 px-3.5 py-1 rounded-full text-xs font-bold">
+              <window.ShieldCheck className="w-3.5 h-3.5" />
+              <span>Transparansi & Akuntabilitas</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Mengapa Berdonasi di Panti Kasih Bunda?
+            </h2>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Kami menjunjung tinggi amanah donatur melalui sistem pencatatan donasi digital, audit berkala, dan transparansi laporan penyaluran.
             </p>
           </div>
 
-          {/* Quick Buttons */}
-          <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 flex-shrink-0">
-            <button
-              onClick={() => onNavigateToDonation('Konsumsi')}
-              className="px-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
-            >
-              <LucideIcon name="heart" className="w-5 h-5 fill-slate-950" />
-              <span>Donasi Cepat (Bebas Login)</span>
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {trustPillars.map((pillar, idx) => {
+              const PillarIcon = pillar.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-emerald-200 hover:shadow-md transition-all duration-300 space-y-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                      <PillarIcon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      {pillar.desc}
+                    </p>
+                  </div>
 
-            <button
-              onClick={onNavigateToProfile}
-              className="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl border border-white/20 text-xs sm:text-sm flex items-center space-x-2 transition-all"
-            >
-              <LucideIcon name="building-2" className="w-4 h-4 text-emerald-300" />
-              <span>Profil & Struktur Panti</span>
-            </button>
+                  <div className="pt-3 border-t border-slate-100 flex items-center space-x-1.5 text-[11px] font-semibold text-emerald-600">
+                    <window.CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{pillar.badge}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
+      </section>
 
-        {/* 1.2 KARTU PROGRAM PRIORITAS PANTI (LANGSUNG TAMPIL DI AREA ATAS) */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-emerald-300">
-              <LucideIcon name="heart-handshake" className="w-4 h-4 text-emerald-400" />
-              <span>Pilihan Program Bantuan Kebutuhan Anak</span>
+      {/* 4. CAMPAIGN DONASI PRIORITAS */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold mb-2">
+                <window.Layers className="w-3.5 h-3.5" />
+                <span>Program Donasi Pilihan</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Campaign Kebutuhan Anak Panti
+              </h2>
+              <p className="text-sm text-slate-500 mt-1 max-w-lg">
+                Pilih program kebutuhan mendesak yang ingin Anda dukung secara langsung.
+              </p>
             </div>
-            <span className="text-[11px] text-slate-300 font-medium">Klik tombol donasi pada program yang ingin Anda bantu</span>
+
+            <window.Link
+              href="/donasi"
+              onClick={() => onNavigateToDonation && onNavigateToDonation()}
+              className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors shrink-0"
+            >
+              <span>Salurkan Donasi Umum</span>
+              <window.ArrowRight className="w-3.5 h-3.5" />
+            </window.Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {activePrograms.length === 0 ? (
-              <div className="col-span-3 text-center py-10 bg-white/10 backdrop-blur-md rounded-3xl border border-white/10 text-slate-300">
-                <p className="text-sm font-bold">Belum ada program prioritas aktif yang ditampilkan.</p>
-              </div>
-            ) : (
-              activePrograms.map((prog) => {
-                const presentation =
-                  getCategoryPresentation(prog.category);
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {activeCampaigns.map((camp) => {
+              const percent = camp.targetAmount > 0
+                ? Math.min(100, Math.round(((camp.collectedAmount || 0) / camp.targetAmount) * 100))
+                : 0;
 
-                const percent =
-                  prog.targetAmount > 0
-                    ? Math.min(
-                        100,
-                        Math.round(
-                          ((prog.collectedAmount || 0) /
-                            prog.targetAmount) *
-                            100
-                        )
-                      )
-                    : 0;
+              return (
+                <div
+                  key={camp.id}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col group"
+                >
+                  <div className="aspect-video relative overflow-hidden bg-slate-100">
+                    <img
+                      src={camp.image || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60'}
+                      alt={camp.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 flex items-center space-x-1.5">
+                      <span className="px-2.5 py-1 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold rounded-full">
+                        {camp.category}
+                      </span>
+                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${
+                        camp.status === 'Target Tercapai'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {camp.status}
+                      </span>
+                    </div>
+                  </div>
 
-                return (
-                  <div
-                    key={prog.id}
-                    className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 text-slate-900 space-y-4 flex flex-col justify-between hover:scale-[1.01] transition-all"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${presentation.iconClass}`}
-                        >
-                          {getIconElement(presentation.icon)}
-                        </div>
-                        <span
-                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full border ${presentation.badge}`}
-                        >
-                          {prog.category}
+                  <div className="p-5 space-y-3 flex-1">
+                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors">
+                      {camp.title}
+                    </h3>
+
+                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                      {camp.description}
+                    </p>
+
+                    <div className="space-y-1.5 pt-1">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="text-emerald-600 font-mono text-[13px]">
+                          Rp {(camp.collectedAmount || 0).toLocaleString('id-ID')}
                         </span>
+                        <span className="text-slate-400 font-mono">{percent}%</span>
                       </div>
 
-                      <h3 className="text-base font-extrabold text-slate-900 leading-snug">{prog.title}</h3>
-                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-3">
-                        {prog.description}
-                      </p>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
 
-                      {/* Progress Bar & Funding Status */}
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                        <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-slate-600">Terkumpul: <b className="text-emerald-700">Rp {(prog.collectedAmount || 0).toLocaleString('id-ID')}</b></span>
-                          <span className="text-slate-800 font-extrabold">{percent}%</span>
-                        </div>
-                        <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                          <div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                            style={{ width: `${percent}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-[10px] text-slate-400 text-right font-mono">
-                          Target: Rp {(prog.targetAmount || 0).toLocaleString('id-ID')}
-                        </div>
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                        <span>Target: Rp {(camp.targetAmount || 0).toLocaleString('id-ID')}</span>
+                        <span>{camp.donorCount || 40}+ Donatur</span>
                       </div>
                     </div>
+                  </div>
 
-                    <button
-                      onClick={() =>
-                        onNavigateToDonation({
-                          campaignCategory:
-                            prog.category ||
-                            '',
-
-                          campaignId:
-                            prog.id ??
-                            null,
-
-                          campaignTitle:
-                            prog.title ||
-                            null,
-
-                          campaignSlug:
-                            prog.slug ||
-                            null,
-                        })
-                      }
-                      className="w-full py-3 bg-slate-900 hover:bg-emerald-700 hover:shadow-lg text-white rounded-2xl text-xs font-black transition-all flex items-center justify-center space-x-1"
+                  <div className="px-5 py-4 flex items-center justify-between border-t border-slate-100">
+                    <window.Link
+                      href={`/campaign/${camp.id}`}
+                      onClick={() => onNavigateToCampaign && onNavigateToCampaign(camp.id)}
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors flex items-center space-x-1"
                     >
-                      <span>Donasi {prog.category} Sekarang →</span>
-                    </button>
+                      <span>Detail Program</span>
+                      <window.ChevronRight className="w-3.5 h-3.5" />
+                    </window.Link>
+
+                    <window.Link
+                      href={`/donasi?campaign=${camp.id}`}
+                      onClick={() => onNavigateToDonation && onNavigateToDonation(camp.id)}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center space-x-1.5 transition-all"
+                    >
+                      <window.Heart className="w-3.5 h-3.5 fill-white" />
+                      <span>Donasi Sekarang</span>
+                    </window.Link>
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })}
           </div>
         </div>
-
-        {/* 1.3 INFOGRAFIS JUMLAH & DEMOGRAFI ANAK ASUH */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10 pt-4 border-t border-white/10">
-          <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-            <LucideIcon name="bar-chart-3" className="w-4 h-4 text-emerald-400" />
-            <span>Infografis Anak Asuh & Kebutuhan Harian</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Total Anak Asuh</span>
-                <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300">
-                  <LucideIcon name="users" className="w-5 h-5" />
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">45 Anak</div>
-              <div className="text-[11px] text-emerald-200 font-medium">👦 24 Putra • 👧 21 Putri Asrama</div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Jenjang Sekolah</span>
-                <span className="p-2 rounded-xl bg-teal-500/20 text-teal-300">
-                  <LucideIcon name="graduation-cap" className="w-5 h-5" />
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">100% Sekolah</div>
-              <div className="text-[11px] text-teal-200 font-medium">SD (15) • SMP (18) • SMA (12)</div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Pemenuhan Konsumsi</span>
-                <span className="p-2 rounded-xl bg-amber-500/20 text-amber-300">
-                  <LucideIcon name="utensils" className="w-5 h-5" />
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">135 Porsi/Hari</div>
-              <div className="text-[11px] text-amber-200 font-medium">Menu Sehat 3x Sehari + Susu & Buah</div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300">Akuntabilitas Donasi</span>
-                <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-300">
-                  <LucideIcon name="file-check" className="w-5 h-5" />
-                </span>
-              </div>
-              <div className="text-3xl font-black text-white">PSAK 45</div>
-              <div className="text-[11px] text-indigo-200 font-medium">Kuitansi Digital Instan & Transparan</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 1.4 HASIL PENGGUNAAN DONASI (DOKUMENTASI FOTO KEGIATAN NYATA) */}
-        <div className="max-w-7xl mx-auto space-y-4 relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-              <LucideIcon name="image" className="w-4 h-4 text-emerald-400" />
-              <span>Hasil Penyaluran Donasi & Aktivitas Nyata Anak Asuh</span>
-            </div>
-            <span className="text-[11px] text-slate-300 font-medium">Dokumentasi Terverifikasi</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="relative z-10 space-y-1">
-                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center mx-auto text-xl">
-                    🍲
-                  </div>
-                  <div className="text-xs font-black text-white">Gizi Harian & Makan Sehat</div>
-                </div>
-              </div>
-              <div className="p-3 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-emerald-300">Alokasi Dana Konsumsi</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Penyediaan beras, lauk segar, telur, susu pertumbuhan 45 anak asuh setiap hari.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="relative z-10 space-y-1">
-                  <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center mx-auto text-xl">
-                    💻
-                  </div>
-                  <div className="text-xs font-black text-white">Lab Komputer & Coding</div>
-                </div>
-              </div>
-              <div className="p-3 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-teal-300">Alokasi Dana Pendidikan</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Pelatihan ketrampilan digital, bimbingan tugas sekolah, dan 15 unit PC internet.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="relative z-10 space-y-1">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center mx-auto text-xl">
-                    📖
-                  </div>
-                  <div className="text-xs font-black text-white">Halaqah Tahfidz Qur'an</div>
-                </div>
-              </div>
-              <div className="p-3 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-indigo-300">Pembinaan Akhlak & Adab</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Bimbingan tahsin & setoran hafalan Al-Qur'an harian bersama ustadz asrama.
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-400/50 transition-all flex flex-col justify-between">
-              <div className="h-32 bg-slate-800/80 relative flex items-center justify-center p-4 text-center overflow-hidden">
-                <div className="relative z-10 space-y-1">
-                  <div className="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center mx-auto text-xl">
-                    🩺
-                  </div>
-                  <div className="text-xs font-black text-white">Cek Kesehatan & Sanitasi</div>
-                </div>
-              </div>
-              <div className="p-3 space-y-1 bg-slate-900/60">
-                <div className="text-[11px] font-bold text-rose-300">Alokasi Dana Kesehatan</div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Pemeriksaan dokter relawan, suplemen, serta sanitasi kamar tidur asrama.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </section>
 
-      {/* ========================================================================= */}
-      {/* 2. SEKSI SEJARAH, LATAR BELAKANG, VISI & MISI PANTI                      */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-7 space-y-4">
-            <div className="inline-flex items-center space-x-2 bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
-              <LucideIcon name="book-marked" className="w-3.5 h-3.5" />
-              <span>Sejarah & Latar Belakang</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Lebih Dari Satu Dekade Mengabdi Untuk Kemandirian Anak Yatim
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              {profile.history}
-            </p>
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-950 space-y-1">
-              <span className="font-extrabold text-emerald-900 block uppercase tracking-wider text-[11px]">Visi Lembaga:</span>
-              <p className="italic">"{profile.vision}"</p>
-            </div>
+      {/* 5. SOCIAL PROOF: DOA DONATUR */}
+      <section className="bg-slate-50/70 border-y border-slate-100 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex items-end justify-between">
             <div>
-              <button
-                onClick={onNavigateToProfile}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all flex items-center space-x-2"
+              <div className="inline-flex items-center space-x-2 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold mb-2">
+                <window.MessageCircle className="w-3.5 h-3.5" />
+                <span>Doa & Solidaritas Kebaikan</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Doa Donatur & Orang Baik</h2>
+            </div>
+            <span className="text-xs font-medium text-slate-400 hidden sm:inline">
+              Update Real-Time
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {recentDonorWishes.map((wish, idx) => (
+              <div
+                key={idx}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-3"
               >
-                <span>Lihat Struktur Kepengurusan Lengkap →</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="lg:col-span-5 bg-slate-50 rounded-3xl p-6 border border-slate-200 space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
-              <LucideIcon name="target" className="w-4 h-4 text-emerald-600" />
-              <span>Pilar Misi Pelayanan Yayasan</span>
-            </h3>
-            <div className="space-y-2.5 text-xs">
-              {profile.missions?.slice(0, 5).map((m, i) => (
-                <div key={i} className="flex items-start space-x-2 text-slate-700">
-                  <LucideIcon name="check-circle" className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{m}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 3. SEKSI FASILITAS ASRAMA & SARANA PENUNJANG                             */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-extrabold text-teal-800 uppercase tracking-wider bg-teal-100 px-3 py-1 rounded-full border border-teal-300">
-            Fasilitas Asrama
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Sarana & Prasarana Penunjang Tumbuh Kembang Anak
-          </h2>
-          <p className="text-xs text-slate-500">
-            Fasilitas layak, aman, dan higienis untuk mendukung aktivitas ibadah, belajar, dan istirahat anak asuh.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {profile.facilities?.map((f, i) => (
-            <div key={i} className="p-5 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2 hover:border-emerald-300 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                {getIconElement(f.icon)}
-              </div>
-              <h3 className="text-sm font-black text-slate-900">{f.name}</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                {f.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 4. SEKSI PRESTASI ANAK ASUH PANTI & LEGALITAS / AKREDITASI LEMBAGA        */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-        {/* Prestasi */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <LucideIcon name="trophy" className="w-5 h-5 text-amber-500" />
-            <h3 className="text-base font-extrabold text-slate-900">Prestasi Anak Asuh Panti</h3>
-          </div>
-          <div className="space-y-3">
-            {profile.achievements?.map((ach, i) => (
-              <div key={i} className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex items-start space-x-3">
-                <span className="px-2 py-1 bg-amber-100 text-amber-900 rounded-lg text-[10px] font-black font-mono">
-                  {ach.year}
-                </span>
-                <div>
-                  <div className="text-xs font-black text-slate-900">{ach.title}</div>
-                  <div className="text-[11px] text-slate-500 font-medium">{ach.by}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Legalitas Ringkas */}
-        <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <LucideIcon name="shield-check" className="w-5 h-5 text-emerald-600" />
-            <h3 className="text-base font-extrabold text-slate-900">Legalitas & Akreditasi Lembaga</h3>
-          </div>
-          <div className="space-y-2.5">
-            {profile.legalities?.slice(0, 5).map((leg, i) => (
-              <div key={i} className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 flex items-center justify-between text-xs">
-                <div>
-                  <div className="font-bold text-slate-900">{leg.type}</div>
-                  <div className="text-[10px] text-slate-500 font-mono">{leg.number}</div>
-                </div>
-                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                  {leg.date}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 5. SEKSI LOKASI & KONTAK PANTI                                           */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-
-            <div className="lg:col-span-7 space-y-4">
-              <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full">
-                Kunjungan & Informasi
-              </span>
-              <h3 className="text-2xl font-black">Lokasi & Kontak Panti Asuhan</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Panti Asuhan Kasih Bunda berlokasi strategis di Jakarta Selatan dan selalu terbuka bagi silaturahmi para dermawan, instansi, maupun relawan.
-              </p>
-
-              <div className="space-y-2.5 text-xs">
-                <div className="flex items-start space-x-3">
-                  <LucideIcon name="map-pin" className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-200">{profile.contactInfo?.address}</span>
-                </div>
                 <div className="flex items-center space-x-3">
-                  <LucideIcon name="phone" className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="text-slate-200">WhatsApp: {profile.contactInfo?.whatsapp}</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <LucideIcon name="mail" className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="text-slate-200">Email: {profile.contactInfo?.email}</span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex flex-wrap gap-3">
-                <button
-                  onClick={() => onNavigateToDonation('Konsumsi')}
-                  className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs shadow-lg transition-all"
-                >
-                  Salurkan Donasi Online
-                </button>
-                <a
-                  href={`https://wa.me/6281234567890?text=Halo%20Pengurus%20Panti%20Asuhan%20Kasih%20Bunda`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition-all flex items-center space-x-1.5"
-                >
-                  <LucideIcon name="message-circle" className="w-4 h-4 text-emerald-400" />
-                  <span>Hubungi via WhatsApp</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Google Maps Simulation Widget */}
-            <div className="lg:col-span-5 bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/20 space-y-3 text-center">
-              <div className="h-40 bg-slate-800 rounded-xl overflow-hidden relative flex items-center justify-center border border-white/10">
-                <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                <div className="relative z-10 text-center space-y-1 p-3">
-                  <div className="w-9 h-9 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-md">
-                    <LucideIcon name="map-pin" className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {wish.initials}
                   </div>
-                  <div className="text-xs font-black text-white">{profile.name}</div>
-                  <div className="text-[10px] text-slate-300">Jakarta Selatan</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-900 truncate">{wish.name}</div>
+                    <div className="text-[10px] text-slate-400 font-medium">{wish.time}</div>
+                  </div>
                 </div>
+
+                <div className="inline-block text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 font-mono">
+                  {wish.amount} • {wish.program}
+                </div>
+
+                <p className="text-xs text-slate-600 italic leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  "{wish.message}"
+                </p>
               </div>
-              <div className="text-[11px] text-emerald-300 font-bold">
-                ⏰ Jam Kunjungan: 08.00 - 17.00 WIB
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. NEWS & ARTICLES PREVIEW */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="inline-flex items-center space-x-2 bg-teal-100 text-teal-700 px-3 py-1 rounded-full text-xs font-bold mb-2">
+                <window.Newspaper className="w-3.5 h-3.5" />
+                <span>Kabar & Transparansi Kegiatan</span>
               </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Artikel & Berita Panti</h2>
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================================= */}
-      {/* 6. FOOTER CTA DONASI                                                      */}
-      {/* ========================================================================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-r from-emerald-900 to-slate-900 rounded-3xl p-8 text-white shadow-xl text-center space-y-4">
-          <h2 className="text-2xl font-extrabold">Siap Berkontribusi Bersama Kami?</h2>
-          <p className="text-xs text-emerald-100 max-w-xl mx-auto">
-            Proses donasi mudah, cepat, dan transparan. Tanpa perlu login, pilih metode Scan QRIS Dinamis atau Transfer Bank, dan dapatkan Kuitansi Digital Resmi seketika.
-          </p>
-          <div className="pt-2">
-            <button
-              onClick={() => onNavigateToDonation('Konsumsi')}
-              className="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all"
+            <window.Link
+              href="/berita"
+              onClick={() => onNavigateToArticle && onNavigateToArticle(null)}
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1 transition-colors shrink-0"
             >
-              Mulai Donasi Publik Sekarang
-            </button>
+              <span>Lihat Semua</span>
+              <window.ArrowRight className="w-3.5 h-3.5" />
+            </window.Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {displayArticles.slice(0, 2).map((art) => (
+              <window.Link
+                key={art.id}
+                href={`/berita/${art.slug || art.id}`}
+                onClick={() => onNavigateToArticle && onNavigateToArticle(art.slug || art.id)}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col sm:flex-row group"
+              >
+                <div className="sm:w-44 h-40 sm:h-auto relative overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img
+                    src={art.image}
+                    alt={art.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  {art.category && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold rounded-full">
+                      {art.category}
+                    </span>
+                  )}
+                </div>
+                <div className="p-5 space-y-2 flex-1 flex flex-col justify-center">
+                  <div className="flex items-center space-x-2 text-[11px] text-slate-400 font-medium">
+                    <window.CalendarDays className="w-3 h-3" />
+                    <span>{art.date}</span>
+                    <span>•</span>
+                    <span>{art.author}</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 line-clamp-2 group-hover:text-emerald-700 transition-colors leading-snug">
+                    {art.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                    {art.excerpt}
+                  </p>
+                  <span className="text-xs font-semibold text-emerald-600 inline-flex items-center space-x-1 pt-1">
+                    <span>Baca Selengkapnya</span>
+                    <window.ArrowRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </window.Link>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* 7. FAQ QUICK PREVIEW */}
+      <section className="bg-slate-50/70 border-y border-slate-100 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <div className="inline-flex items-center space-x-2 bg-slate-200 text-slate-700 px-3.5 py-1 rounded-full text-xs font-bold">
+              <window.HelpCircle className="w-3.5 h-3.5" />
+              <span>Pusat Bantuan & Tanya Jawab</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Pertanyaan yang Sering Diajukan
+            </h2>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Jawaban ringkas seputar penyaluran donasi, verifikasi kuitansi, transparansi, dan tata cara kunjungan panti asuhan.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-3.5">
+            {displayFaqs.slice(0, 4).map((faq) => {
+              const isOpen = openFaqId === faq.id;
+              return (
+                <div
+                  key={faq.id}
+                  className={`rounded-2xl transition-all duration-300 border overflow-hidden ${
+                    isOpen
+                      ? 'bg-white border-emerald-300 shadow-md ring-1 ring-emerald-500/20'
+                      : 'bg-white border-slate-200/90 shadow-xs hover:border-slate-300'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
+                    className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-slate-900 text-sm sm:text-base hover:text-emerald-700 transition-colors"
+                  >
+                    <span className="leading-snug">{faq.question}</span>
+                    <span
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                        isOpen
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {isOpen ? <window.Minus className="w-4 h-4" /> : <window.Plus className="w-4 h-4" />}
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-xs sm:text-sm text-slate-600 leading-relaxed border-t border-slate-100 pt-3 bg-slate-50/40 animate-fade-in">
+                      <p>{faq.answer}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="text-center pt-2">
+            <window.Link
+              href="/faq"
+              onClick={() => onNavigateToFaq && onNavigateToFaq()}
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-xl bg-white border border-slate-200 text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:border-emerald-300 shadow-xs transition-all"
+            >
+              <span>Lihat Seluruh Tanya Jawab (FAQ Lengkap)</span>
+              <window.ArrowRight className="w-3.5 h-3.5" />
+            </window.Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. CALL TO ACTION BANNER */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-950 p-8 sm:p-12 lg:p-16 text-white shadow-xl text-center space-y-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/8 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight relative z-10">
+              Bersama Nyalakan Harapan Masa Depan Anak Yatim Dhuafa
+            </h2>
+            <p className="text-sm text-emerald-200/80 max-w-xl mx-auto leading-relaxed relative z-10">
+              Donasi Anda disalurkan secara amanah dengan kuitansi digital sah dan dokumentasi belanja terbuka.
+            </p>
+            <div className="pt-2 relative z-10">
+              <window.Link
+                href="/donasi"
+                onClick={() => onNavigateToDonation && onNavigateToDonation()}
+                className="inline-flex items-center space-x-2 px-8 py-3.5 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition-all transform hover:-translate-y-0.5"
+              >
+                <window.Heart className="w-4.5 h-4.5 fill-slate-950" />
+                <span>Salurkan Kebaikan Sekarang</span>
+              </window.Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

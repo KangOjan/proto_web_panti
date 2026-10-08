@@ -511,13 +511,18 @@ const AuditTrailLog = () => {
               return;
             }
 
-            setLogs([]);
-
-            setError(
-              requestError
-                ?.message ||
-              'Gagal memuat audit log.'
-            );
+            const mockLogs = window.INITIAL_SIMK_DATA?.auditLogs || [];
+            if (mockLogs.length > 0) {
+              setLogs(mockLogs);
+              setError(null);
+            } else {
+              setLogs([]);
+              setError(
+                requestError
+                  ?.message ||
+                'Gagal memuat audit log.'
+              );
+            }
           } finally {
             if (
               !cancelled

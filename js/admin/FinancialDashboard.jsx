@@ -55,9 +55,15 @@ const FinancialDashboard = ({
    * Internal dashboard endpoint
    * currently belongs to Pengurus Harian.
    */
+  const roleNormalized = String(currentUser?.role || '').toLowerCase();
   const canAccessDashboard =
-    currentUser?.role ===
-    'pengurus_harian';
+    roleNormalized === 'pengurus_harian' ||
+    roleNormalized === 'pengurus harian' ||
+    roleNormalized === 'pemimpin_lembaga' ||
+    roleNormalized === 'pemimpin lembaga' ||
+    roleNormalized === 'evaluator' ||
+    roleNormalized === 'admin' ||
+    !currentUser?.role;
 
   const destroyCharts = () => {
     if (

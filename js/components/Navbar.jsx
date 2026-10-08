@@ -1,458 +1,187 @@
-// Navbar Component for SIMK-Panti (Public + Role-Gated Layout)
+// Modern Symmetrical Navbar Component with Mobile Navigation & Evaluator Simulation
+// Exactly matched to web-panti-project (final frontend)
+
 const Navbar = ({
   currentUser,
-  activeTab,
-  setActiveTab,
-  onLogout,
-  onNavigateToAuth,
-  pendingApprovalCount
+  currentRoute = 'home',
+  onSwitchUserRole,
+  evaluatorMode = true,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = React.useState(false);
 
-  const currentUserName =
-    currentUser?.name ||
-    currentUser?.fullName ||
-    currentUser?.full_name ||
-    currentUser?.username ||
-    'User';
+  // Toggle Mode Evaluator via evaluatorMode
+  const isEvaluatorEnabled = evaluatorMode !== undefined ? Boolean(evaluatorMode) : true;
 
-  const getRoleLabel = (role) => {
-    if (role === 'pengurus_harian') return 'Pengurus Harian';
-    if (role === 'pemimpin_lembaga') return 'Pemimpin Lembaga';
-    return role || '-';
+  const isRouteActive = (route) => {
+    if (route === 'home') return currentRoute === 'home' || currentRoute === 'beranda' || currentRoute === '/' || !currentRoute;
+    if (route === 'profil') return currentRoute === 'profil' || currentRoute === '/profil';
+    if (route === 'berita') return currentRoute === 'berita' || currentRoute === '/berita' || (typeof currentRoute === 'string' && currentRoute.startsWith('detail-berita'));
+    if (route === 'faq') return currentRoute === 'faq' || currentRoute === '/faq';
+    if (route === 'donasi') return currentRoute === 'donasi' || currentRoute === 'public-donation' || currentRoute === '/donasi' || (typeof currentRoute === 'string' && currentRoute.startsWith('detail-campaign'));
+    return currentRoute === route;
   };
 
-  const getRoleBadgeColor = (role) => {
-    if (role === 'pengurus_harian') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-    if (role === 'pemimpin_lembaga') return 'bg-indigo-100 text-indigo-800 border-indigo-300';
-    return 'bg-amber-100 text-amber-800 border-amber-300';
-  };
+  const Building2 = window.Building2;
+  const Home = window.Home;
+  const Heart = window.Heart;
+  const Newspaper = window.Newspaper;
+  const HelpCircle = window.HelpCircle;
+  const Menu = window.Menu;
+  const X = window.X;
+  const UserCheck = window.UserCheck;
+  const ShieldCheck = window.ShieldCheck;
+  const Globe = window.Globe;
+  const Link = window.Link;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm no-print">
-      
-      {/* Main Header Container */}
+      {/* Top Evaluator Bar (Controlled via evaluatorMode) */}
+      {isEvaluatorEnabled && (
+        <div className="bg-slate-900 text-slate-200 px-4 py-1.5 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 simulasi-banner">
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 uppercase tracking-wider">
+              Mode Evaluator
+            </span>
+            <span className="hidden sm:inline text-slate-300">
+              Simulasi Role Pengguna
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2 text-xs">
+            <button
+              type="button"
+              onClick={() => onSwitchUserRole && onSwitchUserRole(null)}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                !currentUser
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Publik (Beranda)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSwitchUserRole && onSwitchUserRole('Pengurus Harian')}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                currentUser?.role === 'Pengurus Harian'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Pengurus Harian</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onSwitchUserRole && onSwitchUserRole('Pemimpin Lembaga')}
+              className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
+                currentUser?.role === 'Pemimpin Lembaga'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Pemimpin Lembaga</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Navbar Header - Symmetrical Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
-          {/* Brand Logo & Title */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab(currentUser ? 'dashboard' : 'beranda')}>
+          {/* Brand Logo & Name (Left Aligned) */}
+          <Link href="/" className="flex items-center space-x-3 cursor-pointer">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <LucideIcon name="building-2" className="w-6 h-6" />
+              <Building2 className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight text-slate-900">SIMK-Panti</span>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  v2.5 Live
-                </span>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900">Panti Kasih Bunda</span>
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block font-medium">
-                Panti Asuhan Kasih Bunda • Transparansi & Akuntabilitas Keuangan
+                Portal Transparansi & Donasi Panti Asuhan
               </p>
             </div>
-          </div>
+          </Link>
 
-          {/* Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            
-            {/* 1. PUBLIC MENU: BERANDA */}
-            <button
-              onClick={() => setActiveTab('beranda')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                activeTab === 'beranda'
-                  ? 'bg-slate-100 text-emerald-700 font-bold shadow-inner'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          {/* Public Nav Links Desktop (Right Aligned & Symmetrical with Logo) */}
+          <nav className="hidden lg:flex items-center space-x-2">
+            <Link
+              href="/"
+              className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-1.5 ${
+                isRouteActive('home') ? 'bg-slate-100 text-emerald-700 font-extrabold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <LucideIcon name="home" className="w-4 h-4" />
+              <Home className="w-4 h-4" />
               <span>Beranda</span>
-            </button>
+            </Link>
 
-            {/* 2. PUBLIC MENU: PROFIL PANTI */}
-            <button
-              onClick={() => setActiveTab('profil')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                activeTab === 'profil'
-                  ? 'bg-slate-100 text-emerald-700 font-bold shadow-inner'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            <Link
+              href="/profil"
+              className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-1.5 ${
+                isRouteActive('profil') ? 'bg-slate-100 text-emerald-700 font-extrabold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <LucideIcon name="building-2" className="w-4 h-4" />
-              <span>Profil Panti</span>
-            </button>
+              <Building2 className="w-4 h-4" />
+              <span>Profil</span>
+            </Link>
 
-            {/* 3. PUBLIC MENU: DONASI (TANPA LOGIN) */}
-            <button
-              onClick={() => setActiveTab('public-donation')}
-              className={`px-3 py-2 rounded-xl text-sm font-extrabold transition-all flex items-center space-x-2 border ${
-                activeTab === 'public-donation'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20'
+            <Link
+              href="/berita"
+              className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-1.5 ${
+                isRouteActive('berita') ? 'bg-slate-100 text-emerald-700 font-extrabold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <Newspaper className="w-4 h-4" />
+              <span>Berita</span>
+            </Link>
+
+            <Link
+              href="/faq"
+              className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all flex items-center space-x-1.5 ${
+                isRouteActive('faq') ? 'bg-slate-100 text-emerald-700 font-extrabold' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>FAQ</span>
+            </Link>
+
+            <Link
+              href="/donasi"
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold transition-all flex items-center space-x-1.5 border shadow-sm ${
+                isRouteActive('donasi')
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-500'
                   : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
               }`}
             >
-              <LucideIcon name="heart" className="w-4 h-4 text-rose-500 fill-rose-100" />
-              <span>Donasi</span>
-              <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full uppercase">
-                Bebas Login
-              </span>
-            </button>
-
-            {/* 4. PUBLIC MENU: DASHBOARD KEUANGAN PUBLIK (TANPA LOGIN) */}
-            <button
-              onClick={() => setActiveTab('public-dashboard')}
-              className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                activeTab === 'public-dashboard'
-                  ? 'bg-slate-100 text-emerald-700 font-bold shadow-inner'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <LucideIcon name="line-chart" className="w-4 h-4 text-emerald-600" />
-              <span>Dashboard Keuangan</span>
-            </button>
-
-            {/* 5. AUTHENTICATED INTERNAL WORKSPACE MENUS (ONLY WHEN LOGGED IN) */}
-            {currentUser && (
-              <>
-                <div className="h-5 w-px bg-slate-200 mx-2"></div>
-
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                    activeTab === 'dashboard'
-                      ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  <LucideIcon name="layout-dashboard" className="w-4 h-4" />
-                  <span>Dashboard Keuangan</span>
-                </button>
-
-                {/* Role: Pengurus Harian Tab */}
-                {currentUser.role === 'pengurus_harian' && (
-                  <>
-                    <button
-                      onClick={() => setActiveTab('transactions')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'transactions'
-                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="receipt" className="w-4 h-4" />
-                      <span>Pencatatan Transaksi (CRUD)</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab('programs')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'programs'
-                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="layers" className="w-4 h-4" />
-                      <span>Program Prioritas (CRUD)</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab('organization-profile-management')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'organization-profile-management'
-                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="building-2" className="w-4 h-4" />
-                      <span>Kelola Profil</span>
-                    </button>
-
-                    <button
-                      onClick={() => setActiveTab('audit')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'audit'
-                          ? 'bg-slate-100 text-emerald-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="history" className="w-4 h-4" />
-                      <span>Audit Trail</span>
-                    </button>
-                  </>
-                )}
-
-                {/* Role: Pemimpin Lembaga Tab */}
-                {currentUser.role === 'pemimpin_lembaga' && (
-                  <>
-                    <button
-                      onClick={() => setActiveTab('approval')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 relative ${
-                        activeTab === 'approval'
-                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="user-check" className="w-4 h-4" />
-                      <span>Persetujuan Akun (Approval)</span>
-                      {pendingApprovalCount > 0 && (
-                        <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                          {pendingApprovalCount}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan sesuai arahan mitra]
-                    <button
-                      onClick={() => setActiveTab('report')}
-                      className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                        activeTab === 'report'
-                          ? 'bg-slate-100 text-indigo-700 shadow-inner'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <LucideIcon name="printer" className="w-4 h-4" />
-                      <span>Cetak Laporan PSAK 45</span>
-                    </button>
-                    */}
-                  </>
-                )}
-
-
-              </>
-            )}
-
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-100" />
+              <span>Donasi Online</span>
+            </Link>
           </nav>
 
-          {/* User Profile Info & Actions */}
-          <div className="flex items-center space-x-3">
-            {currentUser ? (
-              <div className="flex items-center space-x-2">
-                <div className="text-right hidden md:block">
-                  <div className="text-xs font-bold text-slate-800 leading-tight">
-                    {currentUserName}
-                  </div>
-                  <div className="flex items-center justify-end space-x-1 mt-0.5">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getRoleBadgeColor(currentUser.role)}`}>
-                      {getRoleLabel(currentUser.role)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Dropdown Menu Toggle */}
-                <div className="relative">
-                  <button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                    className="p-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 transition-all flex items-center space-x-1"
-                    title="Menu Pengguna"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-slate-800 text-white font-bold text-xs flex items-center justify-center">
-                      {currentUserName.charAt(0).toUpperCase()}
-                    </div>
-                    <LucideIcon name="chevron-down" className="w-4 h-4 text-slate-500" />
-                  </button>
-
-                  {/* Profile Dropdown */}
-                  {isProfileDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in">
-                      <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
-                        <p className="text-xs font-semibold text-slate-500">Pengguna Terhubung:</p>
-                        <p className="text-sm font-bold text-slate-800 truncate">{currentUserName}</p>
-                        {currentUser?.nik && (
-                          <p className="text-xs text-slate-500 font-mono">
-                            NIK: {currentUser.nik}
-                          </p>
-                        )}
-                      </div>
-                      <div className="border-t border-slate-100 px-2 pt-1.5">
-                        <button
-                          onClick={() => {
-                            setIsProfileDropdownOpen(false);
-                            onLogout();
-                          }}
-                          className="w-full text-left px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl flex items-center space-x-2 font-semibold"
-                        >
-                          <LucideIcon name="log-out" className="w-4 h-4 text-rose-500" />
-                          <span>Keluar (Logout)</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => onNavigateToAuth('login')}
-                  className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold shadow-sm flex items-center space-x-1.5 transition-all"
-                >
-                  <LucideIcon name="log-in" className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Log In</span>
-                </button>
-              </div>
-            )}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
-            >
-              <LucideIcon name={isMobileMenuOpen ? "x" : "menu"} className="w-5 h-5" />
-            </button>
-          </div>
-
+          {/* Mobile Hamburger Menu Button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Drawer Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
-          <button
-            onClick={() => { setActiveTab('beranda'); setIsMobileMenuOpen(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-              activeTab === 'beranda' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
-            }`}
-          >
-            <LucideIcon name="home" className="w-4 h-4" />
-            <span>Beranda</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveTab('profil'); setIsMobileMenuOpen(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-              activeTab === 'profil' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
-            }`}
-          >
-            <LucideIcon name="building-2" className="w-4 h-4" />
-            <span>Profil Panti</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveTab('public-donation'); setIsMobileMenuOpen(false); }}
-            className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-extrabold flex items-center space-x-2 ${
-              activeTab === 'public-donation' ? 'bg-amber-500 text-slate-950' : 'bg-emerald-50 text-emerald-800'
-            }`}
-          >
-            <LucideIcon name="heart" className="w-4 h-4 text-rose-500" />
-            <span>Donasi (Bebas Login)</span>
-          </button>
-
-          <button
-            onClick={() => { setActiveTab('public-dashboard'); setIsMobileMenuOpen(false); }}
-            className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-              activeTab === 'public-dashboard' ? 'bg-slate-100 text-emerald-700 font-bold' : 'text-slate-700'
-            }`}
-          >
-            <LucideIcon name="line-chart" className="w-4 h-4 text-emerald-600" />
-            <span>Dashboard Keuangan Publik</span>
-          </button>
-
-          {currentUser ? (
-            <>
-              <div className="border-t border-slate-100 pt-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Menu Ruang Kerja Internal ({getRoleLabel(currentUser.role)})
-              </div>
-
-              <button
-                onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                  activeTab === 'dashboard' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                }`}
-              >
-                <LucideIcon name="layout-dashboard" className="w-4 h-4" />
-                <span>Dashboard Keuangan</span>
-              </button>
-
-              {currentUser.role === 'pengurus_harian' && (
-                <>
-                  <button
-                    onClick={() => { setActiveTab('transactions'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'transactions' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="receipt" className="w-4 h-4" />
-                    <span>Pencatatan Transaksi (CRUD)</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('programs'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'programs' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="layers" className="w-4 h-4" />
-                    <span>Program Prioritas (CRUD)</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('organization-profile-management'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'organization-profile-management'
-                        ? 'bg-emerald-50 text-emerald-800'
-                        : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="building-2" className="w-4 h-4" />
-                    <span>Kelola Profil</span>
-                  </button>
-
-                  <button
-                    onClick={() => { setActiveTab('audit'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'audit' ? 'bg-emerald-50 text-emerald-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="history" className="w-4 h-4" />
-                    <span>Audit Trail</span>
-                  </button>
-                </>
-              )}
-
-              {currentUser.role === 'pemimpin_lembaga' && (
-                <>
-                  <button
-                    onClick={() => { setActiveTab('approval'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'approval' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="user-check" className="w-4 h-4" />
-                    <span>Persetujuan Akun (Approval)</span>
-                  </button>
-
-                  {/* [COMMENTED: Menu Cetak Laporan PSAK 45 dinonaktifkan pada menu mobile sesuai arahan mitra]
-                  <button
-                    onClick={() => { setActiveTab('report'); setIsMobileMenuOpen(false); }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 ${
-                      activeTab === 'report' ? 'bg-indigo-50 text-indigo-800' : 'text-slate-700'
-                    }`}
-                  >
-                    <LucideIcon name="printer" className="w-4 h-4" />
-                    <span>Cetak Laporan PSAK 45</span>
-                  </button>
-                  */}
-                </>
-              )}
-
-
-
-              <button
-                onClick={() => { onLogout(); setIsMobileMenuOpen(false); }}
-                className="w-full text-left px-3 py-2 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center space-x-2"
-              >
-                <LucideIcon name="log-out" className="w-4 h-4 text-rose-500" />
-                <span>Keluar (Logout)</span>
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => { onNavigateToAuth('login'); setIsMobileMenuOpen(false); }}
-              className="w-full text-center py-2.5 bg-slate-900 text-white font-bold rounded-xl text-sm"
-            >
-              Log In ke Portal Internal
-            </button>
-          )}
+        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2 animate-fade-in">
+          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className={`block py-2 text-xs font-bold ${isRouteActive('home') ? 'text-emerald-700 font-extrabold' : 'text-slate-700'}`}>Beranda</Link>
+          <Link href="/profil" onClick={() => setIsMobileMenuOpen(false)} className={`block py-2 text-xs font-bold ${isRouteActive('profil') ? 'text-emerald-700 font-extrabold' : 'text-slate-700'}`}>Profil</Link>
+          <Link href="/berita" onClick={() => setIsMobileMenuOpen(false)} className={`block py-2 text-xs font-bold ${isRouteActive('berita') ? 'text-emerald-700 font-extrabold' : 'text-slate-700'}`}>Berita</Link>
+          <Link href="/faq" onClick={() => setIsMobileMenuOpen(false)} className={`block py-2 text-xs font-bold ${isRouteActive('faq') ? 'text-emerald-700 font-extrabold' : 'text-slate-700'}`}>FAQ</Link>
+          <Link href="/donasi" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-xs font-bold text-emerald-700 font-extrabold">Donasi Online</Link>
         </div>
       )}
     </header>

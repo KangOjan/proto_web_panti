@@ -308,10 +308,8 @@ const OrganizationProfileManagement = ({
   const loadProfile =
     React.useCallback(
       async () => {
-        if (
-          currentUser?.role !==
-          'pengurus_harian'
-        ) {
+        const isHarian = String(currentUser?.role || '').toLowerCase() === 'pengurus_harian' || String(currentUser?.role || '').toLowerCase() === 'pengurus harian';
+        if (!isHarian) {
           setLoading(false);
           return;
         }
@@ -912,10 +910,8 @@ const OrganizationProfileManagement = ({
     ) => {
       event.preventDefault();
 
-      if (
-        currentUser?.role !==
-        'pengurus_harian'
-      ) {
+      const isHarian = String(currentUser?.role || '').toLowerCase() === 'pengurus_harian' || String(currentUser?.role || '').toLowerCase() === 'pengurus harian';
+      if (!isHarian) {
         return;
       }
 
@@ -1011,10 +1007,8 @@ const OrganizationProfileManagement = ({
       }
     };
 
-  if (
-    currentUser?.role !==
-    'pengurus_harian'
-  ) {
+  const isHarianRole = String(currentUser?.role || '').toLowerCase() === 'pengurus_harian' || String(currentUser?.role || '').toLowerCase() === 'pengurus harian';
+  if (!isHarianRole) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16">
         <div className="bg-white border border-rose-200 rounded-3xl p-8 text-center shadow-sm">
