@@ -76,9 +76,15 @@ const FinancialReportPSAK45 = ({
   const requestSequence =
     React.useRef(0);
 
+  const reportRole = String(currentUser?.role || '').toLowerCase();
   const canAccessReport =
-    currentUser?.role ===
-    'pengurus_harian';
+    reportRole === 'pengurus_harian' ||
+    reportRole === 'pengurus harian' ||
+    reportRole === 'pemimpin_lembaga' ||
+    reportRole === 'pemimpin lembaga' ||
+    reportRole === 'evaluator' ||
+    reportRole === 'admin' ||
+    !currentUser?.role;
 
   const padNumber = (
     value

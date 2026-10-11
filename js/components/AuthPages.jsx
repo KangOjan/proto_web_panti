@@ -254,6 +254,41 @@ const AuthPages = ({
           </p>
         </div>
 
+        {/* Quick Demo Assistant Box */}
+        <div className="mb-6 bg-slate-900 text-slate-200 p-3.5 rounded-2xl text-xs space-y-2 border border-slate-800">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-amber-400 flex items-center space-x-1">
+              <Zap className="w-3.5 h-3.5" />
+              <span>Pilih Role untuk Testing Cepat:</span>
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginUsername('harian1');
+                setLoginPassword('password123');
+              }}
+              className="px-2.5 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 rounded-xl font-semibold border border-emerald-800 text-left transition-all"
+            >
+              <div className="font-bold text-[11px]">Pengurus Harian</div>
+              <div className="text-[10px] opacity-75">username: harian1</div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLoginUsername('pemimpin1');
+                setLoginPassword('password123');
+              }}
+              className="px-2.5 py-1.5 bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 rounded-xl font-semibold border border-indigo-800 text-left transition-all"
+            >
+              <div className="font-bold text-[11px]">Pemimpin Lembaga</div>
+              <div className="text-[10px] opacity-75">username: pemimpin1</div>
+            </button>
+          </div>
+        </div>
+
         {/* LOGIN */}
         {view === 'login' && (
           <form

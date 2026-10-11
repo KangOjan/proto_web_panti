@@ -1,107 +1,157 @@
-// Footer Component
-const Footer = ({ onOpenDonationModal, setActiveRole }) => {
+// Modern Comprehensive Footer Component
+const Footer = ({ onNavigateTab }) => {
+  const handleNav = (tab, href) => {
+    if (onNavigateTab) {
+      onNavigateTab(tab);
+    } else if (window.navigateToRoute) {
+      window.navigateToRoute(href);
+    }
+  };
+
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-12 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          
-          {/* Col 1: About */}
-          <div className="space-y-4">
+    <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 text-xs no-print mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Column 1: Brand & Legal */}
+          <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white">
-                <LucideIcon name="heart-handshake" className="w-6 h-6" />
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md">
+                <window.Building2 className="w-6 h-6" />
               </div>
-              <span className="text-xl font-bold text-white">PantiAsih Kasih Bunda</span>
+              <div>
+                <h3 className="font-extrabold text-base text-white">
+                  Panti Kasih Bunda
+                </h3>
+                <span className="text-[10px] text-emerald-400 font-bold">
+                  Lembaga Kesejahteraan Sosial (LKS)
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Lembaga Kesejahteraan Sosial Anak (LKSA) yang berdedikasi mengasuh, mendidik, dan memberdayakan anak-anak yatim, piatu, dan duafa dengan transparansi penuh.
+
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Membina dan mengasuh 45 anak yatim piatu & dhuafa menjadi generasi mandiri, berakhlak mulia, dan berdaya saing.
             </p>
-            <div className="flex space-x-3 pt-2">
-              <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <LucideIcon name="facebook" className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <LucideIcon name="instagram" className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                <LucideIcon name="youtube" className="w-4 h-4" />
-              </a>
+
+            <div className="text-[11px] text-slate-400 space-y-0.5 border-t border-slate-800 pt-2 font-mono">
+              <div>Kemenkumham: AHU-0012847.AH.01.04</div>
+              <div>Izin Dinsos: 503/412/LKS-DINSOS/2023</div>
             </div>
           </div>
 
-          {/* Col 2: Kontak & Alamat */}
-          <div className="space-y-4">
-            <h4 className="text-white text-base font-semibold border-b border-slate-800 pb-2">Kontak & Alamat</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li className="flex items-start space-x-3">
-                <LucideIcon name="map-pin" className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <span>Jl. Kasih Bunda No. 45, Coblong, Kota Bandung, Jawa Barat 40135</span>
+          {/* Column 2: Navigasi Cepat */}
+          <div className="space-y-3">
+            <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">
+              Navigasi Utama
+            </h4>
+            <ul className="space-y-2 text-slate-400">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('beranda', '/')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Beranda Utama
+                </button>
               </li>
-              <li className="flex items-center space-x-3">
-                <LucideIcon name="phone" className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>(022) 250-8899 / 0812-8877-6655</span>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('profil', '/profil')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Profil & Struktur Pengurus
+                </button>
               </li>
-              <li className="flex items-center space-x-3">
-                <LucideIcon name="mail" className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>info@pantiasih-kasihbunda.or.id</span>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('donasi', '/donasi')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Campaign & Program Donasi
+                </button>
               </li>
-              <li className="flex items-center space-x-3">
-                <LucideIcon name="clock" className="w-5 h-5 text-emerald-400 shrink-0" />
-                <span>Buka Kunjungan: Setiap Hari 08:00 - 17:00 WIB</span>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('keuangan-publik', '/keuangan-publik')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Transparansi Keuangan
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('berita', '/berita')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Kabar & Artikel Kegiatan
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => handleNav('faq', '/faq')}
+                  className="hover:text-emerald-400 transition-colors text-left"
+                >
+                  Pusat Bantuan & FAQ
+                </button>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Rekening Donasi Resmi */}
-          <div className="space-y-4">
-            <h4 className="text-white text-base font-semibold border-b border-slate-800 pb-2">Rekening Donasi Resmi</h4>
-            <div className="space-y-2 text-sm text-slate-300">
-              <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700">
-                <div className="text-xs text-emerald-400 font-semibold">Bank BCA</div>
-                <div className="font-mono text-base text-white tracking-wide">8830-1234-56</div>
-                <div className="text-xs text-slate-400">a.n Yayasan Kasih Bunda PantiAsih</div>
+          {/* Column 3: Rekening Resmi Yayasan */}
+          <div className="space-y-3">
+            <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">
+              Rekening Resmi Donasi
+            </h4>
+            <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-2">
+              <div className="text-xs font-bold text-slate-200">
+                Bank Syariah Indonesia (BSI)
               </div>
-              <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700">
-                <div className="text-xs text-emerald-400 font-semibold">Bank Mandiri</div>
-                <div className="font-mono text-base text-white tracking-wide">1310-0099-8877</div>
-                <div className="text-xs text-slate-400">a.n Yayasan Kasih Bunda PantiAsih</div>
+              <div className="font-mono text-base font-black text-emerald-400">
+                7123-4567-89
+              </div>
+              <div className="text-[10px] text-slate-400">
+                a.n. Yayasan Kasih Bunda Indonesia
               </div>
             </div>
-          </div>
-
-          {/* Col 4: Quick Action & Transparency */}
-          <div className="space-y-4">
-            <h4 className="text-white text-base font-semibold border-b border-slate-800 pb-2">Aksi Kebaikan</h4>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Setiap donasi Anda disalurkan 100% transparan untuk kesehatan, pendidikan, dan masa depan anak asuh.
+            <p className="text-[10px] text-slate-500 italic">
+              Bebas biaya admin antar bank syariah & QRIS
             </p>
-            <div className="space-y-2 pt-2">
-              <button
-                onClick={onOpenDonationModal}
-                className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-all shadow-md shadow-emerald-900/40"
-              >
-                Salurkan Donasi
-              </button>
-              <button
-                onClick={() => setActiveRole('admin')}
-                className="w-full py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 text-xs transition-colors flex items-center justify-center space-x-1.5"
-              >
-                <LucideIcon name="lock" className="w-3.5 h-3.5" />
-                <span>Portal Pengurus Admin</span>
-              </button>
-            </div>
           </div>
 
+          {/* Column 4: Kontak & Kunjungan */}
+          <div className="space-y-3">
+            <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">
+              Sekretariat & Kunjungan
+            </h4>
+            <div className="space-y-2 text-slate-400 text-xs">
+              <div className="flex items-start space-x-2">
+                <window.MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <span>Jl. Merdeka Kasih Bunda No. 45, Kebayoran Baru, Jakarta Selatan</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <window.Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>(021) 7829-1029</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <window.MessageCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>WhatsApp: 0812-3456-7890</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+        {/* Bottom Bar */}
+        <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-500 text-[11px]">
           <div>
-            &copy; {new Date().getFullYear()} Yayasan PantiAsih Kasih Bunda. All rights reserved.
+            &copy; {new Date().getFullYear()} Panti Asuhan Kasih Bunda. Seluruh hak cipta dilindungi undang-undang.
           </div>
-          <div className="flex space-x-6 text-slate-400">
-            <a href="#" className="hover:text-emerald-400">Kebijakan Privasi</a>
-            <a href="#" className="hover:text-emerald-400">Syarat & Ketentuan</a>
-            <a href="#" className="hover:text-emerald-400">Laporan Publik</a>
+          <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
+            <window.ShieldCheck className="w-4 h-4" />
+            <span>Sistem Transparansi & Akuntabilitas Donasi Publik</span>
           </div>
         </div>
       </div>

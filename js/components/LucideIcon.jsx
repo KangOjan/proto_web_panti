@@ -116,3 +116,54 @@ const LucideIcon = ({
 };
 
 window.LucideIcon = LucideIcon;
+
+// Helper to create named icon components
+window.createLucideComponent = (iconName) => {
+  return function IconWrapper(props) {
+    return React.createElement(LucideIcon, { name: iconName, ...props });
+  };
+};
+
+const REGISTERED_ICONS = [
+  'Heart', 'Building2', 'Users', 'Award', 'ArrowRight', 'ArrowLeft', 'Sparkles', 'MapPin',
+  'Phone', 'Mail', 'Newspaper', 'HelpCircle', 'Clock', 'Layers', 'CheckCircle2',
+  'FileCheck', 'Receipt', 'CreditCard', 'MessageCircle', 'TrendingUp', 'Share2',
+  'Check', 'ChevronRight', 'ChevronDown', 'ChevronUp', 'CalendarDays', 'Plus', 'Minus',
+  'PlusCircle', 'MinusCircle', 'ShieldCheck', 'UserCheck', 'LayoutDashboard', 'FileText',
+  'History', 'LogOut', 'Globe', 'X', 'BarChart3', 'Wallet', 'FileSpreadsheet',
+  'ExternalLink', 'Upload', 'Lock', 'Send', 'AlertCircle', 'AlertTriangle', 'Copy',
+  'QrCode', 'Menu', 'Home', 'Search', 'Filter', 'Eye', 'Trash2', 'Edit', 'Edit2',
+  'Download', 'Printer', 'DollarSign', 'Package', 'Save', 'User', 'Calendar',
+  'PieChart', 'CheckSquare', 'FileX', 'Image', 'ArrowUpRight', 'ArrowDownLeft',
+  'BookOpen', 'Moon', 'Laptop', 'Utensils', 'GraduationCap', 'XCircle',
+  'Zap', 'KeyRound', 'ShieldAlert', 'ShieldOff', 'Inbox', 'UserPlus'
+];
+
+REGISTERED_ICONS.forEach((name) => {
+  window[name] = window.createLucideComponent(name);
+});
+
+// Link component compatible with Inertia Link
+const Link = ({ href, onClick, className = '', children, ...rest }) => {
+  const handleClick = (e) => {
+    if (e.defaultPrevented) return;
+    if (onClick) onClick(e);
+    if (!e.defaultPrevented && window.navigateToRoute && href) {
+      e.preventDefault();
+      window.navigateToRoute(href);
+    }
+  };
+
+  return React.createElement(
+    'a',
+    {
+      href: href || '#',
+      onClick: handleClick,
+      className,
+      ...rest,
+    },
+    children
+  );
+};
+
+window.Link = Link;

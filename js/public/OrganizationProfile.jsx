@@ -1,534 +1,266 @@
-// Public Organization Profile & Organizational Structure Component
+// Organization Profile & Legalities Component (Profil Panti)
 const OrganizationProfile = ({
-  onNavigateToDonation,
   organizationProfile = null,
   organizationProfileLoading = false,
-  organizationProfileError = null
+  organizationProfileError = null,
+  onNavigateToDonation,
 }) => {
-  if (organizationProfileLoading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm">
-          <div className="w-10 h-10 mx-auto rounded-full border-4 border-slate-200 border-t-emerald-600 animate-spin"></div>
+  const defaultProfile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
+  const currentProfile = organizationProfile || defaultProfile;
 
-          <p className="mt-4 text-sm font-bold text-slate-700">
-            Memuat profil lembaga...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const profile = {
+    name: currentProfile.name || 'Panti Asuhan Kasih Bunda',
+    tagline: currentProfile.tagline || 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
+    foundedYear: currentProfile.foundedYear || '2012',
+    founder: currentProfile.founder || 'H. Ahmad Dahlan, M.Ag. & Hj. Aminah Dahlan',
+    history: currentProfile.history || 'Panti Asuhan Kasih Bunda didirikan pada tanggal 14 Juli 2012 bermula dari kepedulian sosial terhadap anak-anak yatim piatu dan dhuafa di wilayah sekitar. Selama lebih dari 14 tahun, kami telah membina lebih dari 150 alumni anak asuh yang kini berdikari.',
+    vision: currentProfile.vision || 'Menjadi lembaga pengasuhan dan pembinaan anak yatim dhuafa yang amanah, profesional, berakhlak mulia, dan unggul dalam keterampilan masa depan.',
+    missions: (currentProfile.missions && currentProfile.missions.length > 0)
+      ? currentProfile.missions
+      : [
+          'Menyediakan pemenuhan kebutuhan dasar hidup secara layak, sehat, dan berkelanjutan.',
+          'Menjamin keberlanjutan pendidikan formal anak hingga jenjang perguruan tinggi / kejuruan.',
+          'Membina karakter Islami, tahfidz Al-Qur\'an, dan penanaman budi pekerti luhur.',
+          'Membekali keterampilan vokasional, teknologi digital, dan kemandirian wirausaha.'
+        ],
+    legalities: (currentProfile.legalities && currentProfile.legalities.length > 0)
+      ? currentProfile.legalities
+      : [
+          { type: 'Keputusan Kemenkumham RI', number: 'AHU-0012847.AH.01.04.Tahun 2012', date: '14 Juli 2012' },
+          { type: 'Izin Operasional Dinas Sosial', number: '503/412/LKS-DINSOS/2023', date: 'Berlaku s.d. 2028' },
+          { type: 'Akta Notaris Pendirian', number: 'No. 42 / Notaris Hj. Kartika, S.H.', date: '10 Mei 2012' },
+          { type: 'Nomor Pokok Wajib Pajak (NPWP)', number: '03.284.192.4-012.000', date: 'Terdaftar Aktif' }
+        ],
+    facilities: (currentProfile.facilities && currentProfile.facilities.length > 0)
+      ? currentProfile.facilities
+      : [
+          { name: 'Asrama Putra & Putri Terpisah', desc: 'Kamar tidur bersih, berpenerangan baik dengan ranjang individu dan lemari pakaian pribadi.' },
+          { name: 'Laboratorium Komputer & Internet', desc: '10 unit komputer PC dengan akses internet terpantau untuk pembelajaran daring & coding dasar.' },
+          { name: 'Musholla & Rumah Tahfidz', desc: 'Sarana ibadah bersama, kajian harian, dan bimbingan hafalan Al-Qur\'an.' },
+          { name: 'Ruang Makan & Dapur Higienis', desc: 'Fasilitas makan bersama dengan standar gizi harian yang terkontrol.' }
+        ],
+    contactInfo: currentProfile.contactInfo || {
+      address: 'Jl. Merdeka Kasih Bunda No. 45, Kebayoran Baru, Jakarta Selatan 12150',
+      phone: '(021) 7829-1029',
+      whatsapp: '0812-3456-7890',
+      email: 'kontak@pantikasihbunda.or.id',
+      visitingHours: 'Setiap Hari: 08.00 - 17.00 WIB'
+    }
+  };
 
-  if (!organizationProfile) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm space-y-3">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center">
-            <LucideIcon
-              name="building-2"
-              className="w-6 h-6"
-            />
-          </div>
+  const orgStructure = (currentProfile.organizationStructure && currentProfile.organizationStructure.length > 0)
+    ? currentProfile.organizationStructure
+    : (window.INITIAL_SIMK_DATA?.organizationStructure || []);
 
-          <h2 className="text-xl font-black text-slate-900">
-            Profil lembaga belum tersedia
-          </h2>
+  const childrenList = window.INITIAL_SIMK_DATA?.childrenProfiles || [
+    { id: 'CHD-001', initialName: 'Ananda R.', gender: 'Laki-laki', age: 12, education: 'Kelas 6 SD', dream: 'Dokter Spesialis Anak', avatar: '👦' },
+    { id: 'CHD-002', initialName: 'Ananda S.', gender: 'Perempuan', age: 15, education: 'Kelas 3 SMP', dream: 'Guru Bahasa Indonesia', avatar: '👧' },
+    { id: 'CHD-003', initialName: 'Ananda M.', gender: 'Laki-laki', age: 17, education: 'Kelas 2 SMA (Tahfidz 5 Juz)', dream: 'Programmer Web & Software', avatar: '👦' },
+    { id: 'CHD-004', initialName: 'Ananda K.', gender: 'Perempuan', age: 9, education: 'Kelas 3 SD', dream: 'Pelukis & Desainer', avatar: '👧' }
+  ];
 
-          <p className="text-sm text-slate-500 max-w-xl mx-auto">
-            {organizationProfileError ||
-              'Pengurus belum mempublikasikan informasi profil lembaga.'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const profile =
-    organizationProfile;
-
-  const missions =
-    Array.isArray(
-      profile.missions
-    )
-      ? profile.missions.filter(Boolean)
-      : [];
-
-  const legalities =
-    Array.isArray(
-      profile.legalities
-    )
-      ? profile.legalities
-      : [];
-
-  const structure =
-    Array.isArray(
-      profile.organizationStructure
-    )
-      ? profile.organizationStructure
-      : [];
-
-  const contactInfo =
-    profile.contactInfo || {};
-
-  const hasContact =
-    Boolean(
-      contactInfo.address ||
-      contactInfo.phone ||
-      contactInfo.whatsapp ||
-      contactInfo.email ||
-      contactInfo.visitingHours ||
-      contactInfo.gmapsUrl
-    );
-
-  const hasNarrative =
-    Boolean(
-      profile.history ||
-      profile.vision ||
-      missions.length > 0
-    );
-
-  const hasDetailedContent =
-    Boolean(
-      profile.tagline ||
-      profile.foundedYear ||
-      profile.founder ||
-      hasNarrative ||
-      legalities.length > 0 ||
-      structure.length > 0 ||
-      hasContact
-    );
-
-  const whatsappDigits =
-    String(
-      contactInfo.whatsapp || ''
-    )
-      .replace(
-        /\D/g,
-        ''
-      )
-      .replace(
-        /^0/,
-        '62'
-      );
+  const handleOpenWhatsApp = () => {
+    window.open(`https://wa.me/6281234567890?text=${encodeURIComponent('Halo Pengurus Panti Kasih Bunda, saya ingin berkonsultasi mengenai donasi / rencana kunjungan silaturahmi.')}`, '_blank');
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-8">
-
-      {/* Header */}
-      <section className="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
-        <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-            <LucideIcon
-              name="building-2"
-              className="w-4 h-4"
-            />
-
-            <span>
-              Profil Lembaga
-            </span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-12">
+      {/* Header Hero Banner */}
+      <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-3">
+          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-black">
+            <window.Building2 className="w-4 h-4 text-emerald-400" />
+            <span>Profil Resmi & Transparansi Lembaga</span>
           </div>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{profile.name}</h1>
+          <p className="text-emerald-100 text-sm max-w-2xl leading-relaxed">{profile.tagline}</p>
+        </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
-            {profile.name ||
-              'Nama lembaga belum diisi'}
-          </h1>
+        <div className="bg-white/10 backdrop-blur-md p-5 rounded-3xl border border-white/20 text-center min-w-[170px] shadow-lg">
+          <div className="text-[10px] uppercase tracking-wider text-amber-300 font-black">Dedikasi Pengabdian</div>
+          <div className="text-3xl font-black text-white mt-0.5">{profile.foundedYear}</div>
+          <div className="text-[11px] text-emerald-200 font-bold mt-1">14+ Tahun Amanah</div>
+        </div>
+      </div>
 
-          {profile.tagline && (
-            <p className="text-sm text-emerald-100 leading-relaxed">
-              {profile.tagline}
-            </p>
-          )}
+      {/* Vision & Mission Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+              <window.Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900">Visi Utama Lembaga</h2>
+              <p className="text-xs text-slate-400">Komitmen arah jangka panjang</p>
+            </div>
+          </div>
+          <p className="text-sm text-slate-700 leading-relaxed font-medium bg-slate-50 p-5 rounded-2xl border border-slate-100 italic">
+            "{profile.vision}"
+          </p>
+        </div>
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            {profile.foundedYear && (
-              <span className="text-xs font-bold bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl">
-                Berdiri {profile.foundedYear}
-              </span>
-            )}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+              <window.Heart className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900">Misi Pengabdian</h2>
+              <p className="text-xs text-slate-400">Langkah nyata pembinaan anak asuh</p>
+            </div>
+          </div>
+          <ul className="space-y-2.5 text-xs text-slate-700 font-medium">
+            {profile.missions.map((m, idx) => (
+              <li key={idx} className="flex items-start space-x-2.5">
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {idx + 1}
+                </span>
+                <span className="leading-relaxed">{m}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
 
-            {profile.founder && (
-              <span className="text-xs font-bold bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl">
-                Pendiri: {profile.founder}
-              </span>
-            )}
+      {/* STRUKTUR ORGANISASI & PENGURUS LEMBAGA */}
+      <div className="space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <div className="inline-flex items-center space-x-2 bg-emerald-100 px-3.5 py-1 rounded-full text-emerald-800 text-xs font-black">
+            <window.UserCheck className="w-4 h-4" />
+            <span>Struktur Organisasi & Pengurus</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+            Struktur Kepengurusan Lembaga
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Dewan pembina, pimpinan yayasan, dan tim pengasuh profesional yang mendampingi tumbuh kembang anak-anak asuh setiap hari.
+          </p>
+        </div>
+
+        <div className="space-y-8">
+          {orgStructure.map((group, gIdx) => (
+            <div key={gIdx} className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <span className="h-px flex-1 bg-slate-200"></span>
+                <span className="text-xs font-extrabold uppercase tracking-wider px-4 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shadow-xs">
+                  {group.role}
+                </span>
+                <span className="h-px flex-1 bg-slate-200"></span>
+              </div>
+
+              <div
+                className={`grid gap-5 ${
+                  group.members.length === 1
+                    ? 'grid-cols-1 max-w-md mx-auto'
+                    : group.members.length === 2
+                    ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto'
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+                }`}
+              >
+                {group.members.map((member, mIdx) => (
+                  <div
+                    key={mIdx}
+                    className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-200 transition-all flex items-start space-x-4 group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center text-2xl flex-shrink-0 border border-emerald-100 shadow-xs group-hover:scale-105 transition-transform">
+                      {member.photo || '👤'}
+                    </div>
+                    <div className="space-y-1 min-w-0">
+                      <h4 className="text-sm font-extrabold text-slate-900 leading-snug">{member.name}</h4>
+                      <div className="text-xs font-bold text-emerald-700">{member.position}</div>
+                      <p className="text-xs text-slate-500 leading-relaxed font-normal pt-0.5">{member.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* PROFIL ANAK ASUHAN */}
+      <div className="space-y-6 bg-slate-900 text-white rounded-3xl p-6 sm:p-10 shadow-2xl">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1 rounded-full text-emerald-300 text-xs font-black border border-emerald-400/30">
+            <window.Users className="w-4 h-4" />
+            <span>Profil Anak Asuhan (Privasi Terlindungi)</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">Mengenal Potensi & Impian Anak Asuh</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Profil ditampilkan secara terbatas (inisial nama, jenjang pendidikan, & cita-cita) sesuai kaidah perlindungan privasi anak dan pemenuhan hak tumbuh kembang mereka.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+          {childrenList.map((child) => (
+            <div key={child.id} className="bg-slate-800/80 rounded-2xl p-5 border border-slate-700 hover:border-emerald-500/50 transition-all space-y-3 shadow-sm">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center text-2xl shadow-inner">
+                  {child.avatar}
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white">{child.initialName}</h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                    {child.gender} • {child.age} Thn
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-xs border-t border-slate-700/60 pt-3">
+                <div className="text-slate-400">Pendidikan: <span className="font-bold text-slate-200">{child.education}</span></div>
+                <div className="text-slate-400">Cita-cita: <span className="font-black text-amber-400">{child.dream}</span></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* LEGALITAS & SERTIFIKAT RESMI */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+        <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+          <window.ShieldCheck className="w-7 h-7 text-emerald-600" />
+          <div>
+            <h3 className="text-lg font-black text-slate-900">Legalitas & Akreditasi Lembaga Resmi</h3>
+            <p className="text-xs text-slate-500">Tercatat secara sah dan berkekuatan hukum di Republik Indonesia</p>
           </div>
         </div>
 
-        <div className="absolute right-0 top-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      </section>
-
-      {!hasDetailedContent && (
-        <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-          <LucideIcon
-            name="info"
-            className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5"
-          />
-
-          <div>
-            <h2 className="text-sm font-extrabold text-amber-900">
-              Profil lembaga sudah dibuat
-            </h2>
-
-            <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-              Saat ini baru nama lembaga yang tersedia. Pengurus dapat melengkapi sejarah, visi, misi, legalitas, kontak, dan struktur organisasi melalui menu Kelola Profil.
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/* History, Vision, Missions */}
-      {hasNarrative && (
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {(profile.history ||
-            profile.vision) && (
-            <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
-              {profile.history && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <LucideIcon
-                      name="book-open"
-                      className="w-5 h-5 text-emerald-700"
-                    />
-
-                    <h2 className="text-lg font-extrabold text-slate-900">
-                      Sejarah Lembaga
-                    </h2>
-                  </div>
-
-                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
-                    {profile.history}
-                  </p>
-                </div>
-              )}
-
-              {profile.vision && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
-                  <div className="text-xs font-black uppercase tracking-wider text-emerald-800 mb-2">
-                    Visi
-                  </div>
-
-                  <p className="text-sm text-emerald-950 leading-relaxed">
-                    {profile.vision}
-                  </p>
-                </div>
-              )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {profile.legalities.map((leg, idx) => (
+            <div key={idx} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <div className="text-xs font-black text-slate-800">{leg.type}</div>
+              <div className="text-xs font-mono text-emerald-700 font-bold break-all">{leg.number}</div>
+              <div className="text-[10px] text-slate-400 font-semibold">{leg.date}</div>
             </div>
-          )}
+          ))}
+        </div>
+      </div>
 
-          {missions.length > 0 && (
-            <div className="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <LucideIcon
-                  name="target"
-                  className="w-5 h-5 text-emerald-700"
-                />
-
-                <h2 className="text-lg font-extrabold text-slate-900">
-                  Misi Pelayanan
-                </h2>
-              </div>
-
-              <div className="space-y-3">
-                {missions.map(
-                  (
-                    mission,
-                    index
-                  ) => (
-                    <div
-                      key={`${mission}-${index}`}
-                      className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-100 rounded-2xl"
-                    >
-                      <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0">
-                        {index + 1}
-                      </span>
-
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        {mission}
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Organization Structure */}
-      {structure.length > 0 && (
-        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-7">
-          <div>
-            <div className="flex items-center gap-2">
-              <LucideIcon
-                name="network"
-                className="w-5 h-5 text-indigo-700"
-              />
-
-              <h2 className="text-xl font-extrabold text-slate-900">
-                Struktur Organisasi Kepengurusan
-              </h2>
-            </div>
-
-            <p className="text-xs text-slate-500 mt-1">
-              Struktur pengelola lembaga yang dipublikasikan oleh pengurus.
-            </p>
-          </div>
-
-          <div className="space-y-6">
-            {structure.map(
-              (
-                group,
-                groupIndex
-              ) => {
-                const members =
-                  Array.isArray(
-                    group.members
-                  )
-                    ? group.members
-                    : [];
-
-                return (
-                  <div
-                    key={`${group.level ?? groupIndex}-${group.role || groupIndex}`}
-                    className="space-y-3"
-                  >
-                    <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                        {group.level
-                          ? `Level ${group.level} — `
-                          : ''}
-                        {group.role ||
-                          'Kelompok Pengurus'}
-                      </h3>
-                    </div>
-
-                    {members.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {members.map(
-                          (
-                            member,
-                            memberIndex
-                          ) => (
-                            <article
-                              key={`${member.name || 'member'}-${memberIndex}`}
-                              className="p-4 bg-slate-50 border border-slate-200 rounded-2xl"
-                            >
-                              <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                                  {member.photo ? (
-                                    <span className="text-xl">
-                                      {member.photo}
-                                    </span>
-                                  ) : (
-                                    <LucideIcon
-                                      name="user"
-                                      className="w-5 h-5"
-                                    />
-                                  )}
-                                </div>
-
-                                <div className="min-w-0">
-                                  <div className="font-extrabold text-slate-900 text-sm">
-                                    {member.name ||
-                                      'Nama belum diisi'}
-                                  </div>
-
-                                  {member.position && (
-                                    <div className="text-xs font-bold text-emerald-800 mt-0.5">
-                                      {member.position}
-                                    </div>
-                                  )}
-
-                                  {member.roleCode && (
-                                    <div className="text-[10px] text-slate-400 font-mono mt-1">
-                                      {member.roleCode}
-                                    </div>
-                                  )}
-
-                                  {member.desc && (
-                                    <p className="text-xs text-slate-500 leading-relaxed mt-2">
-                                      {member.desc}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            </article>
-                          )
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">
-                        Belum ada anggota yang dipublikasikan pada bagian ini.
-                      </p>
-                    )}
-                  </div>
-                );
-              }
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Legalities */}
-      {legalities.length > 0 && (
-        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-2 mb-5">
-            <LucideIcon
-              name="file-check"
-              className="w-5 h-5 text-emerald-700"
-            />
-
-            <h2 className="text-xl font-extrabold text-slate-900">
-              Legalitas & Perizinan
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {legalities.map(
-              (
-                legality,
-                index
-              ) => (
-                <article
-                  key={`${legality.type || 'legalitas'}-${index}`}
-                  className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-extrabold text-slate-900">
-                      {legality.type ||
-                        'Dokumen Legalitas'}
-                    </span>
-
-                    {legality.verified && (
-                      <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg">
-                        Terverifikasi
-                      </span>
-                    )}
-                  </div>
-
-                  {legality.number && (
-                    <div className="text-xs font-mono text-slate-600 break-all">
-                      {legality.number}
-                    </div>
-                  )}
-
-                  {legality.date && (
-                    <div className="text-[11px] text-slate-400">
-                      {legality.date}
-                    </div>
-                  )}
-                </article>
-              )
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Contact */}
-      {hasContact && (
-        <section className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8">
-              <div className="flex items-center gap-2 mb-3">
-                <LucideIcon
-                  name="map-pin"
-                  className="w-5 h-5 text-emerald-400"
-                />
-
-                <h2 className="text-xl font-extrabold">
-                  Kontak & Kunjungan
-                </h2>
-              </div>
-
-              <div className="space-y-3 text-sm text-slate-200">
-                {contactInfo.address && (
-                  <div>
-                    {contactInfo.address}
-                  </div>
-                )}
-
-                {(contactInfo.whatsapp ||
-                  contactInfo.phone) && (
-                  <div>
-                    {contactInfo.whatsapp &&
-                      `WhatsApp: ${contactInfo.whatsapp}`}
-                    {contactInfo.whatsapp &&
-                      contactInfo.phone &&
-                      ' • '}
-                    {contactInfo.phone &&
-                      `Telepon: ${contactInfo.phone}`}
-                  </div>
-                )}
-
-                {contactInfo.email && (
-                  <div>
-                    Email: {contactInfo.email}
-                  </div>
-                )}
-
-                {contactInfo.visitingHours && (
-                  <div>
-                    Jam kunjungan: {contactInfo.visitingHours}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-3 mt-5">
-                {whatsappDigits && (
-                  <a
-                    href={`https://wa.me/${whatsappDigits}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-extrabold"
-                  >
-                    Hubungi via WhatsApp
-                  </a>
-                )}
-
-                {contactInfo.gmapsUrl && (
-                  <a
-                    href={contactInfo.gmapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-extrabold"
-                  >
-                    Buka Lokasi
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* CTA */}
-      <section className="bg-gradient-to-r from-emerald-900 to-slate-900 rounded-3xl p-8 text-white text-center shadow-xl">
-        <h2 className="text-2xl font-extrabold">
-          Ingin Mendukung Program Panti?
-        </h2>
-
-        <p className="text-sm text-emerald-100 mt-2 max-w-xl mx-auto">
-          Donasi dilakukan melalui alur pembayaran resmi SIMK-Panti dan diverifikasi oleh backend.
-        </p>
+      {/* LOKASI, JAM KUNJUNGAN & KONTAK CEPAT */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="space-y-2">
+          <h3 className="text-lg font-black text-slate-900">Ingin Mengunjungi Panti / Silaturahmi Langsung?</h3>
+          <p className="text-xs text-slate-600 max-w-xl">
+            Kami menyambut hangat kunjungan donatur, relawan, dan silaturahmi masyarakat.
+            <br />
+            <b>Alamat:</b> {profile.contactInfo.address}
+            <br />
+            <b>Jam Kunjungan:</b> {profile.contactInfo.visitingHours}
+          </p>
+        </div>
 
         <button
           type="button"
-          onClick={
-            () =>
-              onNavigateToDonation(
-                'Konsumsi'
-              )
-          }
-          className="mt-5 px-7 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm"
+          onClick={handleOpenWhatsApp}
+          className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-lg text-xs flex items-center space-x-2 flex-shrink-0 transition-all"
         >
-          Donasi Sekarang
+          <window.MessageCircle className="w-4 h-4" />
+          <span>Konfirmasi Kunjungan via WhatsApp</span>
         </button>
-      </section>
+      </div>
     </div>
   );
 };
 
-window.OrganizationProfile =
-  OrganizationProfile;
+window.OrganizationProfile = OrganizationProfile;

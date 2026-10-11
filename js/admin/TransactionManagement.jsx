@@ -141,9 +141,10 @@ const TransactionManagement = ({
     },
   ];
 
+  const trxRole = String(currentUser?.role || '').toLowerCase();
   const isEditableRole =
-    currentUser?.role ===
-    'pengurus_harian';
+    trxRole === 'pengurus_harian' ||
+    trxRole === 'pengurus harian';
 
   const invalidDateRange =
     Boolean(
