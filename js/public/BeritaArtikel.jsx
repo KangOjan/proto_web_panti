@@ -37,7 +37,7 @@ const BeritaArtikel = ({
             Artikel & Berita Panti Asuhan
           </h1>
           <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl mt-1 leading-relaxed">
-            Dokumentasi aktivitas harian, laporan perkembangan anak asuh, serta informasi kegiatan transparansi Panti Asuhan Kasih Bunda.
+            Dokumentasi aktivitas harian, laporan perkembangan anak asuh, serta informasi kegiatan transparansi Panti Asuhan LKSA Taman Harapan Muhammadiyah.
           </p>
         </div>
 

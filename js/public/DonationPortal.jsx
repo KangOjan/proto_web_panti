@@ -78,7 +78,7 @@ const DonationPortal = ({ childrenData, onOpenDonationModal, onOpenFosterModal }
               </div>
             </div>
 
-            <div className="text-xs text-emerald-300">a.n Yayasan Kasih Bunda PantiAsih</div>
+            <div className="text-xs text-emerald-300">a.n Yayasan LKSA Taman Harapan Muhammadiyah PantiAsih</div>
           </div>
 
           {/* Card 2: QRIS Interaktif */}

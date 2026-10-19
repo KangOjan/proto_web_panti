@@ -11,24 +11,27 @@ const ContentManagement = ({
   onSaveFaq = null,
   onDeleteFaq = null,
 }) => {
-  const [activeTab, setActiveTab] = React.useState('profile'); // profile | articles | faqs
+  const [activeTab, setActiveTab] = React.useState('profile'); // profile | vision | articles | faqs
 
   // State Profile Edit
-  const [name, setName] = React.useState(orphanageProfile?.name || 'Panti Asuhan Kasih Bunda');
+  const [name, setName] = React.useState(orphanageProfile?.name || 'Panti Asuhan LKSA Taman Harapan Muhammadiyah ');
   const [tagline, setTagline] = React.useState(orphanageProfile?.tagline || 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri');
   const [history, setHistory] = React.useState(orphanageProfile?.history || '');
   const [vision, setVision] = React.useState(orphanageProfile?.vision || '');
+  const [missions, setMissions] = React.useState(Array.isArray(orphanageProfile?.missions) ? orphanageProfile.missions : []);
   const [address, setAddress] = React.useState(orphanageProfile?.contactInfo?.address || '');
   const [phone, setPhone] = React.useState(orphanageProfile?.contactInfo?.phone || '');
   const [whatsapp, setWhatsapp] = React.useState(orphanageProfile?.contactInfo?.whatsapp || '');
   const [email, setEmail] = React.useState(orphanageProfile?.contactInfo?.email || '');
   const [savedSuccess, setSavedSuccess] = React.useState(false);
+  const [savingProfile, setSavingProfile] = React.useState(false);
 
   // Article Modal State
   const [isArticleModalOpen, setIsArticleModalOpen] = React.useState(false);
   const [articleTitle, setArticleTitle] = React.useState('');
   const [articleContent, setArticleContent] = React.useState('');
-  const [articleImage, setArticleImage] = React.useState('https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=60');
+  const [articleImage, setArticleImage] = React.useState('');
+  const [articleUploadName, setArticleUploadName] = React.useState('');
 
   // FAQ Modal State
   const [isFaqModalOpen, setIsFaqModalOpen] = React.useState(false);
@@ -42,6 +45,7 @@ const ContentManagement = ({
       setTagline(orphanageProfile.tagline || '');
       setHistory(orphanageProfile.history || '');
       setVision(orphanageProfile.vision || '');
+      setMissions(Array.isArray(orphanageProfile.missions) ? orphanageProfile.missions : []);
       setAddress(orphanageProfile.contactInfo?.address || '');
       setPhone(orphanageProfile.contactInfo?.phone || '');
       setWhatsapp(orphanageProfile.contactInfo?.whatsapp || '');
@@ -49,29 +53,23 @@ const ContentManagement = ({
     }
   }, [orphanageProfile]);
 
-  const handleSaveProfileSubmit = (e) => {
+  const handleSaveProfileSubmit = async (e) => {
     e.preventDefault();
-    const updatedProfile = {
-      ...orphanageProfile,
-      name,
-      tagline,
-      history,
-      vision,
-      contactInfo: {
-        ...(orphanageProfile?.contactInfo || {}),
-        address,
-        phone,
-        whatsapp,
-        email
-      }
-    };
-
-    if (onSaveProfile) {
-      onSaveProfile(updatedProfile);
+    setSavingProfile(true);
+    setSavedSuccess(false);
+    try {
+      const updatedProfile = {
+        ...orphanageProfile, name, tagline, history, vision,
+        missions: missions.map((m) => m.trim()).filter(Boolean),
+        contactInfo: {
+          ...(orphanageProfile?.contactInfo || {}), address, phone, whatsapp, email
+        }
+      };
+      const saved = onSaveProfile ? await onSaveProfile(updatedProfile) : false;
+      if (saved) setSavedSuccess(true);
+    } finally {
+      setSavingProfile(false);
     }
-
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
   };
 
   const handleAddArticleSubmit = (e) => {
@@ -143,6 +141,11 @@ const ContentManagement = ({
         >
           <Building2 className="w-4 h-4" />
           <span>Info & Kontak Panti</span>
+        </button>
+
+        <button type="button" onClick={() => setActiveTab('vision')}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition-all ${activeTab === 'vision' ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'}`}>
+          <span>Visi & Misi</span>
         </button>
 
         <button
@@ -217,17 +220,6 @@ const ContentManagement = ({
             ></textarea>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Visi Lembaga *</label>
-            <textarea
-              rows="2"
-              required
-              value={vision}
-              onChange={(e) => setVision(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-medium"
-            ></textarea>
-          </div>
-
           <div className="border-t border-slate-100 pt-4 space-y-4">
             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Perubahan Kontak & Alamat Resmi</h4>
 
@@ -276,10 +268,52 @@ const ContentManagement = ({
 
           <button
             type="submit"
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-md text-xs flex items-center space-x-2"
+            disabled={savingProfile}
+            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold rounded-2xl shadow-md text-xs flex items-center space-x-2"
           >
             <Save className="w-4 h-4" />
             <span>Simpan Perubahan Informasi Panti</span>
+          </button>
+        </form>
+      )}
+
+      {/* VISI & MISI: fields already exist in OrganizationProfile database */}
+      {activeTab === 'vision' && (
+        <form onSubmit={handleSaveProfileSubmit} className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6">
+          <div>
+            <h3 className="text-lg font-extrabold text-slate-900">Visi dan Misi Lembaga</h3>
+            <p className="text-sm text-slate-500 mt-1">Data akan ditampilkan di halaman profil publik setelah tersimpan di MySQL.</p>
+          </div>
+          {savedSuccess && <p role="status" className="rounded-xl p-3 bg-emerald-50 text-emerald-700 text-sm">Visi dan misi berhasil disimpan.</p>}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Visi lembaga</label>
+            <textarea rows="5" value={vision} onChange={(e) => setVision(e.target.value)}
+              placeholder="Tuliskan arah dan cita-cita lembaga..."
+              className="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm leading-relaxed" />
+          </div>
+          <div className="space-y-3">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <label className="text-xs font-bold text-slate-700 uppercase">Daftar misi</label>
+              <button type="button" disabled={missions.length >= 20}
+                onClick={() => setMissions((prev) => [...prev, ''])}
+                className="px-4 py-2 text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl">+ Tambah misi</button>
+            </div>
+            {missions.map((mission, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <span className="text-sm text-slate-500 pt-3 w-6">{index + 1}.</span>
+                <textarea rows="2" maxLength={2000} value={mission}
+                  onChange={(e) => setMissions((prev) => prev.map((value, i) => i === index ? e.target.value : value))}
+                  className="flex-1 rounded-xl border border-slate-300 p-3 text-sm"
+                  aria-label={`Misi ${index + 1}`} />
+                <button type="button" aria-label={`Hapus misi ${index + 1}`}
+                  onClick={() => setMissions((prev) => prev.filter((_, i) => i !== index))}
+                  className="px-3 py-2.5 border border-rose-200 text-rose-700 rounded-xl text-sm">Hapus</button>
+              </div>
+            ))}
+            {missions.length === 0 && <p className="text-sm text-slate-500">Belum ada misi. Pilih Tambah misi.</p>}
+          </div>
+          <button type="submit" disabled={savingProfile} className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm">
+            {savingProfile ? 'Menyimpan...' : 'Simpan Visi & Misi ke Database'}
           </button>
         </form>
       )}
@@ -381,7 +415,7 @@ const ContentManagement = ({
       {/* MODAL ARTICLE */}
       {isArticleModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-5">
             <h3 className="text-base font-bold text-slate-900 border-b pb-2">Tulis Artikel Baru</h3>
             <form onSubmit={handleAddArticleSubmit} className="space-y-3 text-xs">
               <input
@@ -393,13 +427,32 @@ const ContentManagement = ({
                 className="w-full p-2.5 rounded-xl border font-bold"
               />
               <textarea
-                rows="4"
+                rows="9"
                 required
-                placeholder="Isi artikel..."
+                placeholder="Tuliskan laporan kegiatan dengan lengkap..."
                 value={articleContent}
                 onChange={(e) => setArticleContent(e.target.value)}
                 className="w-full p-2.5 rounded-xl border font-medium"
               ></textarea>
+              <div className="rounded-xl border border-dashed border-slate-300 p-4 space-y-2">
+                <label className="block text-sm font-bold text-slate-800">Foto sampul (pratinjau lokal)</label>
+                <input type="file" accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+                      alert('Hanya JPG/PNG/WebP maksimal 5 MB.');
+                      e.target.value = '';
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => { setArticleImage(String(reader.result || '')); setArticleUploadName(file.name); };
+                    reader.readAsDataURL(file);
+                  }} className="block w-full text-xs" />
+                {articleImage && <img src={articleImage} alt="Pratinjau foto artikel" className="h-40 max-w-full object-cover rounded-lg" />}
+                {articleUploadName && <p className="text-xs text-slate-500">{articleUploadName}</p>}
+                <p className="text-xs text-amber-700">Belum ada API untuk menyimpan foto dan artikel. Simpan hanya membuat pratinjau lokal.</p>
+              </div>
               <div className="flex justify-end space-x-2 pt-2">
                 <button
                   type="button"
@@ -423,7 +476,7 @@ const ContentManagement = ({
       {/* MODAL FAQ */}
       {isFaqModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-5">
             <h3 className="text-base font-bold text-slate-900 border-b pb-2">Tambah FAQ Baru</h3>
             <form onSubmit={handleAddFaqSubmit} className="space-y-3 text-xs">
               <input
@@ -435,7 +488,7 @@ const ContentManagement = ({
                 className="w-full p-2.5 rounded-xl border font-bold"
               />
               <textarea
-                rows="3"
+                rows="6"
                 required
                 placeholder="Jawaban..."
                 value={faqAnswer}

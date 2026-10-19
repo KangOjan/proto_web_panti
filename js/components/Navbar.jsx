@@ -4,6 +4,7 @@
 const Navbar = ({
   currentUser,
   currentRoute = 'home',
+  organizationProfile = null,
   onSwitchUserRole,
   evaluatorMode = true,
 }) => {
@@ -100,10 +101,10 @@ const Navbar = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight text-slate-900">Panti Kasih Bunda</span>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900">{organizationProfile?.name || 'Informasi Panti'}</span>
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block font-medium">
-                Portal Transparansi & Donasi Panti Asuhan
+                {organizationProfile?.tagline || 'Portal Transparansi & Donasi Panti Asuhan'}
               </p>
             </div>
           </Link>

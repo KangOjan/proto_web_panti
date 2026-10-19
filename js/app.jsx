@@ -1,6 +1,130 @@
 // Main React Application Component
 // SIMK-Panti
 
+// UI-only route permissions. Laravel middleware/policies MUST enforce these roles
+// independently on every protected API endpoint.
+const SIMK_PROTECTED_ROUTES = Object.freeze({
+  'admin-dashboard': ['pengurus_harian', 'pemimpin_lembaga'],
+  'admin-verifikasi': ['pengurus_harian'],
+  'admin-offline': ['pengurus_harian'],
+  'admin-campaign': ['pengurus_harian'],
+  'admin-konten': ['pengurus_harian'],
+  'dashboard': ['pengurus_harian', 'pemimpin_lembaga'],
+  'transactions': ['pengurus_harian', 'pemimpin_lembaga'],
+  'report': ['pengurus_harian', 'pemimpin_lembaga'],
+  'programs': ['pengurus_harian', 'pemimpin_lembaga'],
+  'audit': ['pengurus_harian', 'pemimpin_lembaga'],
+  'organization-profile-management': ['pengurus_harian'],
+  'approval': ['pemimpin_lembaga'],
+});
+
+const simkUserRole = (user) => {
+  const role = user?.role?.value ?? user?.role ?? null;
+  return typeof role === 'string' ? role.trim().toLowerCase() : null;
+};
+
+// Resolve only known routes. URL state never grants backend permissions.
+const SIMK_ROUTE_TABLE = Object.freeze({
+  '/': 'beranda',
+  '/beranda': 'beranda',
+  '/profil': 'profil',
+  '/donasi': 'public-donation',
+  '/keuangan-publik': 'public-dashboard',
+  '/transparansi': 'public-dashboard',
+  '/berita': 'berita',
+  '/faq': 'faq',
+  '/login': 'auth',
+  '/register': 'auth',
+  '/pengelola/dashboard': 'admin-dashboard',
+  '/admin/dashboard': 'admin-dashboard',
+  '/pengelola/verifikasi-donasi': 'admin-verifikasi',
+  '/admin/verifikasi-donasi': 'admin-verifikasi',
+  '/pengelola/donasi-offline': 'admin-offline',
+  '/admin/donasi-offline': 'admin-offline',
+  '/pengelola/campaign': 'admin-campaign',
+  '/admin/campaign': 'admin-campaign',
+  '/pengelola/konten': 'admin-konten',
+  '/admin/konten': 'admin-konten',
+  '/pengelola/buku-kas': 'transactions',
+  '/pengelola/transaksi': 'transactions',
+  '/dashboard': 'dashboard',
+  '/transaksi': 'transactions',
+  '/laporan': 'report',
+  '/program': 'programs',
+  '/approval': 'approval',
+  '/audit': 'audit',
+  '/organization-profile-management': 'organization-profile-management',
+});
+
+const SIMK_CANONICAL_PATHS = Object.freeze({
+  beranda: '/', profil: '/profil', 'public-donation': '/donasi',
+  'public-dashboard': '/keuangan-publik', berita: '/berita', faq: '/faq',
+  'admin-dashboard': '/pengelola/dashboard',
+  'admin-verifikasi': '/pengelola/verifikasi-donasi',
+  'admin-offline': '/pengelola/donasi-offline',
+  'admin-campaign': '/pengelola/campaign',
+  'admin-konten': '/pengelola/konten',
+  dashboard: '/dashboard', transactions: '/pengelola/buku-kas',
+  report: '/laporan', programs: '/program', approval: '/approval',
+  audit: '/audit',
+  'organization-profile-management': '/organization-profile-management',
+});
+
+const simkResolveRoute = (route) => {
+  if (typeof route !== 'string' || !route.trim()) return null;
+  const clean = route.split(/[?#]/, 1)[0].trim();
+  const path = clean.startsWith('/')
+    ? (clean.replace(/\/+$/, '') || '/')
+    : clean;
+
+  const tab = SIMK_ROUTE_TABLE[path];
+  if (tab) {
+    return {
+      tab,
+      path: SIMK_CANONICAL_PATHS[tab] || path,
+      authView: path === '/register' ? 'register' : 'login',
+    };
+  }
+
+  // Existing components may pass tab keys rather than URL paths.
+  if (Object.prototype.hasOwnProperty.call(SIMK_CANONICAL_PATHS, path)) {
+    return { tab: path, path: SIMK_CANONICAL_PATHS[path] };
+  }
+
+  const legacy = {
+    home: 'beranda',
+    'public-donation': 'public-donation',
+    'public-dashboard': 'public-dashboard',
+    transaksi: 'transactions', report: 'report', program: 'programs',
+    'admin-dashboard': 'admin-dashboard',
+    'admin-verifikasi': 'admin-verifikasi',
+    'admin-offline': 'admin-offline',
+    'admin-campaign': 'admin-campaign',
+    'admin-konten': 'admin-konten',
+  };
+  if (legacy[path]) {
+    return { tab: legacy[path], path: SIMK_CANONICAL_PATHS[legacy[path]] };
+  }
+
+  if (path.startsWith('/campaign/') && path.length > '/campaign/'.length) {
+    try {
+      return {
+        tab: 'detail-campaign', path,
+        campaignId: decodeURIComponent(path.substring('/campaign/'.length)),
+      };
+    } catch { return null; }
+  }
+  if (path.startsWith('/berita/') && path.length > '/berita/'.length) {
+    try {
+      return {
+        tab: 'detail-berita', path,
+        articleSlug: decodeURIComponent(path.substring('/berita/'.length)),
+      };
+    } catch { return null; }
+  }
+  return null;
+};
+
 const App = () => {
   /*
   |--------------------------------------------------------------------------
@@ -50,6 +174,16 @@ const App = () => {
   ] = React.useState([]);
 
   const [
+    publicCampaignLoading,
+    setPublicCampaignLoading,
+  ] = React.useState(true);
+
+  const [
+    publicCampaignError,
+    setPublicCampaignError,
+  ] = React.useState(null);
+
+  const [
     managedPrograms,
     setManagedPrograms,
   ] = React.useState([]);
@@ -96,6 +230,16 @@ const App = () => {
     setCurrentUser,
   ] = React.useState(null);
 
+  // Do not render privileged pages before validating a saved token via /me.
+  const [authStatus, setAuthStatus] = React.useState('checking');
+  const isAuthenticated = authStatus === 'authenticated' && Boolean(currentUser);
+  const currentRole = isAuthenticated ? simkUserRole(currentUser) : null;
+  const hasPengurusAccess = () => isAuthenticated && currentRole === 'pengurus_harian';
+  const hasPemimpinAccess = () => isAuthenticated && currentRole === 'pemimpin_lembaga';
+  // Read-only monitoring. Creation, editing, deletion and verification remain Pengurus-only.
+  const hasOversightReadAccess = () => isAuthenticated &&
+    ['pengurus_harian', 'pemimpin_lembaga'].includes(currentRole);
+
   /*
   |--------------------------------------------------------------------------
   | Backend User Approval State
@@ -138,22 +282,23 @@ const App = () => {
   |--------------------------------------------------------------------------
   */
 
+  // Read the URL on first render so /login, /register and deep links work.
   const [
     activeTab,
     setActiveTab,
-  ] = React.useState('beranda');
+  ] = React.useState(() => simkResolveRoute(window.location.pathname)?.tab || 'beranda');
 
   const [
     authView,
     setAuthView,
-  ] = React.useState('login');
+  ] = React.useState(() => simkResolveRoute(window.location.pathname)?.authView || 'login');
 
   const [
     selectedDonationContext,
     setSelectedDonationContext,
   ] = React.useState({
     allocationCategory:
-      'konsumsi',
+      'lainnya',
 
     campaignId:
       null,
@@ -168,9 +313,7 @@ const App = () => {
   const [
     donations,
     setDonations,
-  ] = React.useState(
-    window.INITIAL_SIMK_DATA?.donations || []
-  );
+  ] = React.useState([]); // Verified/pending donations must come from Laravel, not mock fixtures.
 
   const [
     articles,
@@ -189,12 +332,12 @@ const App = () => {
   const [
     selectedArticleSlug,
     setSelectedArticleSlug,
-  ] = React.useState(null);
+  ] = React.useState(simkResolveRoute(window.location.pathname)?.articleSlug || null);
 
   const [
     selectedCampaignId,
     setSelectedCampaignId,
-  ] = React.useState(null);
+  ] = React.useState(simkResolveRoute(window.location.pathname)?.campaignId || null);
 
   const [
     isMobileSidebarOpen,
@@ -342,7 +485,7 @@ const App = () => {
   const openPublicDonation =
     (
       contextOrCategory =
-        'Konsumsi'
+        'Lainnya'
     ) => {
       if (
         typeof contextOrCategory ===
@@ -394,298 +537,241 @@ const App = () => {
       setActiveTab(
         'public-donation'
       );
+      if (window.location.pathname !== '/donasi') {
+        window.history.pushState({}, '', '/donasi');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-  const navigateToRoute = (route) => {
-    if (!route) return;
-    const cleanRoute = route.split('?')[0];
+  const navigateToRoute = (route, options = {}) => {
+    const resolved = simkResolveRoute(route);
+    if (!resolved) {
+      showToast('Halaman tidak ditemukan.', 'rose');
+      return false;
+    }
 
-    // Public routes:
-    if (cleanRoute === '/' || cleanRoute === '/beranda') {
-      setActiveTab('beranda');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/profil') {
-      setActiveTab('profil');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/donasi' || cleanRoute === 'public-donation') {
-      setActiveTab('public-donation');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/keuangan-publik' || cleanRoute === '/transparansi' || cleanRoute === 'public-dashboard') {
-      setActiveTab('public-dashboard');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/berita') {
-      setActiveTab('berita');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute.startsWith('/berita/')) {
-      const slug = cleanRoute.replace('/berita/', '');
-      setSelectedArticleSlug(slug);
-      setActiveTab('detail-berita');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute.startsWith('/campaign/')) {
-      const id = cleanRoute.replace('/campaign/', '');
-      setSelectedCampaignId(id);
-      setActiveTab('detail-campaign');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/faq') {
-      setActiveTab('faq');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/login') {
+    // Client-side guard is for UX only. Protected API authorization is Laravel's job.
+    const permittedRoles = SIMK_PROTECTED_ROUTES[resolved.tab];
+    if (permittedRoles && !isAuthenticated) {
       setAuthView('login');
       setActiveTab('auth');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+      if (window.location.pathname !== '/login') {
+        const method = options.fromHistory ? 'replaceState' : 'pushState';
+        window.history[method]({}, '', '/login');
+      }
+      if (authStatus !== 'checking') {
+        showToast('Silakan login dengan akun Laravel untuk mengakses halaman ini.', 'info');
+      }
+      return false;
     }
-    if (cleanRoute === '/register') {
-      setAuthView('register');
-      setActiveTab('auth');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // Admin & Pengelola routes:
-    if (cleanRoute === '/pengelola/dashboard' || cleanRoute === '/admin/dashboard' || cleanRoute === 'admin-dashboard') {
-      setActiveTab('admin-dashboard');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/pengelola/verifikasi-donasi' || cleanRoute === '/admin/verifikasi-donasi' || cleanRoute === 'admin-verifikasi') {
-      setActiveTab('admin-verifikasi');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/pengelola/donasi-offline' || cleanRoute === '/admin/donasi-offline' || cleanRoute === 'admin-offline') {
-      setActiveTab('admin-offline');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/pengelola/campaign' || cleanRoute === '/admin/campaign' || cleanRoute === 'admin-campaign') {
-      setActiveTab('admin-campaign');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/pengelola/konten' || cleanRoute === '/admin/konten' || cleanRoute === 'admin-konten') {
-      setActiveTab('admin-konten');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/dashboard') {
-      setActiveTab('dashboard');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/transaksi' || cleanRoute === 'transactions') {
-      setActiveTab('transactions');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/laporan' || cleanRoute === 'report') {
-      setActiveTab('report');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/program' || cleanRoute === 'programs') {
-      setActiveTab('programs');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/approval') {
-      setActiveTab('approval');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    if (cleanRoute === '/audit') {
-      setActiveTab('audit');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+    if (permittedRoles && !permittedRoles.includes(currentRole)) {
+      showToast('Akun Anda tidak memiliki izin untuk halaman tersebut.', 'rose');
+      return false;
     }
 
-    setActiveTab(cleanRoute.replace('/', ''));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (resolved.tab === 'auth') setAuthView(resolved.authView);
+    if (resolved.tab === 'detail-campaign') setSelectedCampaignId(resolved.campaignId);
+    if (resolved.tab === 'detail-berita') setSelectedArticleSlug(resolved.articleSlug);
+    setActiveTab(resolved.tab);
+
+    // pushState is skipped on popstate to preserve browser Back/Forward.
+    if (!options.fromHistory && window.location.pathname !== resolved.path) {
+      window.history.pushState({}, '', resolved.path);
+    }
+    window.scrollTo({ top: 0, behavior: options.fromHistory ? 'instant' : 'smooth' });
+    return true;
   };
 
   React.useEffect(() => {
-    window.navigateToRoute = navigateToRoute;
-  }, []);
+    // Back/Forward synchronizes the displayed component, not just the address bar.
+    const onPopState = () => navigateToRoute(window.location.pathname, { fromHistory: true });
+    window.addEventListener('popstate', onPopState);
+    window.navigateToRoute = navigateToRoute; // Kept for existing components.
+    return () => {
+      window.removeEventListener('popstate', onPopState);
+      if (window.navigateToRoute === navigateToRoute) {
+        delete window.navigateToRoute;
+      }
+    };
+  }, [navigateToRoute]);
 
+  // This is navigation only, NEVER authentication or role impersonation.
   const handleSwitchUserRole = (targetRole) => {
     if (!targetRole) {
-      setCurrentUser(null);
-      navigateToRoute('/');
-      showToast('Beralih ke mode Pengunjung Publik.');
+      navigateToRoute('/beranda');
       return;
     }
-    if (targetRole === 'Pengurus Harian' || targetRole === 'pengurus_harian') {
-      setCurrentUser({
-        id: 'USR-001',
-        nik: '3201012345670001',
-        fullName: 'Budi Santoso',
-        username: 'harian1',
-        role: 'Pengurus Harian',
-      });
-      navigateToRoute('/pengelola/dashboard');
-      showToast('Beralih ke simulasi Pengurus Harian.');
+
+    const requestedRole = targetRole === 'Pengurus Harian'
+      ? 'pengurus_harian'
+      : targetRole === 'Pemimpin Lembaga'
+        ? 'pemimpin_lembaga'
+        : targetRole;
+
+    if (!isAuthenticated) {
+      navigateToRoute('/login');
       return;
     }
-    if (targetRole === 'Pemimpin Lembaga' || targetRole === 'pemimpin_lembaga') {
-      setCurrentUser({
-        id: 'USR-002',
-        nik: '3201019876540002',
-        fullName: 'Dra. Hj. Siti Aminah, M.Pd.',
-        username: 'pemimpin1',
-        role: 'Pemimpin Lembaga',
-      });
-      navigateToRoute('/approval');
-      showToast('Beralih ke simulasi Pemimpin Lembaga.');
+
+    if (currentRole !== requestedRole) {
+      showToast('Role akun tidak sesuai. Pergantian role harus melalui autentikasi Laravel.', 'rose');
       return;
     }
+
+    navigateToRoute(requestedRole === 'pengurus_harian' ? '/pengelola/dashboard' : '/approval');
   };
 
-  const handleApproveDonation = (id) => {
-    setDonations((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Terverifikasi' } : d))
-    );
-    const don = donations.find((d) => d.id === id);
-    if (don) {
-      setPublicPrograms((prev) =>
-        prev.map((c) =>
-          c.id === don.campaignId || c.title === don.campaignTitle
-            ? { ...c, collectedAmount: (c.collectedAmount || 0) + (don.amount || 0) }
-            : c
-        )
-      );
-      const newTrx = {
-        id: `TRX-${Date.now().toString().slice(-6)}`,
-        date: new Date().toISOString().split('T')[0],
-        type: 'pemasukan',
-        category: 'Donasi Rutin',
-        description: `Donasi Online Terverifikasi: ${don.donorName} (${don.campaignTitle || 'Donasi Umum'})`,
-        amount: don.amount,
-        createdBy: currentUser?.fullName || 'Pengurus Harian',
-        editable: false,
-      };
-      setFinancialTransactions((prev) => [newTrx, ...prev]);
+  // Verification must be persisted and authorized on the server, never
+  // simulated by changing donations/campaign totals in React.
+  const handleApproveDonation = async () => {
+    showToast('Verifikasi dinonaktifkan sampai terhubung ke endpoint Laravel yang terotorisasi.', 'rose');
+    return false;
+  };
+
+  const handleRejectDonation = async () => {
+    showToast('Penolakan dinonaktifkan sampai terhubung ke endpoint Laravel yang terotorisasi.', 'rose');
+    return false;
+  };
+
+  const handleAddOfflineDonation = async (payload) => {
+    if (!hasPengurusAccess()) {
+      showToast('Login Pengurus Harian diperlukan.', 'rose');
+      return false;
     }
-    showToast('Donasi online berhasil diverifikasi & kuitansi resmi diterbitkan!');
-  };
-
-  const handleRejectDonation = (id) => {
-    setDonations((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, status: 'Ditolak' } : d))
-    );
-    showToast('Bukti donasi ditolak.', 'rose');
-  };
-
-  const handleAddOfflineDonation = (payload) => {
-    setDonations((prev) => [payload, ...prev]);
-    if (payload.kind === 'uang') {
-      setPublicPrograms((prev) =>
-        prev.map((c) =>
-          c.id === payload.campaignId || c.title === payload.campaignTitle
-            ? { ...c, collectedAmount: (c.collectedAmount || 0) + (payload.amount || 0) }
-            : c
-        )
-      );
-      const newTrx = {
-        id: `TRX-${Date.now().toString().slice(-6)}`,
-        date: payload.createdAt.split('T')[0],
-        type: 'pemasukan',
-        category: 'Donasi Rutin',
-        description: `Donasi Offline Tunai: ${payload.donorName} (${payload.campaignTitle})`,
-        amount: payload.amount,
-        createdBy: currentUser?.fullName || 'Pengurus Harian',
-        editable: false,
-      };
-      setFinancialTransactions((prev) => [newTrx, ...prev]);
+    if (payload.kind !== 'uang') {
+      showToast('Donasi barang belum didukung API. Jangan mencatatnya sebagai penerimaan kas.', 'rose');
+      return false;
     }
-    showToast('Donasi offline berhasil dicatat dan dibukukan!');
-  };
-
-  const handleSaveCampaign = async (payload) => {
     try {
-      if (window.CampaignApi && payload.id && !payload.id.startsWith('CMP-')) {
-        await CampaignApi.updateCampaign(payload.id, payload);
-      }
-    } catch (e) {
-      console.warn('Backend update campaign fallback to local:', e);
+      const campaign = publicPrograms.find((item) => String(item.id) === String(payload.campaignId));
+      const response = await apiRequest('/pengurus/donations/offline', {
+        method: 'POST',
+        body: JSON.stringify({
+          campaign_id: campaign ? Number(campaign.id) : null,
+          allocation_category: campaign
+            ? mapCampaignCategoryToDonationAllocation(campaign.category)
+            : 'lainnya',
+          donor_name: payload.donorName,
+          amount: Number(payload.amount),
+          note: payload.message || null,
+          publish_identity: false,
+        }),
+      });
+      if (!response?.success || !response?.data) throw new Error('Backend tidak mengonfirmasi donasi.');
+      const saved = response.data;
+      setDonations((prev) => [{
+        id: saved.public_id || saved.id,
+        donorName: payload.donorName,
+        campaignId: campaign?.id || null,
+        campaignTitle: campaign?.title || 'Donasi Umum',
+        amount: Number(payload.amount),
+        message: payload.message || '',
+        createdAt: saved.created_at || new Date().toISOString(),
+        status: 'Pending',
+        type: 'offline', kind: 'uang',
+      }, ...prev]);
+      showToast('Donasi offline disimpan sebagai PENDING. Verifikasi agar masuk buku kas.');
+      setFinancialTransactionRefreshKey((key) => key + 1);
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Donasi gagal disimpan ke backend.', 'rose');
+      return false;
     }
-    setPublicPrograms((prev) => {
-      const exists = prev.some((c) => c.id === payload.id);
-      if (exists) {
-        return prev.map((c) => (c.id === payload.id ? { ...c, ...payload } : c));
-      }
-      return [payload, ...prev];
-    });
-    setManagedPrograms((prev) => {
-      const exists = prev.some((c) => c.id === payload.id);
-      if (exists) {
-        return prev.map((c) => (c.id === payload.id ? { ...c, ...payload } : c));
-      }
-      return [payload, ...prev];
-    });
-    showToast('Program campaign berhasil disimpan!');
   };
 
-  const handleDeleteCampaign = (id) => {
-    setPublicPrograms((prev) => prev.filter((c) => c.id !== id));
-    setManagedPrograms((prev) => prev.filter((c) => c.id !== id));
-    showToast('Program campaign berhasil dihapus!');
+  // Legacy CampaignManagement callbacks: never treat local state as saved data.
+  const handleSaveCampaign = async (payload) => {
+    if (!hasPengurusAccess()) {
+      showToast('Login Pengurus Harian diperlukan.', 'rose');
+      return false;
+    }
+    try {
+      const id = payload?.id;
+      const existingId = /^\d+$/.test(String(id ?? '')) ? id : null;
+      const response = existingId
+        ? await CampaignApi.updateCampaign(existingId, payload)
+        : await CampaignApi.createCampaign(payload);
+      if (!response?.data) throw new Error('API tidak mengonfirmasi penyimpanan campaign.');
+      await Promise.all([loadManagedCampaigns(), refreshPublicPrograms()]);
+      showToast('Campaign berhasil disimpan di database.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Campaign gagal disimpan.', 'rose');
+      return false;
+    }
   };
 
-  const handleAddCampaignUpdate = (campaignId, updatePayload) => {
-    const updater = (c) => {
-      if (c.id === campaignId) {
-        const currentUpdates = c.updates || [];
-        return { ...c, updates: [updatePayload, ...currentUpdates] };
-      }
-      return c;
-    };
-    setPublicPrograms((prev) => prev.map(updater));
-    setManagedPrograms((prev) => prev.map(updater));
-    showToast('Update penyaluran program berhasil dipublikasikan!');
+  // For auditability, deactivate instead of silently deleting from local UI.
+  const handleDeleteCampaign = async (id) => {
+    if (!hasPengurusAccess()) {
+      showToast('Login Pengurus Harian diperlukan.', 'rose');
+      return false;
+    }
+    try {
+      const response = await CampaignApi.updateCampaign(id, { status: 'inactive' });
+      if (!response?.data) throw new Error('API tidak mengonfirmasi penonaktifan campaign.');
+      await Promise.all([loadManagedCampaigns(), refreshPublicPrograms()]);
+      showToast('Campaign dinonaktifkan melalui database.', 'info');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Gagal menonaktifkan campaign.', 'rose');
+      return false;
+    }
+  };
+
+  const handleAddCampaignUpdate = async (campaignId, updatePayload) => {
+    if (!hasPengurusAccess()) throw new Error('Login Pengurus Harian diperlukan.');
+    try {
+      if (!window.CampaignApi) throw new Error('API campaign belum tersedia.');
+      await CampaignApi.createPengurusUpdate(campaignId, {
+        title: updatePayload.title,
+        content: updatePayload.content,
+        status: updatePayload.status === 'draft' ? 'draft' : 'published',
+      });
+      showToast('Kabar perkembangan berhasil disimpan di database.');
+    } catch (error) {
+      console.error('Gagal menyimpan perkembangan:', error);
+      showToast(error?.message || 'Gagal menyimpan kabar perkembangan.');
+      throw error;
+    }
   };
 
   const handleSaveProfile = async (updatedProfile) => {
-    setOrganizationProfile(updatedProfile);
-    try {
-      if (window.CmsApi) {
-        await CmsApi.updateProfile({
-          name: updatedProfile.name,
-          tagline: updatedProfile.tagline,
-          history: updatedProfile.history,
-          vision: updatedProfile.vision,
-          contact_info: {
-            address: updatedProfile.contactInfo?.address,
-            phone: updatedProfile.contactInfo?.phone,
-            whatsapp: updatedProfile.contactInfo?.whatsapp,
-            email: updatedProfile.contactInfo?.email,
-          },
-        });
-      }
-    } catch (e) {
-      console.warn('Backend update profile fallback:', e);
+    if (!hasPengurusAccess()) {
+      showToast('Login Pengurus Harian diperlukan.', 'rose');
+      return false;
     }
-    showToast('Informasi profil panti asuhan berhasil diperbarui!');
+    try {
+      if (!window.CmsApi) throw new Error('API CMS tidak tersedia.');
+      const response = await CmsApi.updateProfile({
+        name: updatedProfile.name,
+        tagline: updatedProfile.tagline,
+        history: updatedProfile.history,
+        vision: updatedProfile.vision,
+        missions: Array.isArray(updatedProfile.missions) ? updatedProfile.missions : [],
+        contact_info: {
+          address: updatedProfile.contactInfo?.address || null,
+          phone: updatedProfile.contactInfo?.phone || null,
+          whatsapp: updatedProfile.contactInfo?.whatsapp || null,
+          email: updatedProfile.contactInfo?.email || null,
+        },
+      });
+      if (!response?.success || !response?.data) throw new Error('Server tidak mengonfirmasi perubahan profil.');
+      const persisted = CmsApi.normalizeProfile(response.data);
+      setOrganizationProfile(persisted);
+      showToast('Profil CMS berhasil disimpan ke database.');
+      return true;
+    } catch (error) {
+      showToast(error?.status === 401 || error?.status === 403
+        ? 'Login Laravel sebagai Pengurus Harian diperlukan untuk mengedit CMS.'
+        : error?.message || 'Penyimpanan profil ke database gagal.', 'rose');
+      return false;
+    }
   };
 
   const handleSaveArticle = (newArticle) => {
     setArticles((prev) => [newArticle, ...prev]);
-    showToast('Artikel baru berhasil dipublikasikan!');
+    showToast('Artikel baru hanya masuk pratinjau lokal. API artikel dan upload gambar belum tersedia.', 'info');
   };
 
   const handleDeleteArticle = (id) => {
@@ -695,7 +781,7 @@ const App = () => {
 
   const handleSaveFaq = (newFaq) => {
     setFaqs((prev) => [...prev, newFaq]);
-    showToast('Pertanyaan FAQ berhasil ditambahkan!');
+    showToast('FAQ hanya masuk pratinjau lokal. API penyimpanan FAQ belum tersedia.', 'info');
   };
 
   const handleDeleteFaq = (id) => {
@@ -744,15 +830,31 @@ const App = () => {
             0
         ),
 
-      /*
-       * Nilai ini nantinya berasal
-       * dari backend Donation/Payment.
-       */
+      // Jangan menganggap nilai kosong berarti dana terkumpul Rp0.
+      // Hanya tampilkan angka jika agregasi terverifikasi dikirim API.
       collectedAmount:
-        Number(
-          campaign.collected_amount ||
-            0
-        ),
+        campaign.collected_amount == null
+          ? null
+          : Number(campaign.collected_amount),
+
+      // Dipakai halaman Detail Campaign. Keduanya berasal dari
+      // agregasi donasi verified yang dikirim oleh API Laravel.
+      verifiedCollectedAmount:
+        campaign.collected_amount == null
+          ? null
+          : Number(campaign.collected_amount),
+
+      verifiedDonationCount:
+        campaign.verified_donation_count == null
+          ? null
+          : Number(campaign.verified_donation_count),
+
+      // donor_count berbeda dengan verified_donation_count:
+      // yang pertama dapat berarti orang unik, bukan jumlah transaksi.
+      donorCount:
+        campaign.donor_count == null
+          ? null
+          : Number(campaign.donor_count),
 
       description:
         campaign.description || '',
@@ -783,32 +885,28 @@ const App = () => {
         await CampaignApi
           .getPublicCampaigns();
 
-      const campaigns =
-        Array.isArray(
-          response?.data
-        )
-          ? response.data
-          : [];
+      if (!Array.isArray(response?.data)) {
+        throw new Error('Format data campaign dari API tidak valid.');
+      }
 
-      return campaigns.map(
-        normalizeCampaign
-      );
+      // Pertahankan seluruh record dari API; UI publik memfilter
+      // hanya campaign aktif yang belum melewati deadline.
+      return response.data.map(normalizeCampaign);
     };
 
   const refreshPublicPrograms =
     async () => {
+      setPublicCampaignLoading(true);
+      setPublicCampaignError(null);
       try {
-        const programs =
-          await fetchPublicPrograms();
-
-        setPublicPrograms(
-          programs
-        );
+        const programs = await fetchPublicPrograms();
+        setPublicPrograms(programs);
       } catch (error) {
-        console.error(
-          'Failed to load public campaigns:',
-          error
-        );
+        setPublicPrograms([]);
+        setPublicCampaignError(error?.message || 'Gagal mengambil campaign.');
+        console.error('Failed to load public campaigns:', error);
+      } finally {
+        setPublicCampaignLoading(false);
       }
     };
 
@@ -917,9 +1015,7 @@ const App = () => {
     React.useCallback(
       async () => {
         if (
-          !currentUser ||
-          currentUser.role !==
-            'pemimpin_lembaga'
+          !hasPemimpinAccess()
         ) {
           setApprovalUsers(
             []
@@ -1023,9 +1119,7 @@ const App = () => {
         filters = {}
       ) => {
         if (
-          !currentUser ||
-          currentUser.role !==
-            'pengurus_harian'
+          !hasOversightReadAccess()
         ) {
           setFinancialTransactions(
             []
@@ -1131,6 +1225,7 @@ const App = () => {
           );
 
         if (!token) {
+          if (!cancelled) setAuthStatus('guest');
           return;
         }
 
@@ -1142,19 +1237,20 @@ const App = () => {
             return;
           }
 
-          setCurrentUser(
-            response?.data ||
-              null
-          );
+          const user = response?.data || null;
+          if (!user || !['pengurus_harian', 'pemimpin_lembaga'].includes(simkUserRole(user))) {
+            throw new Error('Profil/role akun tidak valid.');
+          }
+          setCurrentUser(user);
+          setAuthStatus('authenticated');
         } catch {
           sessionStorage.removeItem(
             'access_token'
           );
 
           if (!cancelled) {
-            setCurrentUser(
-              null
-            );
+            setCurrentUser(null);
+            setAuthStatus('guest');
           }
         }
       };
@@ -1187,34 +1283,25 @@ const App = () => {
   React.useEffect(() => {
     let cancelled = false;
 
-    const loadPublicCampaigns =
-      async () => {
-        try {
-          const programs =
-            await fetchPublicPrograms();
-
-          if (!cancelled) {
-            setPublicPrograms(
-              programs
-            );
-          }
-        } catch (error) {
-          if (cancelled) {
-            return;
-          }
-
-          console.error(
-            'Failed to load public campaigns:',
-            error
-          );
+    const loadPublicCampaigns = async () => {
+      setPublicCampaignLoading(true);
+      setPublicCampaignError(null);
+      try {
+        const programs = await fetchPublicPrograms();
+        if (!cancelled) setPublicPrograms(programs);
+      } catch (error) {
+        console.error('Failed to load public campaigns:', error);
+        if (!cancelled) {
+          setPublicPrograms([]);
+          setPublicCampaignError(error?.message || 'Gagal mengambil campaign.');
         }
-      };
+      } finally {
+        if (!cancelled) setPublicCampaignLoading(false);
+      }
+    };
 
     loadPublicCampaigns();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   /*
@@ -1239,7 +1326,7 @@ const App = () => {
     if (
       activeTab !==
         'programs' ||
-      !currentUser
+      !hasPengurusAccess()
     ) {
       return;
     }
@@ -1292,10 +1379,8 @@ const App = () => {
         const user =
           profileResponse?.data;
 
-        if (!user) {
-          sessionStorage.removeItem(
-            'access_token'
-          );
+        if (!user || !['pengurus_harian', 'pemimpin_lembaga'].includes(simkUserRole(user))) {
+          sessionStorage.removeItem('access_token');
 
           return {
             success: false,
@@ -1305,13 +1390,13 @@ const App = () => {
           };
         }
 
-        setCurrentUser(
-          user
-        );
+        setCurrentUser(user);
+        setAuthStatus('authenticated');
 
-        setActiveTab(
-          'dashboard'
-        );
+        const role = simkUserRole(user);
+        const destination = role === 'pengurus_harian' ? '/pengelola/dashboard' : '/approval';
+        setActiveTab(role === 'pengurus_harian' ? 'admin-dashboard' : 'approval');
+        window.history.replaceState({}, '', destination);
 
         showToast(
           `Selamat datang kembali, ${
@@ -1326,9 +1411,9 @@ const App = () => {
           user,
         };
       } catch (error) {
-        sessionStorage.removeItem(
-          'access_token'
-        );
+        sessionStorage.removeItem('access_token');
+        setCurrentUser(null);
+        setAuthStatus('guest');
 
         return {
           success: false,
@@ -1346,6 +1431,7 @@ const App = () => {
 
   const handleLogout =
     async () => {
+      let serverLogoutSucceeded = true;
       try {
         if (
           sessionStorage
@@ -1356,18 +1442,19 @@ const App = () => {
           await AuthApi.logout();
         }
       } catch (error) {
-        console.error(
-          'Logout request failed:',
-          error
-        );
+        serverLogoutSucceeded = false;
+        console.error('Server-side token revocation failed:', error);
       } finally {
         sessionStorage.removeItem(
           'access_token'
         );
 
-        setCurrentUser(
-          null
-        );
+        setCurrentUser(null);
+        setAuthStatus('guest');
+        setDonations([]);
+        setIsAddTrxModalOpen(false);
+        setIsDeleteModalOpen(false);
+        setIsReceiptModalOpen(false);
 
         setApprovalUsers(
           []
@@ -1410,10 +1497,13 @@ const App = () => {
         setActiveTab(
           'beranda'
         );
+        window.history.replaceState({}, '', '/');
 
         showToast(
-          'Anda telah keluar dari akun.',
-          'info'
+          serverLogoutSucceeded
+            ? 'Anda telah keluar dari akun.'
+            : 'Sesi lokal dihapus, tetapi pencabutan token di server gagal. Hubungi administrator bila perlu.',
+          serverLogoutSucceeded ? 'info' : 'rose'
         );
       }
     };
@@ -1521,6 +1611,7 @@ const App = () => {
     async (
       userId
     ) => {
+      if (!hasPemimpinAccess()) return { success: false };
       const targetUser =
         approvalUsers.find(
           (user) =>
@@ -1581,6 +1672,7 @@ const App = () => {
     async (
       userId
     ) => {
+      if (!hasPemimpinAccess()) return { success: false };
       const targetUser =
         approvalUsers.find(
           (user) =>
@@ -1649,10 +1741,7 @@ const App = () => {
 
   const handleSaveTransaction =
     async (trxData) => {
-      if (
-        currentUser?.role !==
-        'pengurus_harian'
-      ) {
+      if (!hasPengurusAccess()) {
         showToast(
           'Anda tidak memiliki izin untuk mengubah transaksi.',
           'rose'
@@ -1816,6 +1905,9 @@ const App = () => {
                 .campaignId ??
               null,
 
+            // Kompatibilitas sementara: backend saat ini masih memakai field ini.
+            // TODO Laravel: hitung kembali berdasarkan campaign_id di server,
+            // jangan mempercayai kode kategori yang dikirim browser.
             allocation_category:
               donationData.category,
 
@@ -1839,13 +1931,16 @@ const App = () => {
                 donationData.amount
               ),
 
-            note:
+            donor_message:
               donationData.note
                 ?.trim() ||
               null,
 
+            publish_message:
+              donationData.publishMessage === true,
+
             publish_identity:
-              false,
+              donationData.isAnonymous !== true,
           };
 
           const donationResponse =
@@ -1962,6 +2057,10 @@ const App = () => {
 
   const handleDeleteTransaction =
     async (trxId) => {
+      if (!hasPengurusAccess()) {
+        showToast('Hanya Pengurus Harian yang dapat menghapus transaksi.', 'rose');
+        return { success: false };
+      }
       const target =
         financialTransactions
           .find(
@@ -2049,6 +2148,7 @@ const App = () => {
 
   const handleSaveProgram =
     async (progData) => {
+      if (!hasPengurusAccess()) return { success: false };
       try {
         const payload = {
           category_id:
@@ -2179,6 +2279,7 @@ const App = () => {
 
   const handleDeactivateProgram =
     async (progId) => {
+      if (!hasPengurusAccess()) return { success: false };
       const target =
         managedPrograms.find(
           (program) =>
@@ -2275,43 +2376,22 @@ const App = () => {
       (d) => d.type === 'online' && d.status === 'Pending'
     ).length;
 
-  const adminRoutes = [
-    'admin-dashboard',
-    'admin-verifikasi',
-    'admin-offline',
-    'admin-campaign',
-    'admin-konten',
-    'dashboard',
-    'transactions',
-    'report',
-    'programs',
-    'approval',
-    'audit',
-    'organization-profile-management',
-  ];
+  const adminRoutes = Object.keys(SIMK_PROTECTED_ROUTES);
+  const isAdminView = adminRoutes.includes(activeTab);
+  const canViewAdmin = isAdminView && isAuthenticated &&
+    SIMK_PROTECTED_ROUTES[activeTab].includes(currentRole);
 
-  const isAdminView = Boolean(
-    currentUser || adminRoutes.includes(activeTab)
-  );
+  // Campaign tidak pernah fallback ke mock data.
+  const displayCampaigns = publicPrograms;
 
-  const displayCampaigns =
-    publicPrograms && publicPrograms.length > 0
-      ? publicPrograms
-      : (window.INITIAL_SIMK_DATA?.campaigns || []);
+  // Never show mock transactions as if they were entries in the official ledger.
+  const displayTransactions = Array.isArray(financialTransactions) ? financialTransactions : [];
 
-  const displayTransactions =
-    financialTransactions && financialTransactions.length > 0
-      ? financialTransactions
-      : (window.INITIAL_SIMK_DATA?.transactions || []);
+  // Public organization identity must come from the CMS API only.
+  const displayProfile = organizationProfile || {};
 
-  const displayProfile =
-    organizationProfile ||
-    (window.INITIAL_SIMK_DATA?.orphanageProfile || {});
-
-  const displayUsers =
-    approvalUsers && approvalUsers.length > 0
-      ? approvalUsers
-      : (window.INITIAL_SIMK_DATA?.users || []);
+  // Never use fixture accounts as real approval records.
+  const displayUsers = approvalUsers;
 
   /*
   |--------------------------------------------------------------------------
@@ -2342,71 +2422,26 @@ const App = () => {
         </div>
       )}
 
-      {/* GLOBAL TOP EVALUATOR BANNER (Matched exactly from final frontend MainLayout) */}
-      <div className="bg-slate-900 text-slate-200 px-4 py-1.5 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 sticky top-0 z-50 no-print simulasi-banner">
-        <div className="flex items-center space-x-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 uppercase tracking-wider">
-            Mode Evaluator
-          </span>
-          <span className="hidden sm:inline text-slate-300">
-            Simulasi Role Pengguna
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2 text-xs">
-          <button
-            type="button"
-            onClick={() => handleSwitchUserRole(null)}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-              !currentUser
-                ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <LucideIcon name="globe" className="w-3.5 h-3.5" />
-            <span>Publik (Beranda)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSwitchUserRole('Pengurus Harian')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-              currentUser?.role === 'Pengurus Harian'
-                ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400/50'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <LucideIcon name="user-check" className="w-3.5 h-3.5" />
-            <span>Pengurus Harian</span>
-            {pendingDonationsCount > 0 && (
-              <span className="ml-1 bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
-                {pendingDonationsCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSwitchUserRole('Pemimpin Lembaga')}
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center space-x-1.5 ${
-              currentUser?.role === 'Pemimpin Lembaga'
-                ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-400/50'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            <LucideIcon name="shield-check" className="w-3.5 h-3.5" />
-            <span>Pemimpin Lembaga</span>
-            {pendingApprovalCount > 0 && (
-              <span className="ml-1 bg-amber-400 text-slate-950 text-[10px] font-black px-1.5 py-0.2 rounded-full">
-                {pendingApprovalCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
+      {/* Simulator role impersonation removed: only AuthApi.login + AuthApi.me
+          can establish a user identity. Public/admin navigation is unchanged. */}
 
       {/* RENDER ADMIN SIDEBAR LAYOUT OR PUBLIC NAVBAR LAYOUT */}
-      {isAdminView ? (
+      {isAdminView && !canViewAdmin ? (
+        <main className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <h1 className="text-xl font-bold text-slate-900">Akses halaman dilindungi</h1>
+          <p className="text-sm text-slate-600">
+            {authStatus === 'checking'
+              ? 'Memeriksa sesi login Laravel...'
+              : isAuthenticated
+                ? 'Role akun Anda tidak memiliki izin untuk membuka halaman ini.'
+                : 'Login Laravel diperlukan untuk mengakses dashboard pengurus.'}
+          </p>
+          <div className="flex gap-3">
+            <button className="rounded-lg bg-emerald-600 px-4 py-2 text-white" onClick={() => navigateToRoute('/login')}>Login</button>
+            <button className="rounded-lg border px-4 py-2" onClick={() => navigateToRoute('/beranda')}>Ke website publik</button>
+          </div>
+        </main>
+      ) : isAdminView ? (
         <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
           {/* Admin Sidebar */}
           <Sidebar
@@ -2418,7 +2453,7 @@ const App = () => {
             pendingDonationsCount={pendingDonationsCount}
             isMobileSidebarOpen={isMobileSidebarOpen}
             setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-            evaluatorMode={true}
+            evaluatorMode={false}
           />
 
           {/* Admin Main Workspace Area */}
@@ -2440,19 +2475,28 @@ const App = () => {
               </div>
 
               <div className="text-xs font-bold text-emerald-400 bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-800">
-                {currentUser?.role || 'Pengelola'}
+                {currentRole === 'pengurus_harian' ? 'Pengurus Harian' : 'Pemimpin Lembaga'}
               </div>
             </header>
 
             <main className="flex-1 p-4 sm:p-6">
               {activeTab === 'admin-dashboard' && (
-                <AdminDashboard
-                  campaigns={displayCampaigns}
-                  donations={donations}
-                  transactions={displayTransactions}
-                  currentUser={currentUser}
-                  onNavigateTab={navigateToRoute}
-                />
+                currentRole === 'pemimpin_lembaga' ? (
+                  // Executive overview reuses the read-only financial analytics endpoint.
+                  <FinancialDashboard
+                    currentUser={currentUser}
+                    onNavigateTab={navigateToRoute}
+                  />
+                ) : (
+                  <AdminDashboard
+                    campaigns={displayCampaigns}
+                    donations={donations}
+                    transactions={displayTransactions}
+                    currentUser={currentUser}
+                    onNavigateTab={navigateToRoute}
+                    financialTransactionRefreshKey={financialTransactionRefreshKey}
+                  />
+                )
               )}
 
               {activeTab === 'admin-verifikasi' && (
@@ -2512,10 +2556,18 @@ const App = () => {
                   transactionRefreshKey={financialTransactionRefreshKey}
                   onLoadTransactions={loadFinancialTransactions}
                   onOpenAddModal={() => {
+                    if (!hasPengurusAccess()) {
+                      showToast('Mode monitoring: hanya Pengurus Harian yang dapat mencatat transaksi.', 'rose');
+                      return;
+                    }
                     setEditingTrx(null);
                     setIsAddTrxModalOpen(true);
                   }}
                   onOpenEditModal={(transaction) => {
+                    if (!hasPengurusAccess()) {
+                      showToast('Mode monitoring: perubahan transaksi tidak diizinkan.', 'rose');
+                      return;
+                    }
                     if (transaction.editable !== true) {
                       showToast('Transaksi sistem tidak dapat diedit manual.', 'rose');
                       return;
@@ -2524,6 +2576,10 @@ const App = () => {
                     setIsAddTrxModalOpen(true);
                   }}
                   onConfirmDeleteTrx={(transaction) => {
+                    if (!hasPengurusAccess()) {
+                      showToast('Mode monitoring: penghapusan transaksi tidak diizinkan.', 'rose');
+                      return;
+                    }
                     if (transaction.editable !== true) {
                       showToast('Transaksi sistem tidak dapat dihapus manual.', 'rose');
                       return;
@@ -2536,14 +2592,41 @@ const App = () => {
               )}
 
               {activeTab === 'programs' && (
-                <ProgramManagement
-                  priorityPrograms={managedPrograms && managedPrograms.length > 0 ? managedPrograms : displayCampaigns}
-                  campaignLoading={campaignLoading}
-                  campaignError={campaignError}
-                  onSaveProgram={handleSaveProgram}
-                  onDeactivateProgram={handleDeactivateProgram}
-                  currentUser={currentUser}
-                />
+                currentRole === 'pemimpin_lembaga' ? (
+                  <section className="mx-auto max-w-6xl space-y-6">
+                    <div className="rounded-3xl bg-slate-900 p-7 text-white shadow-lg">
+                      <p className="text-sm font-semibold text-emerald-300">Ikhtisar eksekutif</p>
+                      <h1 className="mt-2 text-2xl font-extrabold">Program Prioritas</h1>
+                      <p className="mt-2 text-sm text-slate-300">Daftar campaign dari API. Akses Pemimpin Lembaga bersifat baca saja.</p>
+                    </div>
+                    {publicCampaignLoading && <p className="text-sm text-slate-500">Memuat program dari database...</p>}
+                    {publicCampaignError && <p className="text-sm text-rose-600">{publicCampaignError}</p>}
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                      {displayCampaigns.map((program) => (
+                        <article key={program.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                          <span className="text-xs font-semibold text-emerald-700">{program.category}</span>
+                          <h2 className="mt-2 text-base font-bold text-slate-900">{program.title}</h2>
+                          <p className="mt-2 text-xs text-slate-500">Status: {program.status}</p>
+                          <p className="mt-3 text-sm font-semibold">Target: Rp {Number(program.targetAmount || 0).toLocaleString('id-ID')}</p>
+                          <p className="mt-1 text-sm">Dana terverifikasi: {program.verifiedCollectedAmount == null ? 'Belum tersedia' : `Rp ${program.verifiedCollectedAmount.toLocaleString('id-ID')}`}</p>
+                          <button type="button" onClick={() => navigateToRoute(`/campaign/${encodeURIComponent(String(program.id))}`)}
+                            className="mt-4 rounded-xl border border-emerald-200 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
+                            Lihat detail publik
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ) : (
+                  <ProgramManagement
+                    priorityPrograms={managedPrograms && managedPrograms.length > 0 ? managedPrograms : displayCampaigns}
+                    campaignLoading={campaignLoading}
+                    campaignError={campaignError}
+                    onSaveProgram={handleSaveProgram}
+                    onDeactivateProgram={handleDeactivateProgram}
+                    currentUser={currentUser}
+                  />
+                )
               )}
 
               {activeTab === 'organization-profile-management' && (
@@ -2591,6 +2674,7 @@ const App = () => {
             onLogout={handleLogout}
             pendingApprovalCount={pendingApprovalCount}
             evaluatorMode={false}
+            organizationProfile={displayProfile}
           />
 
           {/* Public Main Content */}
@@ -2598,13 +2682,12 @@ const App = () => {
             {activeTab === 'beranda' && (
               <LandingPage
                 onNavigateToDonation={openPublicDonation}
-                onNavigateToLogin={() => {
-                  setActiveTab('auth');
-                  setAuthView('login');
-                }}
+                onNavigateToLogin={() => navigateToRoute('/login')}
                 onNavigateToProfile={() => navigateToRoute('/profil')}
-                onNavigateToDetail={(id) => navigateToRoute(`/campaign/${id}`)}
+                onNavigateToCampaign={(id) => navigateToRoute(`/campaign/${id}`)}
                 priorityPrograms={displayCampaigns}
+                campaignLoading={publicCampaignLoading}
+                campaignError={publicCampaignError}
                 organizationProfile={displayProfile}
               />
             )}
@@ -2619,10 +2702,14 @@ const App = () => {
             )}
 
             {activeTab === 'public-donation' && (
-              <DonasiPublik
-                campaigns={displayCampaigns}
-                initialCampaignId={selectedDonationContext.campaignId}
-                onSubmitDonation={handlePublicDonationSubmit}
+              <PublicDonation
+                campaigns={publicPrograms}
+                campaignLoading={publicCampaignLoading}
+                campaignError={publicCampaignError}
+                donationContext={selectedDonationContext}
+                onSubmitPublicDonation={handlePublicDonationSubmit}
+                resolveAllocationCategory={mapCampaignCategoryToDonationAllocation}
+                onNavigateHome={() => navigateToRoute('/beranda')}
               />
             )}
 
@@ -2664,6 +2751,7 @@ const App = () => {
 
             {activeTab === 'auth' && (
               <AuthPages
+                key={authView}
                 initialView={authView}
                 onLoginSuccess={handleLogin}
                 onRegisterSubmit={handleRegisterSubmit}
@@ -2672,7 +2760,7 @@ const App = () => {
             )}
           </main>
 
-          <Footer />
+          <Footer organizationProfile={displayProfile} onNavigateTab={navigateToRoute} />
         </>
       )}
 

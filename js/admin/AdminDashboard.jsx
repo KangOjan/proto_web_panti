@@ -1,67 +1,135 @@
 // Admin Dashboard Component
 // SIMK-Panti - Portal Pengelola & Analitik Donasi Panti
 
+// SIMK-Panti Dashboard Pengelola.
+// Tata letak asli dipertahankan, angka keuangan berasal dari API Laravel.
 const AdminDashboard = ({
-  campaigns = (window.INITIAL_SIMK_DATA?.campaigns || []),
-  donations = (window.INITIAL_SIMK_DATA?.donations || []),
-  transactions = (window.INITIAL_SIMK_DATA?.transactions || []),
   currentUser = null,
   onNavigateTab = null,
+  financialTransactionRefreshKey = 0,
 }) => {
   const chartBarRef = React.useRef(null);
   const chartPieRef = React.useRef(null);
   const barInstance = React.useRef(null);
   const pieInstance = React.useRef(null);
 
-  const activeCampaignsCount = campaigns.filter((c) => c.status === 'Aktif').length;
-  const pendingDonations = donations.filter((d) => d.status === 'Pending');
-  const verifiedDonations = donations.filter((d) => d.status === 'Terverifikasi');
+  const currentYear = new Date().getFullYear();
+  const emptyFilters = () => ({ year: String(currentYear), from: '', to: '', type: '', category: '', q: '' });
+  const [filters, setFilters] = React.useState(emptyFilters);
+  const [searchDraft, setSearchDraft] = React.useState('');
+  const [refreshTick, setRefreshTick] = React.useState(0);
+  const [financeSnapshot, setFinanceSnapshot] = React.useState(null);
+  const [financeError, setFinanceError] = React.useState('');
+  const [financeLoading, setFinanceLoading] = React.useState(true);
+  const [publicStats, setPublicStats] = React.useState(null);
+  const [campaignRows, setCampaignRows] = React.useState([]);
+  const [campaignsLoaded, setCampaignsLoaded] = React.useState(false);
+  const [pendingDonations, setPendingDonations] = React.useState([]);
+  const [pendingError, setPendingError] = React.useState('');
+  const [lastUpdated, setLastUpdated] = React.useState(null);
+  const [distributionType, setDistributionType] = React.useState('income');
 
-  const totalVerifiedOnline = verifiedDonations
-    .filter((d) => d.type === 'online')
-    .reduce((sum, d) => sum + (d.amount || 0), 0);
+  const money = (num) => num == null ? 'Belum tersedia' : `Rp ${Number(num).toLocaleString('id-ID')}`;
+  const updateFilter = (key, val) => setFilters((prev) => ({ ...prev, [key]: val }));
+  const filterKey = JSON.stringify(filters);
+  const categoryOptions = [
+    ['', 'Semua kategori'],
+    ['donation_routine', 'Donasi Rutin'], ['infak_zakat', 'Infak / Zakat'],
+    ['government_grant', 'Bantuan Pemerintah'], ['other_income', 'Pemasukan Lain'],
+    ['consumption', 'Konsumsi'], ['education', 'Pendidikan'],
+    ['operational', 'Operasional'], ['health', 'Kesehatan'], ['other_expense', 'Pengeluaran Lain'],
+  ];
 
-  const totalVerifiedOffline = verifiedDonations
-    .filter((d) => d.type === 'offline')
-    .reduce((sum, d) => sum + (d.amount || 0), 0);
+  React.useEffect(() => {
+    let cancelled = false;
+    const reload = async () => {
+      setFinanceLoading(true);
+      // API publik hanya untuk ringkasan donasi terverifikasi dan daftar campaign.
+      // Jangan menggunakan window.INITIAL_SIMK_DATA sebagai fallback nominal.
+      const tasks = [
+        Promise.resolve().then(() => FinancialApi.getDashboard(filters)),
+        Promise.resolve().then(() => FinancialApi.getPublicTransparency(Number(filters.year))),
+        Promise.resolve().then(() => CampaignApi.getPublicCampaigns()),
+        Promise.resolve().then(() => apiRequest('/pengurus/donations')),
+      ];
+      const [finance, publicData, campaignData, pendingData] = await Promise.allSettled(tasks);
+      if (cancelled) return;
 
-  const totalDonationsManaged = totalVerifiedOnline + totalVerifiedOffline;
-  const totalVerifiedCount = verifiedDonations.length;
-  const avgDonation = totalVerifiedCount > 0 ? Math.round(totalDonationsManaged / totalVerifiedCount) : 0;
+      if (finance.status === 'fulfilled') {
+        setFinanceSnapshot(finance.value?.data || null);
+        setFinanceError('');
+      } else {
+        setFinanceSnapshot(null);
+        const err = finance.reason;
+        setFinanceError(err?.status === 401 || err?.status === 403
+          ? 'Data buku kas memerlukan login Laravel sebagai Pengurus Harian. Mode Evaluator hanya mengganti tampilan peran.'
+          : err?.message || 'Gagal mengambil grafik buku kas dari server.');
+      }
+      setFinanceLoading(false);
+      if (publicData.status === 'fulfilled') setPublicStats(publicData.value?.data || null);
+      if (campaignData.status === 'fulfilled') {
+        setCampaignsLoaded(true);
+        const rows = campaignData.value?.data;
+        setCampaignRows(Array.isArray(rows) ? rows.map((item) => ({
+          id: item.id,
+          title: item.title,
+          category: item.category?.name || 'Program',
+          status: item.status,
+          targetAmount: Number(item.target_amount || 0),
+          collectedAmount: item.collected_amount == null ? null : Number(item.collected_amount),
+        })) : []);
+      }
+      if (pendingData.status === 'fulfilled') {
+        const rows = pendingData.value?.data?.items;
+        const pendingRows = Array.isArray(rows) ? rows.filter((d) => {
+          const status = d.status?.value || d.status;
+          const source = d.source?.value || d.source;
+          return String(status).toLowerCase() === 'pending' && String(source).toLowerCase() !== 'offline';
+        }).map((d) => ({
+          id: d.id || d.public_id,
+          donorName: d.donor_name || d.donor?.name || 'Hamba Allah',
+          campaignTitle: d.campaign?.title || 'Donasi Umum',
+          amount: Number(d.amount || 0),
+        })) : [];
+        setPendingDonations(pendingRows);
+        setPendingError('');
+      } else {
+        setPendingDonations([]);
+        setPendingError('Antrean verifikasi memerlukan login Pengurus Harian.');
+      }
+      setLastUpdated(new Date());
+    };
+    reload();
+    const timer = window.setInterval(reload, 30000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [filterKey, refreshTick, financialTransactionRefreshKey]);
 
-  // Monthly Data Calculation for Bar Chart
-  const months = ['02', '03', '04', '05', '06', '07'];
-  const monthLabels = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'Mei 2026', 'Jun 2026', 'Jul 2026'];
+  // Ringkasan dari API publik: keseluruhan donasi verified dalam tahun terpilih.
+  const donationSummary = publicStats?.summary || {};
+  const totalDonationsManaged = publicStats ? Number(donationSummary.total_donations || 0) : null;
+  const totalVerifiedCount = publicStats ? Number(donationSummary.donation_count || 0) : null;
+  const avgDonation = publicStats ? Number(donationSummary.average_donation || 0) : null;
+  const activeCampaignsCount = campaignRows.filter((c) => c.status === 'active').length;
 
-  const monthlyIncome = React.useMemo(() => {
-    return months.map((m) =>
-      transactions
-        .filter((t) => t.type === 'pemasukan' && t.date.startsWith(`2026-${m}`))
-        .reduce((sum, t) => sum + t.amount, 0)
-    );
-  }, [transactions]);
+  const monthly = Array.isArray(financeSnapshot?.monthly_trend) ? financeSnapshot.monthly_trend : [];
+  const monthLabels = monthly.map((row) => {
+    const ym = String(row.month || '');
+    const parsed = /^\d{4}-\d{2}$/.test(ym) ? new Date(`${ym}-01T12:00:00`) : null;
+    return parsed && !Number.isNaN(parsed.getTime())
+      ? parsed.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })
+      : ym;
+  });
+  const monthlyIncome = monthly.map((m) => Number(m.income || 0));
+  const monthlyExpense = monthly.map((m) => Number(m.expense || 0));
 
-  const monthlyExpense = React.useMemo(() => {
-    return months.map((m) =>
-      transactions
-        .filter((t) => t.type === 'pengeluaran' && t.date.startsWith(`2026-${m}`))
-        .reduce((sum, t) => sum + t.amount, 0)
-    );
-  }, [transactions]);
-
-  // Category Distribution for Doughnut Chart
-  const categories = ['Pendidikan', 'Konsumsi', 'Operasional', 'Kesehatan', 'Infak & Zakat'];
-  const categoryAmounts = React.useMemo(() => {
-    return categories.map((cat) => {
-      const fromDonations = verifiedDonations
-        .filter((d) => (d.category && d.category.includes(cat)) || (d.campaignTitle && d.campaignTitle.includes(cat)))
-        .reduce((sum, d) => sum + (d.amount || 0), 0);
-      const fromTransactions = transactions
-        .filter((t) => t.type === 'pemasukan' && t.category && t.category.includes(cat))
-        .reduce((sum, t) => sum + t.amount, 0);
-      return Math.max(fromDonations, fromTransactions, 5000000);
-    });
-  }, [verifiedDonations, transactions]);
+  // Alokasi menurut kategori buku kas (filter dan jenis transaksi aktif).
+  const breakdown = distributionType === 'income'
+    ? financeSnapshot?.income_by_category : financeSnapshot?.expense_by_category;
+  const distributionRows = (Array.isArray(breakdown) ? breakdown : [])
+    .filter((r) => Number(r.total || 0) > 0);
+  const categories = distributionRows.map((r) => r.category?.label || r.category?.value || 'Lainnya');
+  const categoryAmounts = distributionRows.map((r) => Number(r.total || 0));
+  const chartKey = JSON.stringify({ monthly, categories, categoryAmounts, distributionType });
 
   // Render Charts
   React.useEffect(() => {
@@ -174,7 +242,7 @@ const AdminDashboard = ({
       if (barInstance.current) barInstance.current.destroy();
       if (pieInstance.current) pieInstance.current.destroy();
     };
-  }, [monthlyIncome, monthlyExpense, categoryAmounts]);
+  }, [chartKey]);
 
   const navigateTo = (route) => {
     if (onNavigateTab) {
@@ -204,11 +272,11 @@ const AdminDashboard = ({
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => navigateTo('/dashboard')}
+            onClick={() => setRefreshTick((prev) => prev + 1)}
             className="px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-2xl text-xs border border-white/20 shadow-sm flex items-center space-x-2 transition-all"
           >
             <BarChart3 className="w-4 h-4 text-emerald-300" />
-            <span>Visualisasi Keuangan Lengkap</span>
+            <span>Muat Ulang Data</span>
           </button>
 
           <button
@@ -217,10 +285,47 @@ const AdminDashboard = ({
             className="px-4 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center space-x-2 transition-all"
           >
             <Clock className="w-4 h-4 text-slate-950" />
-            <span>Verifikasi Donasi ({pendingDonations.length})</span>
+            <span>Verifikasi Donasi ({pendingError ? '-' : pendingDonations.length})</span>
           </button>
         </div>
       </div>
+
+      {/* Filter tambahan. Semua bagian desain dashboard asli tetap ditampilkan. */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4" aria-label="Filter Transaksi dan Grafik">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-extrabold text-slate-900">Filter Transaksi dan Grafik</h2>
+          <button type="button" className="text-xs font-bold text-emerald-700 hover:underline" onClick={() => { setFilters(emptyFilters()); setSearchDraft(''); }}>Reset Filter</button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <label className="text-xs font-bold text-slate-600">Tahun
+            <select value={filters.year} onChange={(e) => setFilters((prev) => ({ ...prev, year: e.target.value, from: '', to: '' }))} className="block mt-1 w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm">
+              {Array.from({ length: 7 }, (_, i) => currentYear - i).map((y) => <option key={y} value={String(y)}>{y}</option>)}
+            </select>
+          </label>
+          <label className="text-xs font-bold text-slate-600">Dari Tanggal
+            <input type="date" value={filters.from} min={`${filters.year}-01-01`} max={`${filters.year}-12-31`} onChange={(e) => updateFilter('from', e.target.value)} className="block mt-1 w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm" />
+          </label>
+          <label className="text-xs font-bold text-slate-600">Sampai Tanggal
+            <input type="date" value={filters.to} min={filters.from || `${filters.year}-01-01`} max={`${filters.year}-12-31`} onChange={(e) => updateFilter('to', e.target.value)} className="block mt-1 w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm" />
+          </label>
+          <label className="text-xs font-bold text-slate-600">Jenis Transaksi
+            <select value={filters.type} onChange={(e) => updateFilter('type', e.target.value)} className="block mt-1 w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm">
+              <option value="">Semua jenis</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option>
+            </select>
+          </label>
+          <label className="text-xs font-bold text-slate-600">Kategori
+            <select value={filters.category} onChange={(e) => updateFilter('category', e.target.value)} className="block mt-1 w-full border border-slate-200 px-3 py-2.5 rounded-xl text-sm">
+              {categoryOptions.map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+            </select>
+          </label>
+        </div>
+        <form onSubmit={(e) => { e.preventDefault(); updateFilter('q', searchDraft.trim()); }} className="flex flex-wrap gap-2">
+          <input aria-label="Cari transaksi" placeholder="Cari kode, nama, atau keterangan transaksi..." value={searchDraft} onChange={(e) => setSearchDraft(e.target.value)} className="flex-1 min-w-52 border border-slate-200 rounded-xl px-3 py-2.5 text-sm" />
+          <button type="submit" className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-extrabold">Cari</button>
+        </form>
+        <p className="text-[11px] text-slate-500">Grafik dan kategori menggunakan filter di atas. Ringkasan donasi, program aktif, dan antrean verifikasi memiliki cakupan tersendiri. Pembaruan setiap 30 detik.{lastUpdated ? ` Terakhir: ${lastUpdated.toLocaleTimeString('id-ID')}` : ''}</p>
+      </section>
+      {financeError && <div role="alert" className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl px-4 py-3 text-sm">{financeError}</div>}
 
       {/* METRICS CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -232,13 +337,13 @@ const AdminDashboard = ({
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">
-            Rp {totalDonationsManaged.toLocaleString('id-ID')}
+            {money(totalDonationsManaged)}
           </div>
           <div className="flex items-center space-x-2 text-[11px] text-emerald-600 font-bold">
             <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-              {totalVerifiedCount} Transaksi
+              {totalVerifiedCount == null ? '-' : totalVerifiedCount} Transaksi
             </span>
-            <span>Terverifikasi Real-time</span>
+            <span>Donasi terverifikasi sesuai tahun</span>
           </div>
         </div>
 
@@ -249,8 +354,8 @@ const AdminDashboard = ({
               <Layers className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-slate-900">{activeCampaignsCount} Program</div>
-          <p className="text-[11px] text-slate-400 font-medium">Dari total {campaigns.length} program tercatat</p>
+          <div className="text-3xl font-black text-slate-900">{campaignsLoaded ? activeCampaignsCount : '-'} Program</div>
+          <p className="text-[11px] text-slate-400 font-medium">Dari total {campaignsLoaded ? campaignRows.length : '-'} program pada API</p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
@@ -261,9 +366,9 @@ const AdminDashboard = ({
             </div>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-indigo-900">
-            Rp {avgDonation.toLocaleString('id-ID')}
+            {money(avgDonation)}
           </div>
-          <p className="text-[11px] text-slate-400 font-medium">Nilai kontribusi rata-rata donatur</p>
+          <p className="text-[11px] text-slate-400 font-medium">Rata-rata dari donasi verified tahun terpilih</p>
         </div>
 
         <div className="bg-amber-50 p-6 rounded-3xl border border-amber-200 shadow-sm space-y-2">
@@ -273,8 +378,8 @@ const AdminDashboard = ({
               <Clock className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-3xl font-black text-amber-900">{pendingDonations.length} Donasi</div>
-          <p className="text-[11px] text-amber-700 font-bold">Menunggu konfirmasi bukti transfer</p>
+          <div className="text-3xl font-black text-amber-900">{pendingError ? '-' : pendingDonations.length} Donasi</div>
+          <p className="text-[11px] text-amber-700 font-bold">Menunggu konfirmasi bukti transfer (halaman pertama)</p>
         </div>
       </div>
 
@@ -289,16 +394,18 @@ const AdminDashboard = ({
                 <span>Tren Keuangan Bulanan</span>
               </div>
               <h3 className="text-lg font-black text-slate-900 mt-0.5">
-                Penerimaan Donasi vs Penyaluran Kas
+                Pemasukan vs Pengeluaran Buku Kas
               </h3>
             </div>
             <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[11px] font-bold self-start sm:self-auto">
-              Februari - Juli 2026
+              {filters.year} · Sesuai filter
             </span>
           </div>
 
-          <div className="h-72 w-full pt-2">
+          <div className="h-72 w-full pt-2 relative">
             <canvas ref={chartBarRef}></canvas>
+            {!financeLoading && (financeError || !monthly.length || monthly.every((m) => !Number(m.income || 0) && !Number(m.expense || 0))) &&
+              <p className="absolute inset-0 flex items-center justify-center text-center text-sm text-slate-400 bg-white/90 px-5">{financeError ? 'Login diperlukan untuk melihat grafik.' : 'Belum ada pemasukan atau pengeluaran sesuai filter.'}</p>}
           </div>
         </div>
 
@@ -310,16 +417,24 @@ const AdminDashboard = ({
               <span>Distribusi Alokasi Dana</span>
             </div>
             <h3 className="text-lg font-black text-slate-900 mt-0.5">
-              Proporsi Program Panti
+              Proporsi Kategori Transaksi
             </h3>
           </div>
 
+          <label className="text-xs font-bold text-slate-600">Distribusi
+            <select value={distributionType} onChange={(e) => setDistributionType(e.target.value)} className="ml-2 rounded-lg border border-slate-200 px-2 py-1 text-xs">
+              <option value="income">Pemasukan</option>
+              <option value="expense">Pengeluaran</option>
+            </select>
+          </label>
           <div className="h-64 w-full relative flex items-center justify-center">
             <canvas ref={chartPieRef}></canvas>
+            {!financeLoading && (financeError || !distributionRows.length) &&
+              <p className="absolute inset-0 flex items-center justify-center text-center text-sm text-slate-400 bg-white/90 px-5">{financeError ? 'Login diperlukan untuk melihat grafik.' : 'Tidak ada transaksi untuk kategori ini.'}</p>}
           </div>
 
           <p className="text-[11px] text-slate-400 text-center font-medium pt-1">
-            Data akumulasi otomatis dari seluruh donasi masuk terverifikasi.
+            Agregasi kategori buku kas dari database sesuai filter. Tidak memakai nilai buatan.
           </p>
         </div>
       </div>
@@ -347,10 +462,10 @@ const AdminDashboard = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {campaigns.slice(0, 3).map((camp) => {
-            const collected = camp.collectedAmount || 0;
-            const target = camp.targetAmount || 1;
-            const pct = Math.min(Math.round((collected / target) * 100), 100);
+          {campaignRows.filter((c) => c.status === 'active').slice(0, 3).map((camp) => {
+            const collected = camp.collectedAmount;
+            const target = camp.targetAmount || 0;
+            const pct = collected == null || target <= 0 ? null : Math.min(Math.round((collected / target) * 100), 100);
 
             return (
               <div
@@ -361,7 +476,7 @@ const AdminDashboard = ({
                   <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                     {camp.category || 'Prioritas'}
                   </span>
-                  <span className="text-xs font-black text-emerald-700">{pct}%</span>
+                  <span className="text-xs font-black text-emerald-700">{pct == null ? '-' : `${pct}%`}</span>
                 </div>
 
                 <h4 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2">
@@ -371,18 +486,18 @@ const AdminDashboard = ({
                 <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
                   <div
                     className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${pct}%` }}
+                    style={{ width: `${pct == null ? '-' : `${pct}%`}` }}
                   ></div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs pt-1">
                   <div>
                     <span className="text-[10px] text-slate-400 block font-semibold">Terkumpul:</span>
-                    <span className="font-bold text-slate-800">Rp {collected.toLocaleString('id-ID')}</span>
+                    <span className="font-bold text-slate-800">{money(collected)}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-slate-400 block font-semibold">Target:</span>
-                    <span className="font-bold text-slate-600">Rp {target.toLocaleString('id-ID')}</span>
+                    <span className="font-bold text-slate-600">{money(target)}</span>
                   </div>
                 </div>
               </div>
@@ -424,7 +539,7 @@ const AdminDashboard = ({
                 <tr>
                   <td colSpan="5" className="text-center py-8 text-slate-400">
                     <CheckCircle2 className="w-8 h-8 mx-auto mb-1 text-emerald-500" />
-                    <p className="font-semibold text-xs">Semua donasi online telah diverifikasi.</p>
+                    <p className="font-semibold text-xs">{pendingError || 'Tidak ada donasi online pending pada halaman data yang dimuat.'}</p>
                   </td>
                 </tr>
               ) : (

@@ -12,9 +12,14 @@ const OfflineDonation = ({
   const [donorName, setDonorName] = React.useState('');
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [kind, setKind] = React.useState('uang'); // uang | barang
-  const [amount, setAmount] = React.useState('500000');
+  const [amount, setAmount] = React.useState('');
   const [itemDetails, setItemDetails] = React.useState('');
-  const [campaignId, setCampaignId] = React.useState(campaigns[0]?.id || 'CMP-001');
+  const [campaignId, setCampaignId] = React.useState(campaigns[0]?.id ? String(campaigns[0].id) : '');
+  React.useEffect(() => {
+    if (campaigns.length > 0 && !campaigns.some((item) => String(item.id) === String(campaignId))) {
+      setCampaignId(String(campaigns[0].id));
+    }
+  }, [campaigns, campaignId]);
   const [message, setMessage] = React.useState('');
 
   const offlineDonations = donations.filter((d) => d.type === 'offline');
@@ -25,14 +30,14 @@ const OfflineDonation = ({
     (d.message && d.message.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!donorName.trim()) {
       alert('Mohon isi Nama Donatur.');
       return;
     }
 
-    const selectedCampaign = campaigns.find((c) => c.id === campaignId);
+    const selectedCampaign = campaigns.find((c) => String(c.id) === String(campaignId));
 
     const payload = {
       id: `DON-OFF-${Date.now().toString().slice(-6)}`,
@@ -45,17 +50,16 @@ const OfflineDonation = ({
       message,
       isAnonymous: false,
       proofImage: null,
-      status: 'Terverifikasi',
+      status: 'Pending',
       type: 'offline',
       kind,
       itemDetails: kind === 'barang' ? itemDetails : '',
       createdAt: new Date(date).toISOString(),
     };
 
-    if (onAddOfflineDonation) {
-      onAddOfflineDonation(payload);
-    }
-
+    if (!onAddOfflineDonation) return;
+    const saved = await onAddOfflineDonation(payload);
+    if (!saved) return;
     setIsModalOpen(false);
     setDonorName('');
     setMessage('');
@@ -188,7 +192,7 @@ const OfflineDonation = ({
       {/* MODAL CATAT DONASI OFFLINE */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-extrabold text-slate-900">Pencatatan Donasi Offline</h3>
               <button
@@ -213,7 +217,7 @@ const OfflineDonation = ({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 uppercase mb-1">Tanggal Penerimaan *</label>
                   <input
@@ -233,7 +237,7 @@ const OfflineDonation = ({
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"
                   >
                     <option value="uang">Uang Tunai</option>
-                    <option value="barang">Barang / Sembako</option>
+                    <option value="barang" disabled>Barang / Sembako (belum didukung backend)</option>
                   </select>
                 </div>
               </div>
@@ -290,6 +294,9 @@ const OfflineDonation = ({
                 ></textarea>
               </div>
 
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                Donasi uang akan disimpan sebagai pending di database, dan baru dicatat ke buku kas setelah verifikasi. Donasi barang memerlukan modul inventaris terpisah.
+              </p>
               <div className="pt-2 flex items-center justify-end space-x-2 border-t border-slate-100">
                 <button
                   type="button"

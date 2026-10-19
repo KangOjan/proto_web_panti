@@ -79,7 +79,7 @@ window.INITIAL_SIMK_DATA = {
       status: 'Aktif',
       image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60',
       description: 'Pengadaan beras, lauk pauk, telur, susu, dan buah-buahan bergizi seimbang untuk 45 anak asuh setiap hari.',
-      bankAccount: 'Bank Syariah Indonesia (BSI) - 7123-4567-89 a.n. YPI Kasih Bunda',
+      bankAccount: 'Bank Syariah Indonesia (BSI) - 7123-4567-89 a.n. LKSA Taman Harapan Muhammadiyah',
       updates: [
         {
           id: 'UPD-101',
@@ -100,7 +100,7 @@ window.INITIAL_SIMK_DATA = {
       status: 'Target Tercapai',
       image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=60',
       description: 'Dukungan biaya SPP bulanan, buku teks pelajaran, dan kelengkapan seragam sekolah 45 anak dari tingkat SD hingga SMA.',
-      bankAccount: 'Bank Mandiri - 123-00-0987654-3 a.n. Yayasan Kasih Bunda',
+      bankAccount: 'Bank Mandiri - 123-00-0987654-3 a.n. Yayasan LKSA Taman Harapan Muhammadiyah',
       updates: [
         {
           id: 'UPD-102',
@@ -121,7 +121,7 @@ window.INITIAL_SIMK_DATA = {
       status: 'Aktif',
       image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800&auto=format&fit=crop&q=60',
       description: 'Perbaikan atap bocor, pengecatan dinding, dan peremajaan kasur serta lemari di kamar tidur asrama putri.',
-      bankAccount: 'Bank Syariah Indonesia (BSI) - 7123-4567-89 a.n. YPI Kasih Bunda',
+      bankAccount: 'Bank Syariah Indonesia (BSI) - 7123-4567-89 a.n. LKSA Taman Harapan Muhammadiyah',
       updates: [],
       createdAt: '2026-02-10T00:00:00.000Z'
     },
@@ -135,7 +135,7 @@ window.INITIAL_SIMK_DATA = {
       status: 'Aktif',
       image: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=60',
       description: 'Pemeriksaan dokter spesialis anak secara berkala, pemberian suplemen multivitamin, dan pengadaan P3K lengkap.',
-      bankAccount: 'Bank BCA - 883-0918-271 a.n. Kasih Bunda Yayasan',
+      bankAccount: 'Bank BCA - 883-0918-271 a.n. LKSA Taman Harapan Muhammadiyah Yayasan',
       updates: [],
       createdAt: '2026-03-01T00:00:00.000Z'
     }
@@ -264,11 +264,11 @@ window.INITIAL_SIMK_DATA = {
       title: 'Kunjungan Edukasi & Pelatihan Coding Dasar untuk Anak Panti',
       slug: 'kunjungan-edukasi-pelatihan-coding-dasar',
       excerpt: 'Sebanyak 25 anak asuh jenjang SMP dan SMA mengikuti workshop pemrograman web dasar yang diselenggarakan oleh komunitas tech volunteer.',
-      content: `Panti Asuhan Kasih Bunda menerima kunjungan istimewa dari tim relawan teknologi. Kegiatan diawali dengan pengenalan logika dasar komputer dan pemrograman web HTML/CSS.
+      content: `Panti Asuhan LKSA Taman Harapan Muhammadiyah menerima kunjungan istimewa dari tim relawan teknologi. Kegiatan diawali dengan pengenalan logika dasar komputer dan pemrograman web HTML/CSS.
 
 Anak-anak sangat antusias mengikuti setiap sesi latihan. Beberapa anak bahkan berhasil membuat halaman biodata sederhana secara mandiri.
 
-"Kami sangat bersyukur atas ilmu dan bimbingan yang diberikan oleh para mentor relawan. Keterampilan digital seperti ini sangat penting untuk bekal masa depan anak-anak kami," ungkap Budi Santoso, Pengurus Harian Panti Kasih Bunda.
+"Kami sangat bersyukur atas ilmu dan bimbingan yang diberikan oleh para mentor relawan. Keterampilan digital seperti ini sangat penting untuk bekal masa depan anak-anak kami," ungkap Budi Santoso, Pengurus Harian Panti LKSA Taman Harapan Muhammadiyah.
 
 Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk mendukung laboratorium belajar panti.`,
       image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=60',
@@ -279,7 +279,7 @@ Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk menduku
       id: 'ART-002',
       title: 'Penyerahan Raport & Apresiasi Anak Asuh Berprestasi Semester Genap',
       slug: 'penyerahan-raport-apresiasi-anak-berprestasi',
-      excerpt: 'Bangga! 5 anak asuh Panti Kasih Bunda berhasil meraih peringkat 3 besar di sekolah masing-masing.',
+      excerpt: 'Bangga! 5 anak asuh Panti LKSA Taman Harapan Muhammadiyah berhasil meraih peringkat 3 besar di sekolah masing-masing.',
       content: `Suasana haru dan penuh rasa syukur mewarnai acara penyerahan santunan prestasi semester ini. Seluruh anak asuh memperlihatkan kemajuan akademik dan hafalan Al-Qur'an yang menggembirakan.
 
 Penghargaan khusus diberikan kepada Ananda M. yang berhasil mempertahankan peringkat 1 di SMA Negeri serta menyelesaikan hafalan juz 5.
@@ -294,7 +294,7 @@ Terima kasih kepada seluruh donatur yang senantiasa menopang pembiayaan SPP, buk
   faqs: [
     {
       id: 'FAQ-001',
-      question: 'Bagaimana cara melakukan donasi online ke Panti Asuhan Kasih Bunda?',
+      question: 'Bagaimana cara melakukan donasi online ke Panti Asuhan LKSA Taman Harapan Muhammadiyah?',
       answer: 'Anda dapat memilih campaign donasi pada menu Donasi, memilih nominal atau memasukkan nominal kustom, melakukan transfer ke rekening resmi panti yang tertera, dan mengunggah bukti transfer.',
       category: 'Donasi'
     },
@@ -379,11 +379,11 @@ Terima kasih kepada seluruh donatur yang senantiasa menopang pembiayaan SPP, buk
   ],
 
   orphanageProfile: {
-    name: 'Panti Asuhan Kasih Bunda',
+    name: 'Panti Asuhan LKSA Taman Harapan Muhammadiyah',
     tagline: 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
     foundedYear: '2012',
     founder: 'H. Ahmad Dahlan, M.Ag. & Hj. Aminah Dahlan',
-    history: 'Panti Asuhan Kasih Bunda didirikan pada tanggal 14 Juli 2012 bermula dari kepedulian sosial terhadap anak-anak yatim piatu dan dhuafa di wilayah sekitar yang membutuhkan tempat tinggal layak, bimbingan akhlak, dan akses pendidikan formal.',
+    history: 'Panti Asuhan LKSA Taman Harapan Muhammadiyah didirikan pada tanggal 14 Juli 2012 bermula dari kepedulian sosial terhadap anak-anak yatim piatu dan dhuafa di wilayah sekitar yang membutuhkan tempat tinggal layak, bimbingan akhlak, dan akses pendidikan formal.',
     vision: 'Menjadi lembaga pengasuhan dan pembinaan anak yatim dhuafa yang amanah, profesional, dan unggul dalam mencetak generasi sholeh, berprestasi, serta mandiri pada tahun 2030.',
     missions: [
       'Menyediakan pemenuhan kebutuhan dasar hidup (sandang, pangan bergizi, dan papan yang layak) secara berkelanjutan.',
@@ -410,10 +410,10 @@ Terima kasih kepada seluruh donatur yang senantiasa menopang pembiayaan SPP, buk
     achievements: [
       { year: '2026', title: 'Juara 1 Lomba Tahfidz 5 Juz Tingkat Provinsi', by: 'Ananda M. (Kelas 2 SMA)' },
       { year: '2025', title: 'Penerima Beasiswa Penuh S1 Universitas Negeri', by: 'Annisa Nurul Aini (Alumni Panti)' },
-      { year: '2025', title: 'Juara 2 Lomba Robotika & Coding Tingkat Kota', by: 'Tim Robotik Panti Kasih Bunda' }
+      { year: '2025', title: 'Juara 2 Lomba Robotika & Coding Tingkat Kota', by: 'Tim Robotik Panti LKSA Taman Harapan Muhammadiyah' }
     ],
     contactInfo: {
-      address: 'Jl. Merdeka Kasih Bunda No. 45, RT 04/RW 07, Kebayoran, Jakarta Selatan, 12180',
+      address: 'Jl. Merdeka LKSA Taman Harapan Muhammadiyah No. 45, RT 04/RW 07, Kebayoran, Jakarta Selatan, 12180',
       phone: '(021) 7829-1029',
       whatsapp: '0812-3456-7890',
       email: 'kontak@pantikasihbunda.or.id',
