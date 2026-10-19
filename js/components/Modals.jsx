@@ -283,7 +283,7 @@ const AddEditTrxModal = ({
         '7192-0045-88',
 
       holder:
-        'Yayasan Panti Asuhan Kasih Bunda',
+        'Yayasan Panti Asuhan LKSA Taman Harapan Muhammadiyah ',
     },
 
     Mandiri: {
@@ -294,7 +294,7 @@ const AddEditTrxModal = ({
         '127-00-098234-1',
 
       holder:
-        'Yayasan Panti Asuhan Kasih Bunda',
+        'Yayasan Panti Asuhan LKSA Taman Harapan Muhammadiyah',
     },
 
     BCA: {
@@ -305,7 +305,7 @@ const AddEditTrxModal = ({
         '882-019-4451',
 
       holder:
-        'Yayasan Panti Asuhan Kasih Bunda',
+        'Yayasan Panti Asuhan LKSA Taman Harapan Muhammadiyah',
     },
   };
 

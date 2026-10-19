@@ -78,7 +78,7 @@ const VisitSchedule = ({ onSubmitVisitRequest, visitsList }) => {
                 <LucideIcon name="check-circle-2" className="w-6 h-6 text-emerald-700 shrink-0" />
                 <div>
                   <strong>Pengajuan Berhasil Dikirim!</strong>
-                  <p className="text-xs text-emerald-800 font-normal">Tim pengurus PantiAsih Kasih Bunda telah menerima jadwal Anda dan akan menghubungi via WhatsApp/Email.</p>
+                  <p className="text-xs text-emerald-800 font-normal">Tim pengurus PantiAsih LKSA Taman Harapan Muhammadiyah telah menerima jadwal Anda dan akan menghubungi via WhatsApp/Email.</p>
                 </div>
               </div>
             )}

@@ -876,7 +876,7 @@ const FinancialReportPSAK45 = ({
             {/* Header */}
             <div className="text-center border-b-2 border-slate-900 pb-4">
               <h2 className="text-xl font-black uppercase tracking-wider text-slate-900">
-                SIMK-PANTI ASUHAN KASIH BUNDA
+                SIMK-PANTI ASUHAN LKSA Taman Harapan Muhammadiyah
               </h2>
 
               <p className="text-xs text-slate-500 mt-1">

@@ -465,17 +465,15 @@ const FinancialApi = {
     );
   },
 
-  getDashboard(year) {
-    const query =
-      year
-        ? `?year=${encodeURIComponent(
-            year
-          )}`
-        : '';
-
-    return apiRequest(
-      `/pengurus/financial-dashboard${query}`
-    );
+  getDashboard(yearOrFilters = {}) {
+    const filters = typeof yearOrFilters === 'object'
+      ? yearOrFilters
+      : { year: yearOrFilters };
+    const query = new URLSearchParams();
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '' && value !== 'ALL') query.set(key, String(value));
+    });
+    return apiRequest(`/pengurus/financial-dashboard${query.toString() ? `?${query.toString()}` : ''}`);
   },
 
   getPublicTransparency(

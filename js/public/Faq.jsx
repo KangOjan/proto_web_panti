@@ -26,7 +26,7 @@ const Faq = ({
     const phone = window.INITIAL_SIMK_DATA?.orphanageProfile?.contactInfo?.whatsapp || '6281234567890';
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     window.open(
-      `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Halo Pengurus Panti Kasih Bunda, saya ingin bertanya lebih lanjut mengenai donasi / program panti.')}`,
+      `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Halo Pengurus Panti LKSA Taman Harapan Muhammadiyah, saya ingin bertanya lebih lanjut mengenai donasi / program panti.')}`,
       '_blank'
     );
   };

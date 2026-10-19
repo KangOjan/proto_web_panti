@@ -12,7 +12,7 @@ const Sidebar = ({
   setIsMobileSidebarOpen,
   evaluatorMode = true,
 }) => {
-  const roleRaw = String(currentUser?.role || '').toLowerCase();
+  const roleRaw = String(currentUser?.role?.value ?? currentUser?.role ?? '').trim().toLowerCase();
   const isPengurusHarian = roleRaw === 'pengurus harian' || roleRaw === 'pengurus_harian';
   const isPemimpinLembaga = roleRaw === 'pemimpin lembaga' || roleRaw === 'pemimpin_lembaga';
 
@@ -132,136 +132,31 @@ const Sidebar = ({
               href: '/pengelola/konten',
               icon: window.FileText,
             },
-          ],
-        },
-        {
-          label: 'Keuangan & Akuntabilitas',
-          items: [
             {
-              name: 'Visualisasi Grafik Keuangan',
-              routeKey: 'dashboard',
-              href: '/dashboard',
-              icon: window.BarChart3,
-            },
-            {
-              name: 'Buku Kas Transaksi (CRUD)',
+              name: 'Buku Kas & Filter Transaksi',
               routeKey: 'transaksi',
               href: '/transaksi',
               icon: window.Wallet,
             },
-            {
-              name: 'Laporan Arus Kas (PSAK 45)',
-              routeKey: 'laporan',
-              href: '/laporan',
-              icon: window.FileSpreadsheet,
-            },
-            {
-              name: 'Program Prioritas',
-              routeKey: 'program',
-              href: '/program',
-              icon: window.Award,
-            },
           ],
         },
+
       ];
     }
 
-    // 3. Fallback jika peran evaluator atau super admin (tampilkan semua menu)
-    return [
-      {
-        label: 'Menu Pengelola',
-        items: [
-          {
-            name: 'Dashboard Pengelola',
-            routeKey: 'admin-dashboard',
-            href: '/pengelola/dashboard',
-            icon: window.LayoutDashboard,
-          },
-          {
-            name: 'Verifikasi Donasi Online',
-            routeKey: 'admin-verifikasi',
-            href: '/pengelola/verifikasi-donasi',
-            icon: window.FileCheck,
-            badge: pendingDonationsCount > 0 ? pendingDonationsCount : null,
-            badgeColor: 'bg-amber-400 text-slate-950',
-          },
-          {
-            name: 'Pencatatan Donasi Langsung',
-            routeKey: 'admin-offline',
-            href: '/pengelola/donasi-offline',
-            icon: window.Heart,
-          },
-          {
-            name: 'Manajemen Campaign Donasi',
-            routeKey: 'admin-campaign',
-            href: '/pengelola/campaign',
-            icon: window.Layers,
-          },
-          {
-            name: 'Manajemen Konten (CMS)',
-            routeKey: 'admin-konten',
-            href: '/pengelola/konten',
-            icon: window.FileText,
-          },
-        ],
-      },
-      {
-        label: 'Keuangan & Akuntabilitas',
-        items: [
-          {
-            name: 'Visualisasi Grafik Keuangan',
-            routeKey: 'dashboard',
-            href: '/dashboard',
-            icon: window.BarChart3,
-          },
-          {
-            name: 'Buku Kas Transaksi (CRUD)',
-            routeKey: 'transaksi',
-            href: '/transaksi',
-            icon: window.Wallet,
-          },
-          {
-            name: 'Laporan Arus Kas (PSAK 45)',
-            routeKey: 'laporan',
-            href: '/laporan',
-            icon: window.FileSpreadsheet,
-          },
-          {
-            name: 'Program Prioritas',
-            routeKey: 'program',
-            href: '/program',
-            icon: window.Award,
-          },
-        ],
-      },
-      {
-        label: 'Otorisasi & Audit',
-        items: [
-          {
-            name: 'Persetujuan Akun',
-            routeKey: 'approval',
-            href: '/approval',
-            icon: window.UserCheck,
-            badge: pendingApprovalCount > 0 ? pendingApprovalCount : null,
-            badgeColor: 'bg-indigo-400 text-slate-950',
-          },
-          {
-            name: 'Log Audit Aktivitas',
-            routeKey: 'audit',
-            href: '/audit',
-            icon: window.History,
-          },
-        ],
-      },
-    ];
+    // Unknown roles are not shown privileged navigation (fail closed).
+    return [];
   }, [isPemimpinLembaga, isPengurusHarian, pendingApprovalCount, pendingDonationsCount]);
 
-  const handleItemClick = (routeKey, href) => {
+  const handleItemClick = (_routeKey, href) => {
     if (setIsMobileSidebarOpen) setIsMobileSidebarOpen(false);
+    // Navigate by registered URL, not display routeKey aliases (laporan, transaksi, etc.).
     if (onNavigateTab) {
-      onNavigateTab(routeKey);
+      onNavigateTab(href);
     } else if (window.navigateToRoute) {
       window.navigateToRoute(href);
+    } else {
+      window.location.assign(href);
     }
   };
 
@@ -273,8 +168,6 @@ const Sidebar = ({
     if ((routeKey === 'admin-konten' || routeKey === 'organization-profile-management') && (currentRoute === 'admin-konten' || currentRoute === 'organization-profile-management')) return true;
     return false;
   };
-
-  const Link = window.Link;
 
   return (
     <React.Fragment>
@@ -319,9 +212,9 @@ const Sidebar = ({
 
           {/* Quick link back to Public Web */}
           <div>
-            <Link
-              href="/"
-              onClick={() => setIsMobileSidebarOpen && setIsMobileSidebarOpen(false)}
+            <button
+              type="button"
+              onClick={() => handleItemClick('beranda', '/')}
               className="w-full py-2.5 px-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-extrabold rounded-2xl border border-emerald-500/40 text-xs flex items-center justify-between transition-all group shadow-inner"
             >
               <div className="flex items-center space-x-2">
@@ -329,7 +222,7 @@ const Sidebar = ({
                 <span>Lihat Website Publik</span>
               </div>
               <window.ExternalLink className="w-3.5 h-3.5 opacity-70" />
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -390,10 +283,10 @@ const Sidebar = ({
                 </div>
                 <span
                   className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded border ${getRoleBadgeColor(
-                    currentUser.role
+                    roleRaw
                   )}`}
                 >
-                  {currentUser.role}
+                  {roleRaw}
                 </span>
               </div>
 

@@ -62,7 +62,7 @@ const DigitalReceiptModal = ({
                 </div>
                 <div>
                   <h3 className="font-black text-xs text-slate-900 leading-tight">
-                    YAYASAN PANTI ASUHAN KASIH BUNDA
+                    YAYASAN PANTI ASUHAN LKSA Taman Harapan Muhammadiyah
                   </h3>
                   <p className="text-[9px] text-slate-500 font-medium">
                     Izin Kemenkumham RI AHU-0019283.AH.01.04

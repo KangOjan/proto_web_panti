@@ -25,7 +25,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              PantiAsih Kasih Bunda mengasuh 48 anak yatim, piatu, dan duafa dengan penuh perhatian, pendidikan berkualitas, dan jaminan gizi yang layak. Mari hadir memberikan senyuman dan asa bagi mereka.
+              PantiAsih LKSA Taman Harapan Muhammadiyah mengasuh 48 anak yatim, piatu, dan duafa dengan penuh perhatian, pendidikan berkualitas, dan jaminan gizi yang layak. Mari hadir memberikan senyuman dan asa bagi mereka.
             </p>
 
             {/* CTA Buttons */}
@@ -73,7 +73,7 @@ const HeroSection = ({ onOpenDonationModal, onScrollToVisit }) => {
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
                 <img
                   src="assets/images/hero.png"
-                  alt="Anak-anak PantiAsih Kasih Bunda"
+                  alt="Anak-anak PantiAsih LKSA Taman Harapan Muhammadiyah"
                   className="w-full h-96 object-cover object-center transform hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent"></div>

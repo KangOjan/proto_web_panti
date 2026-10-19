@@ -16,11 +16,11 @@ const DetailBerita = ({
     id: 'ART-001',
     title: 'Kunjungan Edukasi & Pelatihan Coding Dasar untuk Anak Panti',
     excerpt: 'Sebanyak 25 anak asuh jenjang SMP dan SMA mengikuti workshop pemrograman web dasar.',
-    content: `Panti Asuhan Kasih Bunda menerima kunjungan istimewa dari tim relawan teknologi. Kegiatan diawali dengan pengenalan logika dasar komputer dan pemrograman web HTML/CSS.
+    content: `Panti Asuhan LKSA Taman Harapan Muhammadiyah menerima kunjungan istimewa dari tim relawan teknologi. Kegiatan diawali dengan pengenalan logika dasar komputer dan pemrograman web HTML/CSS.
 
 Anak-anak sangat antusias mengikuti setiap sesi latihan. Beberapa anak bahkan berhasil membuat halaman biodata sederhana secara mandiri.
 
-"Kami sangat bersyukur atas ilmu dan bimbingan yang diberikan oleh para mentor relawan. Keterampilan digital seperti ini sangat penting untuk bekal masa depan anak-anak kami," ungkap Budi Santoso, Pengurus Harian Panti Kasih Bunda.
+"Kami sangat bersyukur atas ilmu dan bimbingan yang diberikan oleh para mentor relawan. Keterampilan digital seperti ini sangat penting untuk bekal masa depan anak-anak kami," ungkap Budi Santoso, Pengurus Harian Panti LKSA Taman Harapan Muhammadiyah.
 
 Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk mendukung laboratorium belajar panti.`,
     image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=60',

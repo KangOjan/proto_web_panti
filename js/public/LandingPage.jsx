@@ -2,6 +2,8 @@
 const LandingPage = ({
   organizationProfile = null,
   priorityPrograms = [],
+  campaignLoading = false,
+  campaignError = null,
   articles = [],
   faqs = [],
   onNavigateToDonation,
@@ -14,23 +16,29 @@ const LandingPage = ({
   const currentProfile = organizationProfile || defaultProfile;
 
   const profile = {
-    name: currentProfile.name || 'Panti Asuhan Kasih Bunda',
+    name: currentProfile.name || 'Panti Asuhan LKSA Taman Harapan Muhammadiyah',
     tagline: currentProfile.tagline || 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
     foundedYear: currentProfile.foundedYear || '2012',
     history: currentProfile.history || '',
     facilities: currentProfile.facilities || [],
     achievements: currentProfile.achievements || [],
     contactInfo: currentProfile.contactInfo || {
-      address: 'Jl. Merdeka Kasih Bunda No. 45, Jakarta Selatan',
+      address: 'Jl. Merdeka LKSA Taman Harapan Muhammadiyah No. 45, Jakarta Selatan',
       phone: '(021) 7829-1029',
       whatsapp: '0812-3456-7890',
       email: 'kontak@pantikasihbunda.or.id'
     }
   };
 
-  const activeCampaigns = (priorityPrograms && priorityPrograms.length > 0)
-    ? priorityPrograms
-    : (window.INITIAL_SIMK_DATA?.campaigns || []);
+  // Campaign publik berasal dari API. Tidak ada fallback ke mock campaign.
+  // Filter deadline merupakan pengaman UI, validasi server tetap wajib.
+  const activeCampaigns = (Array.isArray(priorityPrograms) ? priorityPrograms : [])
+    .filter((campaign) => {
+      if (campaign?.status !== 'active') return false;
+      if (!campaign.deadline) return true;
+      const deadline = new Date(campaign.deadline).getTime();
+      return Number.isFinite(deadline) && deadline >= Date.now();
+    });
 
   const displayArticles = (articles && articles.length > 0)
     ? articles
@@ -115,7 +123,10 @@ const LandingPage = ({
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-1">
                 <window.Link
                   href="/donasi"
-                  onClick={() => onNavigateToDonation && onNavigateToDonation()}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    onNavigateToDonation?.();
+                  }}
                   className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center space-x-2.5 transition-all transform hover:-translate-y-0.5"
                 >
                   <window.Heart className="w-4.5 h-4.5 fill-slate-950" />
@@ -147,7 +158,7 @@ const LandingPage = ({
               <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 group">
                 <img
                   src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60"
-                  alt="Anak Panti Asuhan Kasih Bunda"
+                  alt="Anak Panti Asuhan LKSA Taman Harapan Muhammadiyah"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
@@ -202,7 +213,7 @@ const LandingPage = ({
               <span>Transparansi & Akuntabilitas</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Mengapa Berdonasi di Panti Kasih Bunda?
+              Mengapa Berdonasi di Panti Asuhan Taman Harapan Muhammadiyah?
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
               Kami menjunjung tinggi amanah donatur melalui sistem pencatatan donasi digital, audit berkala, dan transparansi laporan penyaluran.
@@ -259,7 +270,10 @@ const LandingPage = ({
 
             <window.Link
               href="/donasi"
-              onClick={() => onNavigateToDonation && onNavigateToDonation()}
+              onClick={(event) => {
+                event.preventDefault();
+                onNavigateToDonation?.();
+              }}
               className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 transition-colors shrink-0"
             >
               <span>Salurkan Donasi Umum</span>
@@ -267,11 +281,27 @@ const LandingPage = ({
             </window.Link>
           </div>
 
+          {campaignLoading && (
+            <p role="status" className="rounded-xl bg-white p-5 text-sm text-slate-600 border border-slate-200">
+              Memuat campaign dari database...
+            </p>
+          )}
+          {campaignError && !campaignLoading && (
+            <p role="alert" className="rounded-xl bg-rose-50 p-5 text-sm text-rose-800 border border-rose-200">
+              Gagal memuat campaign: {campaignError}
+            </p>
+          )}
+          {!campaignLoading && !campaignError && activeCampaigns.length === 0 && (
+            <p className="rounded-xl bg-white p-5 text-sm text-slate-600 border border-slate-200">
+              Belum ada campaign aktif yang tersedia. Donasi Umum tetap dapat dipilih.
+            </p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeCampaigns.map((camp) => {
-              const percent = camp.targetAmount > 0
-                ? Math.min(100, Math.round(((camp.collectedAmount || 0) / camp.targetAmount) * 100))
-                : 0;
+            {!campaignLoading && !campaignError && activeCampaigns.map((camp) => {
+              const hasCollectedAmount = Number.isFinite(camp.collectedAmount);
+              const percent = hasCollectedAmount && camp.targetAmount > 0
+                ? Math.min(100, Math.round((camp.collectedAmount / camp.targetAmount) * 100))
+                : null;
 
               return (
                 <div
@@ -279,11 +309,17 @@ const LandingPage = ({
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col group"
                 >
                   <div className="aspect-video relative overflow-hidden bg-slate-100">
-                    <img
-                      src={camp.image || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60'}
-                      alt={camp.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {camp.headerImageUrl && !camp.headerImageUrl.includes('example.com') ? (
+                      <img
+                        src={camp.headerImageUrl}
+                        alt={camp.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-slate-100 text-xs font-medium text-slate-500">
+                        Gambar program belum tersedia
+                      </div>
+                    )}
                     <div className="absolute top-3 left-3 flex items-center space-x-1.5">
                       <span className="px-2.5 py-1 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold rounded-full">
                         {camp.category}
@@ -293,7 +329,7 @@ const LandingPage = ({
                           ? 'bg-blue-50 text-blue-700 border-blue-200'
                           : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       }`}>
-                        {camp.status}
+                        {camp.status === 'active' ? 'Aktif' : camp.status}
                       </span>
                     </div>
                   </div>
@@ -308,23 +344,29 @@ const LandingPage = ({
                     </p>
 
                     <div className="space-y-1.5 pt-1">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-emerald-600 font-mono text-[13px]">
-                          Rp {(camp.collectedAmount || 0).toLocaleString('id-ID')}
-                        </span>
-                        <span className="text-slate-400 font-mono">{percent}%</span>
-                      </div>
-
-                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
-                          style={{ width: `${percent}%` }}
-                        ></div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
+                      {hasCollectedAmount ? (
+                        <>
+                          <div className="flex justify-between text-xs font-bold">
+                            <span className="text-emerald-600 font-mono text-[13px]">
+                              Rp {camp.collectedAmount.toLocaleString('id-ID')}
+                            </span>
+                            <span className="text-slate-400 font-mono">{percent}%</span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-xs text-slate-500">Data dana terkumpul belum tersedia dari API.</p>
+                      )}
+                      <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400 font-medium">
                         <span>Target: Rp {(camp.targetAmount || 0).toLocaleString('id-ID')}</span>
-                        <span>{camp.donorCount || 40}+ Donatur</span>
+                        {Number.isFinite(camp.donorCount) && (
+                          <span>{camp.donorCount.toLocaleString('id-ID')} Donatur</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -332,7 +374,10 @@ const LandingPage = ({
                   <div className="px-5 py-4 flex items-center justify-between border-t border-slate-100">
                     <window.Link
                       href={`/campaign/${camp.id}`}
-                      onClick={() => onNavigateToCampaign && onNavigateToCampaign(camp.id)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onNavigateToCampaign?.(camp.id);
+                      }}
                       className="text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors flex items-center space-x-1"
                     >
                       <span>Detail Program</span>
@@ -341,7 +386,15 @@ const LandingPage = ({
 
                     <window.Link
                       href={`/donasi?campaign=${camp.id}`}
-                      onClick={() => onNavigateToDonation && onNavigateToDonation(camp.id)}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onNavigateToDonation?.({
+                          campaignId: camp.id,
+                          campaignTitle: camp.title,
+                          campaignSlug: camp.slug,
+                          campaignCategory: camp.category,
+                        });
+                      }}
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center space-x-1.5 transition-all"
                     >
                       <window.Heart className="w-3.5 h-3.5 fill-white" />
@@ -550,7 +603,10 @@ const LandingPage = ({
             <div className="pt-2 relative z-10">
               <window.Link
                 href="/donasi"
-                onClick={() => onNavigateToDonation && onNavigateToDonation()}
+                onClick={(event) => {
+                    event.preventDefault();
+                    onNavigateToDonation?.();
+                  }}
                 className="inline-flex items-center space-x-2 px-8 py-3.5 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 text-sm transition-all transform hover:-translate-y-0.5"
               >
                 <window.Heart className="w-4.5 h-4.5 fill-slate-950" />
