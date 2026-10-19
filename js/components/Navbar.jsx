@@ -96,12 +96,16 @@ const Navbar = ({
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Name (Left Aligned) */}
           <Link href="/" className="flex items-center space-x-3 cursor-pointer">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-              <Building2 className="w-6 h-6" />
+            <div className="w-12 h-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-sm flex items-center justify-center">
+              <img
+                src="/assets/images/logo-panti.png"
+                alt="Logo Panti Sosial Asuhan Anak Taman Harapan Muhammadiyah Bandung"
+                className="h-full w-full object-contain"
+              />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight text-slate-900">{organizationProfile?.name || 'Informasi Panti'}</span>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900">{organizationProfile?.name || 'Panti Asuhan LKSA Taman Harapan Muhammadiyah'}</span>
               </div>
               <p className="text-[11px] text-slate-500 hidden sm:block font-medium">
                 {organizationProfile?.tagline || 'Portal Transparansi & Donasi Panti Asuhan'}

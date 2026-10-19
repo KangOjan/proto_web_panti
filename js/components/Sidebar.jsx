@@ -188,8 +188,12 @@ const Sidebar = ({
         <div className="p-5 pb-3 space-y-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                <window.Building2 className="w-6 h-6" />
+              <div className="w-11 h-11 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-md flex items-center justify-center">
+                <img
+                  src="/assets/images/logo-panti.png"
+                  alt="Logo Panti Sosial Asuhan Anak Taman Harapan Muhammadiyah Bandung"
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">
