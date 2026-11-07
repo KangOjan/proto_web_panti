@@ -2,17 +2,28 @@
 // SIMK-Panti - Pusat Bantuan & Tanya Jawab Donatur
 
 const Faq = ({
-  faqs = (window.INITIAL_SIMK_DATA?.faqs || []),
+  faqs = [],
 }) => {
-  const availableFaqs = (faqs && faqs.length > 0)
-    ? faqs
-    : (window.INITIAL_SIMK_DATA?.faqs || []);
-
-  const [openId, setOpenId] = React.useState(availableFaqs[0]?.id || 'FAQ-001');
+  const [availableFaqs, setAvailableFaqs] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState('');
+  const [officialWhatsapp, setOfficialWhatsapp] = React.useState('');
+  React.useEffect(() => {
+    let live = true;
+    CmsApi.getPublicFaqs()
+      .then(response => { if (live) setAvailableFaqs(Array.isArray(response?.data) ? response.data.map(CmsApi.normalizeFaq) : []); })
+      .catch(error => { if (live) { setAvailableFaqs([]); setLoadError(error?.message || 'FAQ tidak dapat dimuat.'); } })
+      .finally(() => { if (live) setLoading(false); });
+    CmsApi.getPublicProfile().then(response => {
+      if (live) setOfficialWhatsapp(String(response?.data?.contact_info?.whatsapp || ''));
+    }).catch(() => {});
+    return () => { live = false; };
+  }, []);
+  const [openId, setOpenId] = React.useState(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('ALL');
 
-  const categories = ['ALL', 'Donasi', 'Kunjungan', 'Transparansi'];
+  const categories = ['ALL', ...new Set(availableFaqs.map((item) => item.category).filter(Boolean))];
 
   const filteredFaqs = availableFaqs.filter((f) => {
     const matchesCategory = selectedCategory === 'ALL' || f.category === selectedCategory;
@@ -23,10 +34,10 @@ const Faq = ({
   });
 
   const handleOpenWhatsApp = () => {
-    const phone = window.INITIAL_SIMK_DATA?.orphanageProfile?.contactInfo?.whatsapp || '6281234567890';
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const cleanPhone = officialWhatsapp.replace(/[^0-9]/g, '');
+    if (!cleanPhone) return;
     window.open(
-      `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Halo Pengurus Panti LKSA Taman Harapan Muhammadiyah, saya ingin bertanya lebih lanjut mengenai donasi / program panti.')}`,
+      `https://wa.me/${cleanPhone}?text=${encodeURIComponent('Halo Pengurus LKSA Taman Harapan Muhammadiyah, saya ingin bertanya lebih lanjut mengenai donasi / program panti.')}`,
       '_blank'
     );
   };
@@ -80,6 +91,8 @@ const Faq = ({
           ))}
         </div>
 
+        {loading && <p className="text-sm text-slate-500 text-center">Memuat FAQ resmi...</p>}
+        {loadError && <p role="alert" className="text-sm text-rose-700 text-center">{loadError}</p>}
         {/* FAQ Accordion Items */}
         <div className="space-y-3.5">
           {filteredFaqs.length === 0 ? (
@@ -147,8 +160,9 @@ const Faq = ({
 
         <button
           type="button"
+          disabled={!officialWhatsapp}
           onClick={handleOpenWhatsApp}
-          className="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-extrabold rounded-xl shadow-lg text-xs flex items-center space-x-2 transition-all shrink-0 transform hover:-translate-y-0.5"
+          className="px-6 py-3 bg-gradient-to-r from-emerald-400 to-teal-300 hover:from-emerald-300 hover:to-teal-200 text-slate-950 font-extrabold rounded-xl shadow-lg text-xs flex items-center space-x-2 transition-all shrink-0 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <MessageCircle className="w-4 h-4 fill-slate-950" />
           <span>Tanya via WhatsApp</span>

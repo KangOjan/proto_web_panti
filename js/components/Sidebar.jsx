@@ -10,9 +10,11 @@ const Sidebar = ({
   pendingDonationsCount = 0,
   isMobileSidebarOpen = false,
   setIsMobileSidebarOpen,
+  isDesktopSidebarOpen = true,
   evaluatorMode = true,
 }) => {
   const roleRaw = String(currentUser?.role?.value ?? currentUser?.role ?? '').trim().toLowerCase();
+  const roleLabel = ({ pengurus_harian: 'Pengurus Harian', pemimpin_lembaga: 'Pemimpin Lembaga' })[roleRaw] || 'Pengguna';
   const isPengurusHarian = roleRaw === 'pengurus harian' || roleRaw === 'pengurus_harian';
   const isPemimpinLembaga = roleRaw === 'pemimpin lembaga' || roleRaw === 'pemimpin_lembaga';
 
@@ -107,7 +109,7 @@ const Sidebar = ({
               icon: window.LayoutDashboard,
             },
             {
-              name: 'Verifikasi Donasi Online',
+              name: 'Verifikasi Transfer Manual',
               routeKey: 'admin-verifikasi',
               href: '/pengelola/verifikasi-donasi',
               icon: window.FileCheck,
@@ -165,7 +167,6 @@ const Sidebar = ({
     if ((routeKey === 'transaksi' || routeKey === 'transactions') && (currentRoute === 'transaksi' || currentRoute === 'transactions')) return true;
     if ((routeKey === 'laporan' || routeKey === 'report') && (currentRoute === 'laporan' || currentRoute === 'report')) return true;
     if ((routeKey === 'program' || routeKey === 'programs') && (currentRoute === 'program' || currentRoute === 'programs')) return true;
-    if ((routeKey === 'admin-konten' || routeKey === 'organization-profile-management') && (currentRoute === 'admin-konten' || currentRoute === 'organization-profile-management')) return true;
     return false;
   };
 
@@ -180,7 +181,7 @@ const Sidebar = ({
       )}
 
       <aside
-        className={`fixed left-0 bottom-0 z-40 w-72 bg-slate-900 text-white flex flex-col justify-between border-r border-slate-800 transition-all duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed left-0 bottom-0 z-40 w-72 bg-slate-900 text-white flex flex-col justify-between border-r border-slate-800 transition-all duration-300 ease-in-out ${isDesktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'} ${
           evaluatorMode ? 'top-9' : 'top-0'
         } ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
@@ -188,8 +189,12 @@ const Sidebar = ({
         <div className="p-5 pb-3 space-y-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-                <window.Building2 className="w-6 h-6" />
+              <div className="w-11 h-11 shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-md flex items-center justify-center">
+                <img
+                  src="/storage/site/logo-panti.png"
+                  alt="Logo Panti Sosial Asuhan Anak Taman Harapan Muhammadiyah Bandung"
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div>
                 <h1 className="font-extrabold text-base tracking-tight text-white leading-tight">
@@ -201,13 +206,6 @@ const Sidebar = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsMobileSidebarOpen && setIsMobileSidebarOpen(false)}
-              className="lg:hidden p-1.5 rounded-xl hover:bg-slate-800 text-slate-400"
-            >
-              <window.X className="w-5 h-5" />
-            </button>
           </div>
 
           {/* Quick link back to Public Web */}
@@ -286,7 +284,7 @@ const Sidebar = ({
                     roleRaw
                   )}`}
                 >
-                  {roleRaw}
+                  {roleLabel}
                 </span>
               </div>
 

@@ -141,10 +141,11 @@ const TransactionManagement = ({
     },
   ];
 
-  const trxRole = String(currentUser?.role || '').toLowerCase();
+  const trxRole = String(currentUser?.role?.value ?? currentUser?.role ?? '').toLowerCase();
   const isEditableRole =
     trxRole === 'pengurus_harian' ||
     trxRole === 'pengurus harian';
+  const canReadLedger = isEditableRole || trxRole === 'pemimpin_lembaga' || trxRole === 'pemimpin lembaga';
 
   const invalidDateRange =
     Boolean(
@@ -218,7 +219,7 @@ const TransactionManagement = ({
     () => {
       if (
         !onLoadTransactions ||
-        !isEditableRole ||
+        !canReadLedger ||
         invalidDateRange
       ) {
         return undefined;
@@ -273,7 +274,7 @@ const TransactionManagement = ({
       searchQuery,
       startDate,
       endDate,
-      isEditableRole,
+      canReadLedger,
       invalidDateRange,
       onLoadTransactions,
       transactionRefreshKey,
@@ -413,7 +414,7 @@ const TransactionManagement = ({
             <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
               {isEditableRole
                 ? 'Hak Akses CRUD Lengkap'
-                : 'Akses Keuangan Terbatas'}
+                : 'Monitoring (Baca Saja)'}
             </span>
 
             <span className="text-xs text-slate-400 font-mono">
@@ -452,7 +453,7 @@ const TransactionManagement = ({
 
       {!isEditableRole && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800">
-          Endpoint transaksi internal saat ini hanya tersedia untuk role Pengurus Harian. Dukungan read-only Pemimpin Lembaga akan diaktifkan pada fase role terkait.
+          Mode pengawasan: Anda dapat melihat dan mencetak data transaksi, tetapi tidak dapat membuat, mengubah, atau menghapus transaksi.
         </div>
       )}
 
@@ -742,7 +743,7 @@ const TransactionManagement = ({
             </div>
           </div>
 
-          {isEditableRole && (
+          {canReadLedger && (
             <button
               type="button"
               onClick={() =>

@@ -54,6 +54,7 @@ const AuthPages = ({
     registerError,
     setRegisterError,
   ] = React.useState(null);
+  const [registerFieldErrors, setRegisterFieldErrors] = React.useState({});
 
   const [
     registerLoading,
@@ -76,10 +77,53 @@ const AuthPages = ({
     initialView,
   ]);
 
+  const validateRegistration = (form) => {
+    const errors = {};
+    if (!/^\d{16}$/.test(form.nik.trim())) errors.nik = 'NIK harus terdiri dari tepat 16 angka.';
+    if (!form.fullName.trim()) {
+      errors.fullName = 'Nama lengkap wajib diisi.';
+    } else if (!/^[\p{L}][\p{L}\p{M} .,'’\-]*$/u.test(form.fullName.trim()) || form.fullName.trim().length > 255) {
+      errors.fullName = 'Nama lengkap hanya boleh berisi huruf dan tanda baca nama yang wajar, tanpa angka atau simbol.';
+    }
+    if (!form.email.trim()) {
+      errors.email = 'Email wajib diisi.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) || form.email.trim().length > 255) {
+      errors.email = 'Gunakan alamat email yang valid, misalnya nama@gmail.com.';
+    }
+    if (!form.phone.trim()) {
+      errors.phone = 'Nomor HP atau WhatsApp wajib diisi.';
+    } else if (!/^(?:\+62|62|0)8[0-9]{8,11}$/.test(form.phone.trim())) {
+      errors.phone = 'Nomor HP Indonesia harus berupa 08..., 628..., atau +628..., tanpa spasi atau simbol lainnya.';
+    }
+    if (!['pengurus_harian', 'pemimpin_lembaga'].includes(form.role)) {
+      errors.role = 'Pilih peran Pengurus Harian atau Pemimpin Lembaga.';
+    }
+    if (form.address.trim().length > 2000) errors.address = 'Alamat maksimal 2.000 karakter.';
+    if (!/^[A-Za-z0-9._-]{3,100}$/.test(form.username.trim())) {
+      errors.username = 'Username 3-100 karakter, hanya huruf, angka, titik, garis bawah, atau tanda hubung.';
+    }
+    if (form.password.length < 8 || form.password.length > 72 || !/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      errors.password = 'Password harus 8-72 karakter dan mengandung setidaknya satu huruf serta satu angka.';
+    }
+    return errors;
+  };
+
+  const registrationFieldError = (field) => {
+    const error = registerFieldErrors[field];
+    return error ? (
+      <p role="alert" className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-rose-50 px-2.5 py-2 text-[11px] leading-relaxed text-rose-700">
+        <span aria-hidden="true" className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-rose-100 font-bold">!</span>
+        <span>{Array.isArray(error) ? error[0] : error}</span>
+      </p>
+    ) : null;
+  };
+
   const updateFormField = (
     field,
     value
   ) => {
+    setRegisterFieldErrors((old) => ({ ...old, [field]: null }));
+    setRegisterError(null);
     setFormData(
       (previous) => ({
         ...previous,
@@ -102,18 +146,11 @@ const AuthPages = ({
         null
       );
 
-      if (
-        !formData.nik.trim() ||
-        !formData.fullName.trim() ||
-        !formData.email.trim() ||
-        !formData.phone.trim() ||
-        !formData.username.trim() ||
-        !formData.password
-      ) {
-        setRegisterError(
-          'Mohon lengkapi seluruh field wajib formulir pendaftaran.'
-        );
-
+      const fieldErrors = validateRegistration(formData);
+      setRegisterFieldErrors(fieldErrors);
+      if (Object.keys(fieldErrors).length > 0) {
+        setRegisterError(null);
+        event.currentTarget.querySelector(`[name="${Object.keys(fieldErrors)[0]}"]`)?.focus();
         return;
       }
 
@@ -128,6 +165,9 @@ const AuthPages = ({
           );
 
         if (!result?.success) {
+          if (result?.errors) {
+            setRegisterFieldErrors({ ...result.errors, fullName: result.errors.name || null });
+          }
           setRegisterError(
             result?.message ||
               'Pendaftaran akun gagal.'
@@ -435,6 +475,7 @@ const AuthPages = ({
                 onSubmit={
                   handleRegister
                 }
+                noValidate
                 className="space-y-3.5"
               >
                 {registerError && (
@@ -456,6 +497,8 @@ const AuthPages = ({
                   </label>
 
                   <input
+                    name="nik"
+                    aria-invalid={Boolean(registerFieldErrors.nik)}
                     type="text"
                     required
                     inputMode="numeric"
@@ -474,6 +517,7 @@ const AuthPages = ({
                     }
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                   />
+                    {registrationFieldError("nik")}
                 </div>
 
                 <div>
@@ -482,6 +526,8 @@ const AuthPages = ({
                   </label>
 
                   <input
+                    name="fullName"
+                    aria-invalid={Boolean(registerFieldErrors.fullName)}
                     type="text"
                     required
                     placeholder="Nama lengkap beserta gelar jika ada"
@@ -498,6 +544,7 @@ const AuthPages = ({
                     }
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                   />
+                    {registrationFieldError("fullName")}
                 </div>
 
                 <div>
@@ -506,7 +553,11 @@ const AuthPages = ({
                   </label>
 
                   <input
-                    type="email"
+                    name="email"
+                    aria-invalid={Boolean(registerFieldErrors.email)}
+                    type="text"
+                    inputMode="email"
+                    autoComplete="email"
                     required
                     placeholder="nama@email.com"
                     value={
@@ -522,6 +573,7 @@ const AuthPages = ({
                     }
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                   />
+                    {registrationFieldError("email")}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -531,6 +583,8 @@ const AuthPages = ({
                     </label>
 
                     <input
+                      name="phone"
+                      aria-invalid={Boolean(registerFieldErrors.phone)}
                       type="text"
                       required
                       placeholder="0812XXXXXXXX"
@@ -547,6 +601,7 @@ const AuthPages = ({
                       }
                       className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                     />
+                    {registrationFieldError("phone")}
                   </div>
 
                   <div>
@@ -555,6 +610,8 @@ const AuthPages = ({
                     </label>
 
                     <select
+                      name="role"
+                      aria-invalid={Boolean(registerFieldErrors.role)}
                       required
                       value={
                         formData.role
@@ -577,6 +634,7 @@ const AuthPages = ({
                         Pemimpin Lembaga
                       </option>
                     </select>
+                    {registrationFieldError("role")}
                   </div>
                 </div>
 
@@ -586,6 +644,8 @@ const AuthPages = ({
                   </label>
 
                   <input
+                    name="address"
+                    aria-invalid={Boolean(registerFieldErrors.address)}
                     type="text"
                     placeholder="Jl. Merdeka No. X..."
                     value={
@@ -601,6 +661,7 @@ const AuthPages = ({
                     }
                     className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                   />
+                    {registrationFieldError("address")}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -610,6 +671,8 @@ const AuthPages = ({
                     </label>
 
                     <input
+                      name="username"
+                      aria-invalid={Boolean(registerFieldErrors.username)}
                       type="text"
                       required
                       placeholder="username_anda"
@@ -626,6 +689,7 @@ const AuthPages = ({
                       }
                       className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                     />
+                    {registrationFieldError("username")}
                   </div>
 
                   <div>
@@ -634,6 +698,8 @@ const AuthPages = ({
                     </label>
 
                     <input
+                      name="password"
+                      aria-invalid={Boolean(registerFieldErrors.password)}
                       type="password"
                       required
                       minLength="8"
@@ -651,6 +717,7 @@ const AuthPages = ({
                       }
                       className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-xs font-medium"
                     />
+                    {registrationFieldError("password")}
                   </div>
                 </div>
 

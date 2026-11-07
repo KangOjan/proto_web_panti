@@ -1,6 +1,10 @@
 // Reusable Modals & Feedback Notifications Component
 // Step 30B: Async-safe transaction create/update/delete UX
 
+const simkValidTransactionPartyName = (value) =>
+  String(value || '').trim().length <= 150 &&
+  /^(?=(?:.*\p{L}){2,})[\p{L}\p{M}]+(?:[ .,'\u2019-]+[\p{L}\p{M}]+)*\.?$/u.test(String(value || '').trim());
+
 const AddEditTrxModal = ({
   isOpen,
   onClose,
@@ -183,6 +187,15 @@ const AddEditTrxModal = ({
     setSubmitError,
   ] = React.useState(null);
 
+  const [fieldErrors, setFieldErrors] = React.useState({});
+  const clearFieldError = (field) => setFieldErrors((previous) => ({ ...previous, [field]: null }));
+  const inlineError = (field) => fieldErrors[field] ? (
+    <p role="alert" className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-rose-50 px-2.5 py-2 text-[11px] leading-relaxed text-rose-700">
+      <span aria-hidden="true" className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-rose-100 font-bold">!</span>
+      <span>{fieldErrors[field]}</span>
+    </p>
+  ) : null;
+
   React.useEffect(
     () => {
       if (!isOpen) {
@@ -252,6 +265,7 @@ const AddEditTrxModal = ({
       setSubmitError(
         null
       );
+      setFieldErrors({});
 
       setIsSubmitting(
         false
@@ -369,6 +383,7 @@ const AddEditTrxModal = ({
     setSubmitError(
       null
     );
+    setFieldErrors({});
 
     if (
       newType ===
@@ -402,59 +417,33 @@ const AddEditTrxModal = ({
         null
       );
 
-      const parsedAmount =
-        Number(
-          amount
-        );
-
-      if (
-        !Number.isFinite(
-          parsedAmount
-        ) ||
-        parsedAmount <
-          1000
-      ) {
-        setSubmitError(
-          'Nominal transaksi minimal Rp 1.000.'
-        );
-
-        return;
+      const parsedAmount = Number(amount);
+      const normalizedParty = String(partyName || '').trim();
+      const normalizedDescription = String(description || '').trim();
+      const errors = {};
+      if (!normalizedParty) {
+        errors.party = type === 'pemasukan' ? 'Isi nama donatur atau sumber dana.' : 'Isi nama penerima atau nama toko.';
+      } else if (!simkValidTransactionPartyName(normalizedParty)) {
+        errors.party = 'Gunakan nama dengan huruf dan tanda baca yang wajar, tanpa angka atau simbol.';
       }
-
-      const normalizedParty =
-        String(
-          partyName ||
-          ''
-        ).trim();
-
-      if (
-        !normalizedParty
-      ) {
-        setSubmitError(
-          type ===
-          'pemasukan'
-            ? 'Nama donatur atau sumber dana wajib diisi.'
-            : 'Nama penerima atau pihak transaksi wajib diisi.'
-        );
-
-        return;
+      if (!/^\d+$/.test(String(amount).trim()) || !Number.isSafeInteger(parsedAmount) || parsedAmount < 1000) {
+        errors.amount = 'Nominal harus berupa angka bulat minimal Rp1.000.';
       }
-
-      const normalizedDescription =
-        String(
-          description ||
-          ''
-        ).trim();
-
-      if (
-        type ===
-          'pengeluaran' &&
-        !normalizedDescription
-      ) {
-        setSubmitError(
-          'Rincian pengeluaran wajib diisi.'
-        );
-
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date)) || !Number.isFinite(Date.parse(`${date}T00:00:00Z`)) || date > getToday()) {
+        errors.date = 'Pilih tanggal transaksi yang valid, tidak melebihi hari ini.';
+      }
+      if (String(phone || '').trim() && !/^(?:\+62|62|0)8[0-9]{8,11}$/.test(String(phone).trim())) {
+        errors.phone = 'Gunakan nomor WhatsApp Indonesia, misalnya 081234567890.';
+      }
+      if (type === 'pengeluaran' && !normalizedDescription) {
+        errors.description = 'Isi rincian penggunaan dana terlebih dahulu.';
+      } else if (normalizedDescription.length > 2000) {
+        errors.description = 'Rincian maksimal 2.000 karakter.';
+      }
+      setFieldErrors(errors);
+      if (Object.keys(errors).length) {
+        const fieldIds = { party: 'trx-party', amount: 'trx-amount', date: 'trx-date', phone: 'trx-phone', description: 'trx-description' };
+        document.getElementById(fieldIds[Object.keys(errors)[0]])?.focus();
         return;
       }
 
@@ -539,18 +528,27 @@ const AddEditTrxModal = ({
           result?.success !==
           true
         ) {
-          const validationMessage =
-            result
-              ?.error
-              ?.errors
-              ? Object.values(
-                  result
-                    .error
-                    .errors
-                )
-                  .flat()
-                  .join(' ')
-              : null;
+          const serverErrors = result?.error?.errors || result?.errors || null;
+          if (serverErrors && typeof serverErrors === 'object') {
+            const keyMap = { party_name: 'party', donor_name: 'party', amount: 'amount', transaction_date: 'date', phone: 'phone', description: 'description' };
+            const messages = {
+              party: 'Periksa nama pihak transaksi. Gunakan nama tanpa angka atau simbol.',
+              amount: 'Masukkan nominal yang valid, minimal Rp1.000.',
+              date: 'Tanggal transaksi tidak valid.',
+              phone: 'Periksa format nomor WhatsApp.',
+              description: 'Periksa rincian transaksi.',
+            };
+            const mapped = {};
+            for (const [serverField, uiField] of Object.entries(keyMap)) {
+              if (serverErrors[serverField]) mapped[uiField] = messages[uiField];
+            }
+            if (Object.keys(mapped).length) {
+              setFieldErrors(mapped);
+              setSubmitError(null);
+              return;
+            }
+          }
+          const validationMessage = serverErrors ? 'Periksa kembali kategori atau data transaksi.' : null;
 
           setSubmitError(
             validationMessage ||
@@ -649,6 +647,7 @@ const AddEditTrxModal = ({
           onSubmit={
             handleSubmit
           }
+          noValidate
           className="space-y-6"
         >
 
@@ -742,30 +741,27 @@ const AddEditTrxModal = ({
                 </label>
 
                 <input
+                  id="trx-party"
                   type="text"
                   required
+                  maxLength={150}
+                  aria-invalid={Boolean(fieldErrors.party)}
                   disabled={
                     isSubmitting
                   }
                   placeholder={
                     type ===
                     'pemasukan'
-                      ? 'cth: Bapak H. Hendra / Hamba Allah'
+                      ? 'cth: Bapak H. Hendra atau Hamba Allah'
                       : 'cth: Toko Sembako Barokah / Pembayaran SPP'
                   }
                   value={
                     partyName
                   }
-                  onChange={(
-                    event
-                  ) =>
-                    setPartyName(
-                      event.target
-                        .value
-                    )
-                  }
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-semibold disabled:bg-slate-100 disabled:cursor-not-allowed"
+                  onChange={(event) => { setPartyName(event.target.value); clearFieldError('party'); }}
+                  className={`w-full px-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-emerald-500 text-sm font-semibold disabled:bg-slate-100 disabled:cursor-not-allowed ${fieldErrors.party ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'}`}
                 />
+                {inlineError('party')}
               </div>
 
               <div>
@@ -917,26 +913,23 @@ const AddEditTrxModal = ({
                   </span>
 
                   <input
-                    type="number"
+                    id="trx-amount"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength="15"
+                    aria-invalid={Boolean(fieldErrors.amount)}
                     required
-                    min="1000"
                     disabled={
                       isSubmitting
                     }
                     value={
                       amount
                     }
-                    onChange={(
-                      event
-                    ) =>
-                      setAmount(
-                        event.target
-                          .value
-                      )
-                    }
+                    onChange={(event) => { setAmount(event.target.value); clearFieldError('amount'); }}
                     className="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-base font-black text-slate-900 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
                 </div>
+                {inlineError('amount')}
               </div>
 
               {/* Date + Phone */}
@@ -947,7 +940,9 @@ const AddEditTrxModal = ({
                   </label>
 
                   <input
+                    id="trx-date"
                     type="date"
+                    aria-invalid={Boolean(fieldErrors.date)}
                     required
                     max={
                       getToday()
@@ -958,16 +953,10 @@ const AddEditTrxModal = ({
                     value={
                       date
                     }
-                    onChange={(
-                      event
-                    ) =>
-                      setDate(
-                        event.target
-                          .value
-                      )
-                    }
+                    onChange={(event) => { setDate(event.target.value); clearFieldError('date'); }}
                     className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
+                  {inlineError('date')}
                 </div>
 
                 <div>
@@ -976,7 +965,10 @@ const AddEditTrxModal = ({
                   </label>
 
                   <input
-                    type="text"
+                    id="trx-phone"
+                    type="tel"
+                    inputMode="tel"
+                    aria-invalid={Boolean(fieldErrors.phone)}
                     disabled={
                       isSubmitting
                     }
@@ -984,16 +976,10 @@ const AddEditTrxModal = ({
                     value={
                       phone
                     }
-                    onChange={(
-                      event
-                    ) =>
-                      setPhone(
-                        event.target
-                          .value
-                      )
-                    }
+                    onChange={(event) => { setPhone(event.target.value); clearFieldError('phone'); }}
                     className="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold disabled:bg-slate-100 disabled:cursor-not-allowed"
                   />
+                  {inlineError('phone')}
                 </div>
               </div>
             </div>
@@ -1008,6 +994,8 @@ const AddEditTrxModal = ({
               </label>
 
               <textarea
+                id="trx-description"
+                aria-invalid={Boolean(fieldErrors.description)}
                 rows="3"
                 required={
                   type ===
@@ -1025,16 +1013,10 @@ const AddEditTrxModal = ({
                 value={
                   description
                 }
-                onChange={(
-                  event
-                ) =>
-                  setDescription(
-                    event.target
-                      .value
-                  )
-                }
+                onChange={(event) => { setDescription(event.target.value); clearFieldError('description'); }}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 text-sm font-medium leading-relaxed resize-y disabled:bg-slate-100 disabled:cursor-not-allowed"
               />
+              {inlineError('description')}
             </div>
           </div>
 

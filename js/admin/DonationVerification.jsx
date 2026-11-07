@@ -1,295 +1,212 @@
-// Admin Donation Verification Component
-// SIMK-Panti - Pemeriksaan & Verifikasi Bukti Transfer Donasi Online
-
+// SIMK-Panti: pengurus-only manual transfer review (Midtrans never verified here).
 const DonationVerification = ({
-  donations = (window.INITIAL_SIMK_DATA?.donations || []),
-  campaigns = (window.INITIAL_SIMK_DATA?.campaigns || []),
+  donations = [],
+  loading = false,
+  error = null,
+  onReload = null,
+  currentPage = 1,
+  lastPage = 1,
+  onPageChange = null,
   onApproveDonation = null,
   onRejectDonation = null,
-  onOpenReceiptModal = null,
 }) => {
   const [filterStatus, setFilterStatus] = React.useState('Pending');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedDonationForInspect, setSelectedDonationForInspect] = React.useState(null);
+  const [selected, setSelected] = React.useState(null);
+  const [proofUrl, setProofUrl] = React.useState(null);
+  const [proofError, setProofError] = React.useState(null);
+  const [proofLoading, setProofLoading] = React.useState(false);
+  const [bankConfirmed, setBankConfirmed] = React.useState(false);
+  const [reasonCode, setReasonCode] = React.useState('no_funds_received');
+  const [processing, setProcessing] = React.useState(false);
+  const proofUrlRef = React.useRef(null);
+  const proofRunRef = React.useRef(0);
 
-  const filteredDonations = React.useMemo(() => {
-    return donations.filter((d) => {
-      const matchesType = d.type === 'online';
-      const matchesStatus = filterStatus === 'ALL' || d.status === filterStatus;
-      const matchesSearch =
-        (d.donorName && d.donorName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (d.id && d.id.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (d.campaignTitle && d.campaignTitle.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesType && matchesStatus && matchesSearch;
-    });
-  }, [donations, filterStatus, searchQuery]);
+  React.useEffect(() => () => {
+    proofRunRef.current += 1;
+    if (proofUrlRef.current) URL.revokeObjectURL(proofUrlRef.current);
+  }, []);
 
-  const pendingCount = donations.filter((d) => d.type === 'online' && d.status === 'Pending').length;
-  const verifiedCount = donations.filter((d) => d.type === 'online' && d.status === 'Terverifikasi').length;
-  const rejectedCount = donations.filter((d) => d.type === 'online' && d.status === 'Ditolak').length;
+  const closeInspect = () => {
+    proofRunRef.current += 1;
+    if (proofUrlRef.current) URL.revokeObjectURL(proofUrlRef.current);
+    proofUrlRef.current = null;
+    setProofUrl(null);
+    setSelected(null);
+    setProofError(null);
+    setBankConfirmed(false);
+  };
+
+  const inspect = async (item) => {
+    if (proofUrlRef.current) URL.revokeObjectURL(proofUrlRef.current);
+    proofUrlRef.current = null;
+    const runId = ++proofRunRef.current;
+    setSelected(item);
+    setProofUrl(null);
+    setProofError(null);
+    setBankConfirmed(false);
+    setReasonCode('no_funds_received');
+    setProofLoading(true);
+    try {
+      const blob = await DonationApi.getManualTransferProof(item.id);
+      if (runId !== proofRunRef.current) return;
+      const url = URL.createObjectURL(blob);
+      proofUrlRef.current = url;
+      setProofUrl(url);
+    } catch (err) {
+      if (runId === proofRunRef.current) {
+        setProofError(err?.message || 'Bukti tidak dapat dimuat.');
+      }
+    } finally {
+      if (runId === proofRunRef.current) setProofLoading(false);
+    }
+  };
+
+  const runAction = async (kind) => {
+    if (processing || !selected) return;
+    setProcessing(true);
+    try {
+      const success = kind === 'verify'
+        ? await onApproveDonation?.(selected.id)
+        : await onRejectDonation?.(selected.id, reasonCode);
+      if (success === true) closeInspect();
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const records = (Array.isArray(donations) ? donations : [])
+    .filter((item) => item.type === 'manual_transfer');
+  const pendingCount = records.filter((item) => item.status === 'Pending').length;
+  const approvedCount = records.filter((item) => item.status === 'Terverifikasi').length;
+  const rejectedCount = records.filter((item) => item.status === 'Ditolak').length;
+  const visible = records.filter((item) => {
+    if (filterStatus !== 'ALL' && item.status !== filterStatus) return false;
+    const q = searchQuery.trim().toLowerCase();
+    return !q || [item.id, item.donorName, item.campaignTitle]
+      .some((value) => String(value || '').toLowerCase().includes(q));
+  });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center space-x-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-            <FileCheck className="w-4 h-4 text-emerald-400" />
-            <span>Sistem Verifikasi Bukti Donasi Online</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight mt-2">
-            Pemeriksaan & Verifikasi Bukti Transfer
-          </h1>
-          <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl mt-1 leading-relaxed">
-            Periksa keabsahan bukti transfer donasi online donatur. Donasi yang diverifikasi akan otomatis memperbarui capaian dana campaign tujuan dan menerbitkan kuitansi digital resmi.
-          </p>
-        </div>
+    <div className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
+      <header className="rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-800 to-slate-900 p-6 text-white shadow-lg">
+        <div className="text-xs font-bold text-emerald-200">REVIEW TRANSFER MANUAL</div>
+        <h1 className="mt-2 text-2xl font-extrabold">Verifikasi Bukti Transfer Donasi</h1>
+        <p className="mt-2 max-w-3xl text-xs text-emerald-100">
+          Pemeriksaan ini khusus transfer manual. Cocokkan dana masuk pada mutasi rekening resmi,
+          bukan hanya gambar bukti. Pembayaran Midtrans tetap diverifikasi otomatis oleh backend.
+        </p>
+        <p className="mt-3 text-sm font-bold">Antrean pending halaman ini: {pendingCount}</p>
+      </header>
 
-        <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 text-center min-w-[160px]">
-          <div className="text-[10px] uppercase tracking-wider text-amber-300 font-extrabold">Antrean Pending</div>
-          <div className="text-2xl font-black text-amber-400 mt-0.5">{pendingCount} Donasi</div>
-        </div>
-      </div>
-
-      {/* Filter Controls & Search */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setFilterStatus('Pending')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 whitespace-nowrap ${
-              filterStatus === 'Pending'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Pending Verifikasi ({pendingCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFilterStatus('Terverifikasi')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 whitespace-nowrap ${
-              filterStatus === 'Terverifikasi'
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Terverifikasi ({verifiedCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFilterStatus('Ditolak')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 whitespace-nowrap ${
-              filterStatus === 'Ditolak'
-                ? 'bg-rose-600 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <XCircle className="w-3.5 h-3.5" />
-            <span>Ditolak ({rejectedCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setFilterStatus('ALL')}
-            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              filterStatus === 'ALL'
-                ? 'bg-slate-900 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <span>Semua Online</span>
-          </button>
-        </div>
-
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-          <input
-            type="text"
-            placeholder="Cari Donatur, ID, Campaign..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-      </div>
-
-      {/* Verification Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                <th className="py-3.5 px-4">KODE & TANGGAL</th>
-                <th className="py-3.5 px-4">DONATUR & KONTAK</th>
-                <th className="py-3.5 px-4">CAMPAIGN TUJUAN</th>
-                <th className="py-3.5 px-4">NOMINAL (RP)</th>
-                <th className="py-3.5 px-4">BUKTI TRANSFER</th>
-                <th className="py-3.5 px-4">STATUS</th>
-                <th className="py-3.5 px-4 text-right">AKSI VERIFIKASI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs font-medium">
-              {filteredDonations.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-12 text-slate-400">
-                    <AlertCircle className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                    <p className="font-semibold">Tidak ada donasi online yang sesuai filter.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredDonations.map((don) => (
-                  <tr key={don.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="font-mono text-xs font-bold text-slate-900">{don.id}</div>
-                      <div className="text-[10px] text-slate-400">
-                        {don.createdAt ? new Date(don.createdAt).toLocaleDateString('id-ID') : '-'}
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">{don.donorName}</div>
-                      <div className="text-[10px] text-slate-500">{don.email || don.phone || 'Tanpa Kontak'}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="text-slate-800 font-semibold truncate max-w-xs">{don.campaignTitle || 'Donasi Umum'}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap font-black text-emerald-700 text-sm">
-                      Rp {don.amount.toLocaleString('id-ID')}
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {don.proofImage ? (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedDonationForInspect(don)}
-                          className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[11px] hover:bg-emerald-100 transition-colors"
-                        >
-                          <Image className="w-3.5 h-3.5" />
-                          <span>Lihat Bukti</span>
-                        </button>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 italic">Tanpa Foto</span>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      {don.status === 'Pending' && (
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300 font-bold text-[11px]">
-                          Pending
-                        </span>
-                      )}
-                      {don.status === 'Terverifikasi' && (
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold text-[11px]">
-                          Terverifikasi
-                        </span>
-                      )}
-                      {don.status === 'Ditolak' && (
-                        <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 border border-rose-300 font-bold text-[11px]">
-                          Ditolak
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end space-x-2">
-                        {don.status === 'Pending' ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => onApproveDonation && onApproveDonation(don.id)}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1 shadow-sm"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              <span>Verifikasi</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => onRejectDonation && onRejectDonation(don.id)}
-                              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center space-x-1"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              <span>Tolak</span>
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onOpenReceiptModal && onOpenReceiptModal(don)}
-                            className="p-1.5 text-slate-700 hover:text-emerald-700 bg-slate-100 hover:bg-emerald-50 rounded-lg transition-all border border-slate-200"
-                            title="Cetak Kuitansi Resmi"
-                          >
-                            <Printer className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* INSPECT PROOF MODAL */}
-      {selectedDonationForInspect && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 text-center relative">
-            <button
-              type="button"
-              onClick={() => setSelectedDonationForInspect(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-5 h-5" />
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {[
+            ['Pending', `Pending (${pendingCount})`],
+            ['Terverifikasi', `Terverifikasi (${approvedCount})`],
+            ['Ditolak', `Ditolak (${rejectedCount})`],
+            ['ALL', `Semua (${records.length})`],
+          ].map(([status, label]) => (
+            <button key={status} type="button" onClick={() => setFilterStatus(status)}
+              className={`rounded-lg px-3 py-2 text-xs font-bold ${filterStatus === status ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-700'}`}>
+              {label}
             </button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari ID, donatur, campaign" aria-label="Cari donasi"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs sm:w-56" />
+          <button type="button" onClick={onReload} disabled={loading}
+            className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold disabled:opacity-50">Muat Ulang</button>
+        </div>
+      </div>
 
-            <h3 className="text-base font-extrabold text-slate-900">Bukti Transfer Donasi</h3>
-            <p className="text-xs text-slate-500">
-              Donatur: <b>{selectedDonationForInspect.donorName}</b> • Rp {selectedDonationForInspect.amount.toLocaleString('id-ID')}
-            </p>
+      {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">{error}</div>}
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[750px] text-left text-xs">
+          <thead className="bg-slate-50 font-bold uppercase text-slate-600">
+            <tr>
+              {['ID / Tanggal', 'Donatur', 'Program', 'Nominal', 'Bukti', 'Status', 'Aksi'].map((col) => <th key={col} className="px-4 py-3">{col}</th>)}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {loading ? (
+              <tr><td colSpan="7" className="p-8 text-center text-slate-500">Memuat donasi dari Laravel...</td></tr>
+            ) : visible.length === 0 ? (
+              <tr><td colSpan="7" className="p-8 text-center text-slate-500">Tidak ada transfer manual yang sesuai filter pada halaman ini.</td></tr>
+            ) : visible.map((item) => (
+              <tr key={item.id}>
+                <td className="px-4 py-3"><div className="font-mono font-bold">{item.id}</div><div className="mt-1 text-slate-500">{item.createdAt ? new Date(item.createdAt).toLocaleDateString('id-ID') : '-'}</div></td>
+                <td className="px-4 py-3"><strong>{item.donorName}</strong><div className="text-slate-500">{item.email || item.phone || '-'}</div></td>
+                <td className="px-4 py-3">{item.campaignTitle}</td>
+                <td className="px-4 py-3 font-bold">Rp {item.amount.toLocaleString('id-ID')}</td>
+                <td className="px-4 py-3">{item.hasProof ? 'Tersimpan privat' : 'Tidak tersedia'}</td>
+                <td className="px-4 py-3 font-bold">{item.status}</td>
+                <td className="px-4 py-3"><button type="button" onClick={() => inspect(item)}
+                  className="rounded-lg bg-emerald-700 px-3 py-2 font-bold text-white">Lihat Bukti</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-            <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 max-h-80 flex items-center justify-center">
-              <img
-                src={selectedDonationForInspect.proofImage}
-                alt="Bukti Transfer"
-                className="max-h-72 object-contain"
-              />
+      {lastPage > 1 && (
+        <div className="flex items-center justify-end gap-3 text-xs">
+          <button type="button" disabled={loading || currentPage <= 1}
+            onClick={() => onPageChange?.(currentPage - 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Sebelumnya</button>
+          <span>Halaman {currentPage} / {lastPage}</span>
+          <button type="button" disabled={loading || currentPage >= lastPage}
+            onClick={() => onPageChange?.(currentPage + 1)} className="rounded-lg border px-3 py-2 disabled:opacity-40">Berikutnya</button>
+        </div>
+      )}
+
+      {selected && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-950/70 p-4">
+          <section role="dialog" aria-modal="true" aria-labelledby="review-proof-title"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 id="review-proof-title" className="text-lg font-extrabold">Review Bukti Transfer</h2>
+                <p className="mt-1 text-xs text-slate-500">{selected.donorName} · Rp {selected.amount.toLocaleString('id-ID')}</p>
+              </div>
+              <button type="button" onClick={closeInspect} disabled={processing}
+                className="rounded-lg border px-3 py-1 text-sm">Tutup</button>
             </div>
-
-            {selectedDonationForInspect.status === 'Pending' && (
-              <div className="flex items-center space-x-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onRejectDonation) onRejectDonation(selectedDonationForInspect.id);
-                    setSelectedDonationForInspect(null);
-                  }}
-                  className="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200"
-                >
-                  Tolak Bukti
+            <div className="mt-4 flex min-h-48 items-center justify-center rounded-xl border bg-slate-50 p-3">
+              {proofLoading ? <span className="text-xs">Memuat bukti privat...</span>
+                : proofError ? <span role="alert" className="text-xs text-rose-700">{proofError}</span>
+                : proofUrl ? <img src={proofUrl} alt="Bukti transfer privat" className="max-h-80 object-contain" />
+                : <span className="text-xs">Bukti tidak tersedia.</span>}
+            </div>
+            {selected.status === 'Pending' && (
+              <div className="mt-4 space-y-3">
+                <label className="flex items-start gap-2 text-xs font-semibold text-slate-800">
+                  <input type="checkbox" checked={bankConfirmed}
+                    onChange={(e) => setBankConfirmed(e.target.checked)} className="mt-0.5" />
+                  <span>Saya sudah memeriksa mutasi rekening resmi dan mengonfirmasi dana benar-benar diterima.</span>
+                </label>
+                <button type="button" disabled={!bankConfirmed || processing || !proofUrl}
+                  onClick={() => runAction('verify')}
+                  className="w-full rounded-lg bg-emerald-700 px-4 py-3 text-xs font-bold text-white disabled:opacity-40">
+                  {processing ? 'Memproses...' : 'Verifikasi dan Catat ke Buku Kas'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onApproveDonation) onApproveDonation(selectedDonationForInspect.id);
-                    setSelectedDonationForInspect(null);
-                  }}
-                  className="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-md"
-                >
-                  Verifikasi Donasi
-                </button>
+                <div className="border-t pt-3">
+                  <label htmlFor="rejection-reason" className="block text-xs font-bold">Alasan penolakan</label>
+                  <select id="rejection-reason" value={reasonCode} onChange={(e) => setReasonCode(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs">
+                    <option value="no_funds_received">Dana tidak diterima</option>
+                    <option value="invalid_proof">Bukti tidak valid</option>
+                    <option value="duplicate">Pengajuan duplikat</option>
+                    <option value="other">Alasan lain</option>
+                  </select>
+                  <button type="button" disabled={processing} onClick={() => runAction('reject')}
+                    className="mt-2 w-full rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-800 disabled:opacity-40">Tolak Pengajuan</button>
+                </div>
               </div>
             )}
-          </div>
-        </div>
+          </section>
+        </div>, document.body
       )}
     </div>
   );

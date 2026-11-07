@@ -2,14 +2,22 @@
 // SIMK-Panti - Berita & Artikel Kegiatan
 
 const BeritaArtikel = ({
-  articles = (window.INITIAL_SIMK_DATA?.articles || []),
+  articles = [],
   onNavigateToDetail = null,
 }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
-  const displayArticles = (articles && articles.length > 0)
-    ? articles
-    : (window.INITIAL_SIMK_DATA?.articles || []);
+  const [displayArticles, setDisplayArticles] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState('');
+  React.useEffect(() => {
+    let live = true;
+    CmsApi.getPublicArticles()
+      .then(response => { if (live) setDisplayArticles(Array.isArray(response?.data) ? response.data.map(CmsApi.normalizeArticle) : []); })
+      .catch(error => { if (live) { setDisplayArticles([]); setLoadError(error?.message || 'Tidak dapat memuat artikel.'); } })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, []);
 
   const filteredArticles = displayArticles.filter(art =>
     art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,6 +63,8 @@ const BeritaArtikel = ({
         </div>
       </div>
 
+      {loading && <p className="text-sm text-slate-500">Memuat berita dari Laravel...</p>}
+      {loadError && <p role="alert" className="text-sm text-rose-700">{loadError}</p>}
       {/* Articles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredArticles.length === 0 ? (
@@ -66,12 +76,8 @@ const BeritaArtikel = ({
           filteredArticles.map((art) => (
             <article key={art.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-md transition-all flex flex-col justify-between group">
               <div>
-                <div className="aspect-video relative overflow-hidden bg-slate-100">
-                  <img
-                    src={art.image}
-                    alt={art.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
+                <div className={`aspect-video relative overflow-hidden bg-slate-100 ${art.image ? 'simk-protected-media' : ''}`}>
+                  {art.image ? <img src={art.image} alt={art.title} draggable={false} onContextMenu={(event) => event.preventDefault()} className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none" /> : <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">Belum ada foto sampul</div>}
                 </div>
                 <div className="p-6 space-y-3">
                   <div className="flex items-center space-x-3 text-[11px] text-slate-400 font-medium">

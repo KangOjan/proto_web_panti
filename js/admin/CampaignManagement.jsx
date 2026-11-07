@@ -22,18 +22,26 @@ const simkCampaignDateInput = (value) => {
   return `${part('year')}-${part('month')}-${part('day')}`;
 };
 
+const simkTodayJakarta = () => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const value = (key) => parts.find((part) => part.type === key)?.value || '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+};
+
 const simkCampaignImage = (campaign) =>
   campaign?.headerImageUrl || campaign?.header_image_url || campaign?.image || null;
 
 const SimkCampaignCover = ({ campaign }) => {
-  const src = simkCampaignImage(campaign);
+  const src = window.CmsApi?.normalizeMediaUrl(simkCampaignImage(campaign)) || null;
   const [failed, setFailed] = React.useState(false);
   React.useEffect(() => { setFailed(false); }, [src]);
   return (
-    <div className="aspect-video relative overflow-hidden bg-slate-100">
+    <div className="aspect-video relative overflow-hidden bg-slate-100 group">
       {src && !failed ? (
         <img src={src} alt={campaign.title || 'Foto program donasi'}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none"
           loading="lazy" onError={() => setFailed(true)} />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-5 text-center text-slate-500">
@@ -47,11 +55,14 @@ const SimkCampaignCover = ({ campaign }) => {
 
 const CampaignManagement = ({
   campaigns = [],
+  campaignLoading = false,
+  campaignError = null,
   onSaveCampaign = null,
   onDeleteCampaign = null,
   onAddCampaignUpdate = null,
 }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [campaignFilter, setCampaignFilter] = React.useState('current');
   const [isUpdateModalOpen, setIsUpdateModalOpen] = React.useState(false);
   const [editingCampaign, setEditingCampaign] = React.useState(null);
   const [selectedCampaignForUpdate, setSelectedCampaignForUpdate] = React.useState(null);
@@ -59,13 +70,48 @@ const CampaignManagement = ({
   // Form Campaign State
   const [title, setTitle] = React.useState('');
   const [category, setCategory] = React.useState('Konsumsi');
-  const [targetAmount, setTargetAmount] = React.useState(20000000);
-  const [deadline, setDeadline] = React.useState('2026-10-31');
-  const [status, setStatus] = React.useState('Aktif');
+  const [targetAmount, setTargetAmount] = React.useState('');
+  const [deadline, setDeadline] = React.useState('');
+  const [status, setStatus] = React.useState('draft');
   const [description, setDescription] = React.useState('');
   const [image, setImage] = React.useState('');
+  const [imageFile, setImageFile] = React.useState(null);
+  const [imageFilePreview, setImageFilePreview] = React.useState('');
+  React.useEffect(() => {
+    if (!imageFile) { setImageFilePreview(''); return; }
+    const preview = URL.createObjectURL(imageFile);
+    setImageFilePreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [imageFile]);
   const [saveError, setSaveError] = React.useState(null);
+  const [saveFieldErrors, setSaveFieldErrors] = React.useState({});
+  const clearSaveFieldError = (field) => setSaveFieldErrors((previous) => ({ ...previous, [field]: null }));
+  const campaignInlineError = (field) => saveFieldErrors[field] ? (
+    <p role="alert" className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-rose-50 px-2.5 py-2 text-[11px] leading-relaxed text-rose-700">
+      <span aria-hidden="true" className="grid h-4 w-4 shrink-0 place-items-center rounded-full bg-rose-100 font-bold">!</span>
+      <span>{saveFieldErrors[field]}</span>
+    </p>
+  ) : null;
   const [saving, setSaving] = React.useState(false);
+  const campaignTitleInputRef = React.useRef(null);
+
+  // Portal modal avoids clipping by transformed/scrolling dashboard containers.
+  React.useEffect(() => {
+    if (!isModalOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (!saving) campaignTitleInputRef.current?.focus();
+    const onEscape = (event) => {
+      if (event.key === 'Escape' && !saving) setIsModalOpen(false);
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [isModalOpen, saving]);
+
+  const [imagePreviewError, setImagePreviewError] = React.useState(false);
   const [categoryId, setCategoryId] = React.useState('');
   const [dbCategories, setDbCategories] = React.useState([]);
 
@@ -95,18 +141,40 @@ const CampaignManagement = ({
     { value: 'closed', name: 'Ditutup' },
     { value: 'inactive', name: 'Tidak aktif' },
   ];
+  // Campaign nonaktif/ditutup tetap berada di database untuk audit, tetapi
+  // tidak memenuhi daftar utama yang digunakan pengurus sehari-hari.
+  const campaignBuckets = React.useMemo(() => {
+    const list = Array.isArray(campaigns) ? campaigns : [];
+    const normalizedStatus = (camp) => String(camp?.status || '').toLowerCase();
+    return {
+      current: list.filter((camp) => !['inactive', 'closed'].includes(normalizedStatus(camp))),
+      active: list.filter((camp) => normalizedStatus(camp) === 'active'),
+      draft: list.filter((camp) => normalizedStatus(camp) === 'draft'),
+      archive: list.filter((camp) => ['inactive', 'closed'].includes(normalizedStatus(camp))),
+    };
+  }, [campaigns]);
+  const campaignTabs = [
+    { key: 'current', label: 'Daftar Utama' },
+    { key: 'active', label: 'Aktif' },
+    { key: 'draft', label: 'Draft' },
+    { key: 'archive', label: 'Arsip' },
+  ];
+  const visibleCampaigns = campaignBuckets[campaignFilter] || [];
 
   const handleOpenAddModal = () => {
     setEditingCampaign(null);
     setTitle('');
     setCategory('Konsumsi');
     setCategoryId(categories[0]?.id ? String(categories[0].id) : '');
-    setTargetAmount(20000000);
-    setDeadline('2026-10-31');
-    setStatus('active');
+    setTargetAmount('');
+    setDeadline('');
+    setStatus('draft');
     setDescription('');
     setImage('');
+    setImageFile(null);
     setSaveError(null);
+    setSaveFieldErrors({});
+    setImagePreviewError(false);
     setIsModalOpen(true);
   };
 
@@ -120,7 +188,10 @@ const CampaignManagement = ({
     setStatus(camp.status || 'active');
     setDescription(camp.description || '');
     setImage(simkCampaignImage(camp) || '');
+    setImageFile(null);
     setSaveError(null);
+    setSaveFieldErrors({});
+    setImagePreviewError(false);
     setIsModalOpen(true);
   };
 
@@ -128,15 +199,25 @@ const CampaignManagement = ({
     event.preventDefault();
     if (!onSaveCampaign) { setSaveError('API penyimpanan campaign belum tersedia.'); return; }
     const selectedCategory = categories.find((item) => String(item.id) === String(categoryId));
-    if (!selectedCategory || !title.trim() || !description.trim() || !deadline) {
-      setSaveError('Lengkapi kategori, judul, deskripsi, dan tenggat terlebih dahulu.');
-      return;
+    const errors = {};
+    if (!title.trim()) errors.title = 'Judul program wajib diisi.';
+    else if (title.trim().length > 200) errors.title = 'Judul maksimal 200 karakter.';
+    if (!selectedCategory) errors.category = 'Pilih kategori program.';
+    if (!description.trim()) errors.description = 'Deskripsi lengkap program wajib diisi.';
+    if (!/^\d+$/.test(String(targetAmount).trim()) || !Number.isSafeInteger(Number(targetAmount)) || Number(targetAmount) < 100000) {
+      errors.target = 'Masukkan nominal bulat minimal Rp100.000, tanpa titik atau koma.';
     }
-    // Backend membatasi URL gambar ke HTTP(S). Aset lokal yang sudah tersimpan
-    // melalui seeder tidak perlu dikirim ulang ketika menyunting detail lain.
-    const absoluteImage = /^https?:\/\//i.test(image.trim());
-    if (!editingCampaign && !absoluteImage) {
-      setSaveError('Untuk campaign baru, gunakan URL gambar HTTPS. Upload gambar lokal membutuhkan endpoint upload backend.');
+    if (!deadline) errors.deadline = 'Tentukan tanggal tenggat program.';
+    else if (deadline < simkTodayJakarta()) errors.deadline = 'Tanggal tenggat sudah lewat. Pilih hari ini atau tanggal berikutnya.';
+    if (!editingCampaign && !imageFile) errors.image = 'Unggah banner program terlebih dahulu.';
+    if (imageFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type) || imageFile.size > 4 * 1024 * 1024)) {
+      errors.image = 'Gunakan gambar JPG, PNG, atau WebP maksimal 4 MB.';
+    }
+    setSaveFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      setSaveError(null);
+      const fields = { title: 'campaign-title', category: 'campaign-category', description: 'campaign-desc', target: 'campaign-target', deadline: 'campaign-deadline', image: 'campaign-image' };
+      document.getElementById(fields[Object.keys(errors)[0]])?.focus();
       return;
     }
     const payload = {
@@ -147,16 +228,25 @@ const CampaignManagement = ({
       deadline,
       status,
       description: description.trim(),
-      ...(absoluteImage ? { header_image_url: image.trim() } : {}),
+
     };
     setSaving(true);
     setSaveError(null);
     try {
+      if (imageFile) {
+        const uploaded = await CampaignApi.uploadBanner(imageFile);
+        const path = uploaded?.data?.image_url;
+        if (!path || !/^\/storage\/campaigns\/[a-z0-9._/-]+$/i.test(path)) {
+          throw new Error('Backend tidak mengembalikan path banner yang valid.');
+        }
+        payload.header_image_url = new URL(path, window.location.origin).href;
+      }
       const result = await onSaveCampaign(payload);
       if (result === false || result?.success === false) {
-        throw new Error('Penyimpanan campaign gagal. Periksa notifikasi dari server.');
+        throw new Error(result?.message || 'Penyimpanan campaign gagal. Periksa notifikasi dari server.');
       }
       setIsModalOpen(false);
+      setCampaignFilter('current');
     } catch (error) {
       setSaveError(error?.message || 'Gagal menyimpan campaign.');
     } finally {
@@ -277,9 +367,45 @@ const CampaignManagement = ({
         </button>
       </div>
 
+      {campaignError && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Gagal memuat daftar campaign pengurus: {campaignError}</div>}
+      {campaignLoading && <p role="status" className="text-sm text-slate-600">Memuat seluruh campaign dari CMS...</p>}
+      {!campaignLoading && !campaignError && campaigns.length === 0 &&
+        <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">Belum ada campaign tersimpan dalam CMS.</p>}
+
+      <section aria-label="Filter daftar campaign" className="space-y-3">
+        <div role="tablist" aria-label="Status campaign" className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+          {campaignTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={campaignFilter === tab.key}
+              onClick={() => setCampaignFilter(tab.key)}
+              className={`rounded-xl px-4 py-2.5 text-xs font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
+                campaignFilter === tab.key
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              {tab.label} <span className="ml-1 opacity-80">({campaignBuckets[tab.key].length})</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs leading-relaxed text-slate-600">
+          {campaignFilter === 'archive'
+            ? 'Program nonaktif dan ditutup tetap tersimpan sebagai arsip. Pilih Edit bila perlu mengaktifkannya kembali.'
+            : 'Program yang dinonaktifkan tidak tampil di daftar utama atau pada halaman donasi publik. Lihat tab Arsip untuk riwayatnya.'}
+        </p>
+        {!campaignLoading && !campaignError && campaigns.length > 0 && visibleCampaigns.length === 0 && (
+          <p role="status" className="rounded-xl border border-slate-200 bg-white px-5 py-6 text-sm text-slate-600">
+            Tidak ada campaign pada kategori ini.
+          </p>
+        )}
+      </section>
+
       {/* Campaigns Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {campaigns.map((camp) => {
+        {visibleCampaigns.map((camp) => {
           const collected = camp.verifiedCollectedAmount ?? camp.collectedAmount;
           const target = Number(camp.targetAmount) || 0;
           const pct = collected == null || target <= 0 ? 0
@@ -355,154 +481,161 @@ onClick={() => openUpdateModal(camp)}
                   <span>Edit</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`Apakah Anda yakin ingin menghapus campaign "${camp.title}"?`)) {
-                      if (onDeleteCampaign) onDeleteCampaign(camp.id);
-                    }
-                  }}
-                  className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs border border-rose-200"
-                  title="Hapus Campaign"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {!['inactive', 'closed'].includes(String(camp.status || '').toLowerCase()) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Nonaktifkan program "${camp.title}"? Program akan dipindahkan ke Arsip dan tidak ditampilkan kepada donatur. Riwayatnya tetap tersimpan.`)) {
+                        if (onDeleteCampaign) onDeleteCampaign(camp.id);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                    title="Nonaktifkan dan pindahkan ke Arsip"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Arsipkan</span>
+                  </button>
+                ) : (
+                  <span className="text-[11px] font-medium text-slate-500">Tersimpan di Arsip</span>
+                )}
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* MODAL ADD / EDIT CAMPAIGN */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-extrabold text-slate-900">
-                {editingCampaign ? 'Edit Program Campaign' : 'Buat Program Campaign Baru'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
-              >
-                ✕
-              </button>
+      {/* MODAL ADD / EDIT CAMPAIGN - only presentation and client validation changed. */}
+      {isModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-[3px] flex items-center justify-center px-3 py-4 sm:px-6 sm:py-8" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setIsModalOpen(false); }}>
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-[700px] w-full shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="campaign-modal-heading">
+            <div className="shrink-0 px-5 sm:px-7 py-4 sm:py-5 border-b border-slate-100 bg-white flex justify-between items-start gap-4">
+              <div>
+                <p className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700">Pengelolaan Program Donasi</p>
+                <h3 id="campaign-modal-heading" className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">
+                  {editingCampaign ? 'Edit Campaign' : 'Buat Campaign Baru'}
+                </h3>
+                <p className="mt-1 text-xs text-slate-500">Lengkapi informasi program. Pilih Draft agar belum tampil sebagai campaign aktif.</p>
+              </div>
+              <button type="button" onClick={() => !saving && setIsModalOpen(false)} disabled={saving}
+                aria-label="Tutup form campaign" className="rounded-xl px-3 py-2 hover:bg-slate-200 text-slate-600 font-bold disabled:opacity-50">✕</button>
             </div>
 
-            <form onSubmit={handleSaveSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">Judul Program *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: Paket Pangan & Gizi Anak Asuh..."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-bold"
-                />
-              </div>
+            <form id="campaign-form" onSubmit={handleSaveSubmit} noValidate className="flex flex-col min-h-0">
+              <div className="flex-1 min-h-0 overflow-y-auto px-5 sm:px-7 py-5 space-y-4 text-xs">
+                <section className="space-y-3" aria-label="Identitas campaign">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span className="w-7 h-7 bg-emerald-50 text-emerald-700 rounded-lg grid place-items-center font-black text-xs">1</span>
+                    <h4 className="font-extrabold text-slate-900">Informasi Program</h4>
+                  </div>
+                  <div>
+                    <label htmlFor="campaign-title" className="block font-bold text-slate-700 mb-1.5">Judul Program <span className="text-rose-600">*</span></label>
+                    <input id="campaign-title" ref={campaignTitleInputRef} type="text" required maxLength="200"
+                      placeholder="Contoh: Bantuan Pendidikan Anak Asuh" value={title} onChange={(e) => { setTitle(e.target.value); clearSaveFieldError('title'); }}
+                      aria-invalid={Boolean(saveFieldErrors.title)}
+                      className={`w-full px-4 py-2.5 rounded-xl border font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400 ${saveFieldErrors.title ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'}`} />
+                    {campaignInlineError('title')}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="campaign-category" className="block font-bold text-slate-700 mb-1.5">Kategori <span className="text-rose-600">*</span></label>
+                      <select id="campaign-category" value={categoryId} required
+                        onChange={(e) => {
+                          setCategoryId(e.target.value);
+                          clearSaveFieldError('category');
+                          setCategory(categories.find((item) => String(item.id) === e.target.value)?.name || '');
+                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        <option value="">Pilih kategori...</option>
+                        {categories.map((cat) => <option key={cat.id} value={String(cat.id)}>{cat.name}</option>)}
+                      </select>
+                      {campaignInlineError('category')}
+                      {!categories.length && <p className="text-xs text-amber-700 mt-1.5">Kategori belum tersedia. Periksa koneksi API kategori campaign.</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="campaign-status" className="block font-bold text-slate-700 mb-1.5">Status Operasional <span className="text-rose-600">*</span></label>
+                      <select id="campaign-status" required value={status} onChange={(e) => setStatus(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400">
+                        {statuses.map((st) => <option key={st.value} value={st.value}>{st.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  {status === 'active' && <p className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-xs text-amber-900">Status <b>Aktif</b> akan membuat campaign tersedia pada halaman publik setelah disimpan.</p>}
+                  <div>
+                    <label htmlFor="campaign-desc" className="block font-bold text-slate-700 mb-1.5">Deskripsi Lengkap <span className="text-rose-600">*</span></label>
+                    <textarea id="campaign-desc" rows="3" required placeholder="Tujuan, kebutuhan, penerima manfaat, dan rencana penyaluran dana..."
+                      value={description} onChange={(e) => { setDescription(e.target.value); clearSaveFieldError('description'); }}
+                      aria-invalid={Boolean(saveFieldErrors.description)}
+                      className={`w-full px-4 py-2.5 rounded-xl border font-medium leading-relaxed focus:outline-none focus:ring-2 focus:ring-emerald-400 ${saveFieldErrors.description ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'}`} />
+                    {campaignInlineError('description')}
+                  </div>
+                </section>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Kategori *</label>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => {
-                      setCategoryId(e.target.value);
-                      setCategory(categories.find((item) => String(item.id) === e.target.value)?.name || '');
-                    }}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"
-                  >
-                    <option value="" disabled>Pilih kategori...</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                    ))}
-                  </select>
+                <section className="space-y-3" aria-label="Dana dan tenggat">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span className="w-7 h-7 bg-emerald-50 text-emerald-700 rounded-lg grid place-items-center font-black text-xs">2</span>
+                    <h4 className="font-extrabold text-slate-900">Target & Tenggat</h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="campaign-target" className="block font-bold text-slate-700 mb-1.5">Target Dana (Rp) <span className="text-rose-600">*</span></label>
+                      <input id="campaign-target" type="text" inputMode="numeric" maxLength="15" required placeholder="Contoh: 20000000"
+                        value={targetAmount} onChange={(e) => { setTargetAmount(e.target.value); clearSaveFieldError('target'); }}
+                        aria-invalid={Boolean(saveFieldErrors.target)}
+                        className={`w-full px-4 py-2.5 rounded-xl border font-bold text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 ${saveFieldErrors.target ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'}`} />
+                      {campaignInlineError('target')}
+                      {Number(targetAmount) >= 100000 && <p className="text-xs text-emerald-700 mt-1">Rp {Number(targetAmount).toLocaleString('id-ID')}</p>}
+                    </div>
+                    <div>
+                      <label htmlFor="campaign-deadline" className="block font-bold text-slate-700 mb-1.5">Tenggat Waktu <span className="text-rose-600">*</span></label>
+                      <input id="campaign-deadline" type="date" required value={deadline} aria-invalid={Boolean(saveError && deadline && deadline < simkTodayJakarta())}
+                        onChange={(e) => { setDeadline(e.target.value); setSaveError(null); clearSaveFieldError('deadline'); }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                      {campaignInlineError('deadline')}
+                      <p className="text-xs text-slate-500 mt-1">Pilih tanggal hari ini atau tanggal mendatang sesuai periode resmi program.</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-3" aria-label="Gambar banner">
+                  <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                    <span className="w-7 h-7 bg-emerald-50 text-emerald-700 rounded-lg grid place-items-center font-black text-xs">3</span>
+                    <h4 className="font-extrabold text-slate-900">Gambar Banner</h4>
+                  </div>
+                  <div>
+                    <label htmlFor="campaign-image" className="block font-bold text-slate-700 mb-1.5">Upload Banner {editingCampaign ? '(opsional jika tidak diganti)' : '*'} </label>
+                    <input id="campaign-image" type="file" accept="image/jpeg,image/png,image/webp"
+                      required={!editingCampaign} onChange={(e) => { setImageFile(e.target.files?.[0] || null); setImagePreviewError(false); clearSaveFieldError('image'); }}
+                      className="block w-full rounded-xl border border-slate-300 p-3 text-sm" />
+                    {campaignInlineError('image')}
+                    <p className="text-xs text-slate-500 mt-1.5">JPG, PNG, atau WebP; maksimal 4 MB. Gambar disimpan di Laravel Storage.</p>
+                  </div>
+                  {(imageFilePreview || image.trim()) && (
+                    <div className="border border-slate-200 rounded-2xl bg-slate-50 p-3">
+                      <p className="text-xs font-bold text-slate-600 mb-2">Pratinjau Banner</p>
+                      <img src={imageFilePreview || window.CmsApi?.normalizeMediaUrl(image) || ''}
+                        alt="Pratinjau banner campaign" className="w-full max-h-44 object-contain rounded-xl bg-white"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; setImagePreviewError(true); }} />
+                      {imagePreviewError && <p className="text-xs text-rose-700">Gambar lama tidak dapat diakses. Silakan unggah yang baru.</p>}
+                    </div>
+                  )}
+                </section>
+                {saveError && <p role="alert" className="rounded-xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">{saveError}</p>}
+              </div>
+              <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 px-5 sm:px-7 py-3.5 border-t border-slate-100 bg-slate-50">
+                <span className="text-xs text-slate-500">* Wajib diisi</span>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button type="button" disabled={saving} onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold disabled:opacity-50">Batal</button>
+                  <button type="submit" disabled={saving || categories.length === 0}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold shadow-sm disabled:opacity-50">
+                    {saving ? 'Menyimpan...' : editingCampaign ? 'Simpan Perubahan' : 'Buat Campaign'}
+                  </button>
                 </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Status Operasional *</label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"
-                  >
-                    {statuses.map((st) => (
-                      <option key={st.value} value={st.value}>{st.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Target Dana (Rp) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="100000"
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold text-emerald-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 uppercase mb-1">Tenggat Waktu *</label>
-                  <input
-                    type="date"
-                    required
-                    value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-medium"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">Deskripsi Lengkap *</label>
-                <textarea
-                  rows="3"
-                  required
-                  placeholder="Rincian tujuan program, sasaran bantuan, dan dampak bagi anak asuh..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-medium leading-relaxed"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 uppercase mb-1">URL Gambar Banner</label>
-                <p className="mb-1 text-[11px] text-slate-500">Foto yang sudah tersimpan akan tetap tampil. Gambar baru menggunakan URL HTTPS.</p>
-                <input
-                  type="text"
-                  placeholder="https://... (URL gambar baru)"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 font-medium"
-                />
-              </div>
-
-              {saveError && <p role="alert" className="text-xs text-rose-700">{saveError}</p>}
-              <div className="pt-2 flex items-center justify-end space-x-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-bold"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit" disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black shadow-md disabled:opacity-50"
-                >
-                  {saving ? 'Menyimpan...' : 'Simpan Campaign'}
-                </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL ADD UPDATE */}

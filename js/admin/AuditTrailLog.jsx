@@ -511,18 +511,10 @@ const AuditTrailLog = () => {
               return;
             }
 
-            const mockLogs = window.INITIAL_SIMK_DATA?.auditLogs || [];
-            if (mockLogs.length > 0) {
-              setLogs(mockLogs);
-              setError(null);
-            } else {
-              setLogs([]);
-              setError(
-                requestError
-                  ?.message ||
-                'Gagal memuat audit log.'
-              );
-            }
+            setLogs([]);
+            setError(
+              requestError?.message || 'Gagal memuat audit log dari Laravel.'
+            );
           } finally {
             if (
               !cancelled

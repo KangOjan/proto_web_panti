@@ -81,6 +81,15 @@ const DetailCampaign = ({
     }).format(date);
   };
 
+  React.useEffect(() => {
+    if (campaign) simkUpdateSeo('detail-campaign', {
+      title: campaign.title,
+      description: (campaign.description || `Dukung program ${campaign.title} bersama LKSA Taman Harapan Muhammadiyah.`).slice(0, 155),
+      image: campaign.headerImageUrl || campaign.image,
+      campaign: true,
+    });
+  }, [campaign?.id, campaign?.title, campaign?.description, campaign?.headerImageUrl]);
+
   const handleShareWhatsApp = () => {
     const text = `Mari bersama bantu program: ${campaign.title} di Panti Asuhan LKSA Taman Harapan Muhammadiyah. Salurkan donasi Anda secara transparan. Info lengkap: ${window.location.href}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
@@ -144,10 +153,10 @@ const DetailCampaign = ({
 
       {/* Main Campaign Hero Card */}
       <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-0">
-        <div className="lg:col-span-7 aspect-video lg:aspect-auto relative overflow-hidden bg-slate-900">
+        <div className="lg:col-span-7 aspect-video lg:aspect-auto relative overflow-hidden bg-slate-900 group">
           {(campaign.headerImageUrl || campaign.image) ? (
             <img src={campaign.headerImageUrl || campaign.image}
-              alt={campaign.title} className="w-full h-full object-cover min-h-[300px]" />
+              alt={campaign.title} className="w-full h-full object-cover min-h-[300px] scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none" />
           ) : (
             <div className="min-h-[300px] h-full flex items-center justify-center text-sm text-white/80">
               Foto program belum tersedia

@@ -103,6 +103,45 @@ const CmsTextarea = ({
   </label>
 );
 
+// Common institutional records. The list is informational, not a claim that all are mandatory.
+const CMS_LEGALITY_TYPES = [
+  'Akta Pendirian Lembaga/Yayasan',
+  'Akta Perubahan Lembaga/Yayasan',
+  'SK Pengesahan Badan Hukum',
+  'Tanda Pendaftaran LKS',
+  'Surat Keterangan Domisili',
+  'Surat Izin Operasional/Penyelenggaraan',
+  'Sertifikat Akreditasi LKSA',
+  'Anggaran Dasar dan Anggaran Rumah Tangga',
+  'Surat Rekomendasi Dinas Sosial',
+  'Dokumen Legalitas Lainnya',
+];
+
+const CMS_FACILITY_ICONS = [
+  ['', 'Otomatis'],
+  ['home', 'Asrama / Rumah'],
+  ['book-open', 'Ruang Belajar'],
+  ['graduation-cap', 'Pendidikan'],
+  ['heart-pulse', 'Kesehatan'],
+  ['users', 'Ruang Kegiatan'],
+  ['utensils', 'Dapur / Ruang Makan'],
+  ['building-2', 'Bangunan'],
+];
+
+const CMS_VISITING_DAYS = [
+  ['monday', 'Senin'], ['tuesday', 'Selasa'], ['wednesday', 'Rabu'],
+  ['thursday', 'Kamis'], ['friday', 'Jumat'], ['saturday', 'Sabtu'],
+  ['sunday', 'Minggu'],
+];
+
+const cmsEmptyVisitSchedule = () => ({ days: [], start: '09:00', end: '16:00' });
+const cmsVisitLabel = (schedule) => {
+  if (!schedule || !schedule.days?.length) return null;
+  const names = CMS_VISITING_DAYS.filter(([key]) => schedule.days.includes(key))
+    .map(([, name]) => name).join(', ');
+  return `${names}: ${schedule.start}-${schedule.end} WIB`;
+};
+
 const OrganizationProfileManagement = ({
   currentUser,
   onProfileUpdated,
@@ -125,6 +164,7 @@ const OrganizationProfileManagement = ({
       whatsapp: '',
       email: '',
       visiting_hours: '',
+      visiting_schedule: cmsEmptyVisitSchedule(),
       gmaps_url: '',
     },
     organization_structure: [],
@@ -169,6 +209,10 @@ const OrganizationProfileManagement = ({
         )
           ? profile.legalities.map(
               (item) => ({
+                id: item?.id || null,
+                has_document: item?.has_document === true,
+                is_public: item?.is_public === true,
+
                 type:
                   item?.type || '',
 
@@ -241,6 +285,12 @@ const OrganizationProfileManagement = ({
           profile.contact_info
             ?.visiting_hours || '',
 
+        visiting_schedule:
+          profile.contact_info?.visiting_schedule &&
+          Array.isArray(profile.contact_info.visiting_schedule.days)
+            ? profile.contact_info.visiting_schedule
+            : cmsEmptyVisitSchedule(),
+
         gmaps_url:
           profile.contact_info
             ?.gmaps_url || '',
@@ -271,11 +321,11 @@ const OrganizationProfileManagement = ({
                             position:
                               member?.position || '',
 
-                            role_code:
-                              member?.role_code || '',
-
                             photo:
                               member?.photo || '',
+
+                            photo_url:
+                              member?.photo_url || member?.photo || '',
 
                             description:
                               member?.description || '',
@@ -298,6 +348,58 @@ const OrganizationProfileManagement = ({
 
   const [saving, setSaving] =
     React.useState(false);
+
+  const [uploadingPhoto, setUploadingPhoto] = React.useState(false);
+  const [uploadingLegalityId, setUploadingLegalityId] = React.useState(null);
+  const [scheduleChanged, setScheduleChanged] = React.useState(false);
+  const [receiptSettings, setReceiptSettings] = React.useState({ daily_manager_name: '', institution_head_name: '', daily_manager_has_signature: false, institution_head_has_signature: false });
+  const [receiptSaving, setReceiptSaving] = React.useState(false);
+  const [signatureBusy, setSignatureBusy] = React.useState('');
+  const [receiptMessage, setReceiptMessage] = React.useState('');
+  const [signaturePreview, setSignaturePreview] = React.useState({});
+  const refreshSignatures = async (profile) => {
+    const settings = profile?.receipt_settings || {};
+    setReceiptSettings({
+      daily_manager_name: settings.daily_manager_name || '',
+      institution_head_name: settings.institution_head_name || '',
+      daily_manager_has_signature: settings.daily_manager_has_signature === true,
+      institution_head_has_signature: settings.institution_head_has_signature === true,
+    });
+    const previews = {};
+    for (const role of ['daily_manager', 'institution_head']) {
+      if (settings[`${role}_has_signature`]) {
+        try { previews[role] = (await CmsApi.getReceiptSignature(role))?.data?.image || null; }
+        catch (_) { previews[role] = null; }
+      }
+    }
+    setSignaturePreview(previews);
+  };
+  const uploadReceiptSignature = async (role, file) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 512 * 1024) {
+      setReceiptMessage('Gunakan PNG/JPG/WebP, maksimal 512 KB.'); return;
+    }
+    try {
+      setSignatureBusy(role); setReceiptMessage('');
+      const response = await CmsApi.uploadReceiptSignature(role, file);
+      await refreshSignatures(response?.data);
+      setReceiptMessage('Tanda tangan tersimpan secara privat. Kuitansi lama tidak berubah.');
+    } catch (error) { setReceiptMessage(error?.message || 'Upload tanda tangan gagal.'); }
+    finally { setSignatureBusy(''); }
+  };
+  const saveReceiptNames = async () => {
+    if (!configured) { setReceiptMessage('Simpan identitas lembaga terlebih dahulu.'); return; }
+    try {
+      setReceiptSaving(true); setReceiptMessage('');
+      const response = await CmsApi.updateReceiptSettings({
+        daily_manager_name: receiptSettings.daily_manager_name.trim(),
+        institution_head_name: receiptSettings.institution_head_name.trim(),
+      });
+      await refreshSignatures(response?.data);
+      setReceiptMessage('Konfigurasi kwitansi tersimpan untuk penerbitan berikutnya.');
+    } catch (error) { setReceiptMessage(error?.message || 'Gagal menyimpan konfigurasi.'); }
+    finally { setReceiptSaving(false); }
+  };
 
   const [error, setError] =
     React.useState(null);
@@ -334,6 +436,8 @@ const OrganizationProfileManagement = ({
               profile
             )
           );
+          setScheduleChanged(false);
+          await refreshSignatures(profile);
         } catch (requestError) {
           console.error(
             'Failed to load managed organization profile:',
@@ -446,6 +550,38 @@ const OrganizationProfileManagement = ({
     );
   };
 
+  const handleLegalityUpload = async (legalityId, file) => {
+    if (!file || !legalityId || uploadingLegalityId) return;
+    if (file.type !== 'application/pdf' || file.size > 5 * 1024 * 1024) {
+      setError('Pilih file PDF maksimal 5 MB.');
+      return;
+    }
+    try {
+      setUploadingLegalityId(legalityId);
+      setError(null);
+      const response = await CmsApi.uploadLegalityDocument(legalityId, file);
+      const confirmed = response?.data?.legalities?.find((item) => item.id === legalityId);
+      if (!confirmed?.has_document) throw new Error('Server belum mengonfirmasi dokumen PDF.');
+      // Keep unsaved form edits intact. Only update the document status of this row.
+      setForm((previous) => ({
+        ...previous,
+        legalities: previous.legalities.map((item) =>
+          item.id === legalityId ? { ...item, has_document: true, is_public: false } : item
+        ),
+      }));
+      if (typeof showToast === 'function') showToast('PDF legalitas berhasil diunggah secara privat.', 'success');
+    } catch (requestError) {
+      setError(requestError?.message || 'Gagal mengunggah PDF legalitas.');
+    } finally {
+      setUploadingLegalityId(null);
+    }
+  };
+
+  const handleLegalityDownload = async (legalityId) => {
+    try { await CmsApi.downloadLegalityDocument(legalityId); }
+    catch (requestError) { setError(requestError?.message || 'Gagal mengunduh PDF.'); }
+  };
+
   const addLegality = () => {
     setForm(
       (previous) => ({
@@ -453,6 +589,9 @@ const OrganizationProfileManagement = ({
         legalities: [
           ...previous.legalities,
           {
+            id: null,
+            has_document: false,
+            is_public: false,
             type: '',
             number: '',
             date: '',
@@ -514,7 +653,6 @@ const OrganizationProfileManagement = ({
               {
                 name: '',
                 position: '',
-                role_code: '',
                 photo: '',
                 description: '',
               },
@@ -602,7 +740,6 @@ const OrganizationProfileManagement = ({
                         {
                           name: '',
                           position: '',
-                          role_code: '',
                           photo: '',
                           description: '',
                         },
@@ -698,6 +835,40 @@ const OrganizationProfileManagement = ({
     );
   };
 
+  const uploadMemberPhoto = async (groupIndex, memberIndex, file) => {
+    if (!file || uploadingPhoto || saving) return;
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type) || file.size > 3 * 1024 * 1024) {
+      setError('Foto wajib JPG, PNG, atau WebP dengan ukuran maksimal 3 MB.');
+      return;
+    }
+    try {
+      setUploadingPhoto(true);
+      setError(null);
+      const response = await CmsApi.uploadOrganizationMemberPhoto(file);
+      const path = response?.data?.path;
+      if (!path) throw new Error('Server tidak mengembalikan lokasi foto.');
+      setForm(previous => ({
+        ...previous,
+        organization_structure: previous.organization_structure.map((group, i) => i !== groupIndex
+          ? group
+          : { ...group, members: group.members.map((member, j) => j !== memberIndex
+            ? member
+            : { ...member, photo: path, photo_url: response?.data?.url || '' }) },
+        ),
+      }));
+    } catch (uploadError) {
+      setError(uploadError?.message || 'Gagal mengunggah foto pengurus.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const updateVisitingSchedule = (schedule) => {
+    setScheduleChanged(true);
+    setContactField('visiting_schedule', schedule);
+  };
+
   const buildPayload = () => ({
     name:
       form.name.trim(),
@@ -743,6 +914,7 @@ const OrganizationProfileManagement = ({
         )
         .map(
           (item) => ({
+            ...(item.id ? { id: item.id } : {}),
             type:
               item.type.trim(),
 
@@ -756,6 +928,7 @@ const OrganizationProfileManagement = ({
             verified:
               item.verified ===
               true,
+            is_public: item.is_public === true && item.verified === true && item.has_document === true,
           })
         ),
 
@@ -830,11 +1003,11 @@ const OrganizationProfileManagement = ({
           .trim() ||
         null,
 
-      visiting_hours:
-        form.contact_info
-          .visiting_hours
-          .trim() ||
-        null,
+      visiting_hours: scheduleChanged
+        ? cmsVisitLabel(form.contact_info.visiting_schedule)
+        : (form.contact_info.visiting_hours.trim() || null),
+
+      visiting_schedule: form.contact_info.visiting_schedule,
 
       gmaps_url:
         form.contact_info
@@ -884,11 +1057,6 @@ const OrganizationProfileManagement = ({
                       member.position
                         .trim(),
 
-                    role_code:
-                      member.role_code
-                        .trim() ||
-                      null,
-
                     photo:
                       member.photo
                         .trim() ||
@@ -924,6 +1092,17 @@ const OrganizationProfileManagement = ({
         return;
       }
 
+      const schedule = form.contact_info.visiting_schedule;
+      if (schedule?.days?.length && (!schedule.start || !schedule.end || schedule.end <= schedule.start)) {
+        setError('Jam selesai kunjungan harus lebih besar daripada jam mulai.');
+        return;
+      }
+
+      if (uploadingPhoto || uploadingLegalityId) {
+        setError('Selesaikan upload foto atau legalitas sebelum menyimpan perubahan.');
+        return;
+      }
+
       try {
         setSaving(true);
         setError(null);
@@ -948,6 +1127,7 @@ const OrganizationProfileManagement = ({
             profile
           )
         );
+        setScheduleChanged(false);
 
         setConfigured(true);
 
@@ -1102,12 +1282,47 @@ const OrganizationProfileManagement = ({
         </div>
       )}
 
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-7 space-y-5">
+        <h2 className="text-lg font-bold text-slate-900">Pejabat & tanda tangan kwitansi</h2>
+        <p className="text-xs text-slate-600">Konfigurasi hanya untuk kwitansi baru. File tanda tangan tersimpan privat; kwitansi yang telah diterbitkan tidak berubah.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[
+            ['daily_manager', 'Pengurus Harian'], ['institution_head', 'Kepala Lembaga'],
+          ].map(([role, label]) => (
+            <div key={role} className="rounded-2xl border border-slate-200 p-4 space-y-3">
+              <label className="block text-sm font-bold">Nama {label}
+                <input type="text" maxLength={150} value={receiptSettings[`${role}_name`] || ''}
+                  onChange={(event) => setReceiptSettings((old) => ({ ...old, [`${role}_name`]: event.target.value }))}
+                  className="block w-full mt-1 rounded-xl border border-slate-300 px-3 py-2" />
+              </label>
+              <label className="block text-xs font-bold">Upload tanda tangan {label} (PNG/JPG/WebP, maks 512 KB)
+                <input type="file" accept="image/png,image/jpeg,image/webp" disabled={!configured || Boolean(signatureBusy)}
+                  onChange={(event) => { const file = event.target.files?.[0]; uploadReceiptSignature(role, file); event.target.value = ''; }}
+                  className="block w-full mt-2 text-xs" />
+              </label>
+              {signaturePreview[role] ? <img src={signaturePreview[role]} alt={`Tanda tangan ${label}`} className="h-16 max-w-full object-contain" /> :
+                <p className="text-xs text-slate-500">Belum ada tanda tangan.</p>}
+            </div>
+          ))}
+        </div>
+        {receiptMessage && <p role="status" className="text-xs text-emerald-800">{receiptMessage}</p>}
+        <button type="button" disabled={!configured || receiptSaving || Boolean(signatureBusy)} onClick={saveReceiptNames}
+          className="rounded-xl bg-emerald-700 px-5 py-2.5 text-white font-bold disabled:opacity-50">
+          {receiptSaving ? 'Menyimpan...' : 'Simpan Nama Penandatangan'}
+        </button>
+      </section>
+
       <form
         onSubmit={
           handleSubmit
         }
         className="space-y-6"
       >
+        {form.organization_structure.some((group) => /\[\s*DEMO\s*\]/i.test(group?.role || '') || (group?.members || []).some((member) => (/\[\s*DEMO\s*\]/i.test(member?.name || '') || /\[\s*DEMO\s*\]/i.test(member?.position || '')))) && (
+          <div role="status" className="border border-amber-300 bg-amber-50 text-amber-900 px-4 py-3 rounded-xl text-sm">
+            Data struktur organisasi yang masih berlabel [DEMO] sengaja tidak ditampilkan sebagai pengurus resmi pada website publik. Perbarui nama dan jabatan dengan data yang telah dikonfirmasi, lalu simpan profil.
+          </div>
+        )}
         <CmsSection
           icon="building-2"
           title="Identitas Lembaga"
@@ -1270,7 +1485,7 @@ const OrganizationProfileManagement = ({
         <CmsSection
           icon="shield-check"
           title="Legalitas"
-          description="Dokumen legal dan status verifikasi lembaga."
+          description="PDF tetap privat secara default. Pengurus dapat memilih dokumen yang aman untuk dipublikasikan pada profil lembaga."
         >
           <div className="space-y-4">
             {form.legalities.map(
@@ -1283,56 +1498,64 @@ const OrganizationProfileManagement = ({
                   className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <CmsInput
-                      label="Jenis Dokumen"
-                      value={item.type}
-                      onChange={
-                        (value) =>
-                          updateArrayItem(
-                            'legalities',
-                            index,
-                            {
-                              ...item,
-                              type:
-                                value,
-                            }
-                          )
-                      }
-                    />
+                    <label className="block space-y-1.5">
+                      <span className="text-xs font-bold text-slate-700">Jenis Dokumen</span>
+                      <select value={CMS_LEGALITY_TYPES.includes(item.type) ? item.type : (item.type ? '__other__' : '')}
+                        onChange={(event) => updateArrayItem('legalities', index, {
+                          ...item, type: event.target.value === '__other__' ? 'Dokumen Legalitas Lainnya' : event.target.value,
+                        })}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-emerald-500">
+                        <option value="">Pilih jenis dokumen</option>
+                        {CMS_LEGALITY_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                        {!CMS_LEGALITY_TYPES.includes(item.type) && item.type && <option value="__other__">Jenis lain (data lama)</option>}
+                      </select>
+                      {item.type && (!CMS_LEGALITY_TYPES.includes(item.type) || item.type === 'Dokumen Legalitas Lainnya') && (
+                        <input aria-label="Jenis dokumen lainnya" type="text" value={item.type}
+                          onChange={(event) => updateArrayItem('legalities', index, { ...item, type: event.target.value })}
+                          maxLength="150" placeholder="Tuliskan jenis dokumen"
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" />
+                      )}
+                    </label>
 
                     <CmsInput
                       label="Nomor"
                       value={item.number}
-                      onChange={
-                        (value) =>
-                          updateArrayItem(
-                            'legalities',
-                            index,
-                            {
-                              ...item,
-                              number:
-                                value,
-                            }
-                          )
-                      }
+                      onChange={(value) => updateArrayItem('legalities', index, { ...item, number: value })}
                     />
 
-                    <CmsInput
-                      label="Tanggal / Status"
-                      value={item.date}
-                      onChange={
-                        (value) =>
-                          updateArrayItem(
-                            'legalities',
-                            index,
-                            {
-                              ...item,
-                              date:
-                                value,
-                            }
-                          )
-                      }
-                    />
+                    <label className="block space-y-1.5">
+                      <span className="text-xs font-bold text-slate-700">Tanggal Penerbitan</span>
+                      <input type="date" value={/^\d{4}-\d{2}-\d{2}$/.test(item.date || '') ? item.date : ''}
+                        onChange={(event) => updateArrayItem('legalities', index, { ...item, date: event.target.value })}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm" />
+                      {item.date && !/^\d{4}-\d{2}-\d{2}$/.test(item.date) && (
+                        <p className="text-[11px] text-amber-700">Tanggal lama "{item.date}" tidak valid. Pilih tanggal penerbitan yang benar.</p>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <label className={`font-semibold rounded-lg border px-3 py-2 ${item.id && !uploadingLegalityId ? 'cursor-pointer bg-white text-emerald-700 border-emerald-200' : 'cursor-not-allowed bg-slate-100 text-slate-400 border-slate-200'}`}>
+                      {uploadingLegalityId === item.id && item.id ? 'Mengunggah PDF...' : item.has_document ? 'Ganti PDF Legalitas' : 'Unggah PDF Legalitas'}
+                      <input
+                        type="file"
+                        className="sr-only"
+                        accept=".pdf,application/pdf"
+                        disabled={!item.id || Boolean(uploadingLegalityId) || saving}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) handleLegalityUpload(item.id, file);
+                          event.target.value = '';
+                        }}
+                      />
+                    </label>
+                    {item.has_document && item.id && (
+                      <button type="button" onClick={() => handleLegalityDownload(item.id)} className="font-bold text-blue-700 underline">
+                        Unduh PDF (khusus pengurus)
+                      </button>
+                    )}
+                    {!item.id && <span className="text-slate-500">Simpan profil terlebih dahulu untuk mengaktifkan unggah.</span>}
+                    <p className="w-full text-[11px] leading-relaxed text-slate-600">PDF hanya tampil di halaman publik jika dokumen sudah diunggah, dicentang Terverifikasi dan Publikasikan PDF, kemudian perubahan profil disimpan. Periksa dan tutupi data pribadi sebelum publikasi.</p>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -1359,6 +1582,14 @@ const OrganizationProfileManagement = ({
                         }
                       />
                       Terverifikasi
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                      <input type="checkbox" checked={item.is_public === true && item.has_document === true && item.verified === true}
+                        disabled={!item.id || !item.has_document || !item.verified}
+                        onChange={(event) => updateArrayItem('legalities', index, {
+                          ...item, is_public: event.target.checked,
+                        })} />
+                      Publikasikan PDF
                     </label>
 
                     <button
@@ -1427,23 +1658,23 @@ const OrganizationProfileManagement = ({
                       }
                     />
 
-                    <CmsInput
-                      label="Icon Lucide"
-                      value={item.icon}
-                      placeholder="Contoh: home"
-                      onChange={
-                        (value) =>
-                          updateArrayItem(
-                            'facilities',
-                            index,
-                            {
-                              ...item,
-                              icon:
-                                value,
-                            }
-                          )
-                      }
-                    />
+                    <label className="space-y-1.5 block">
+                      <span className="text-xs font-bold text-slate-700">Ikon Fasilitas (Opsional)</span>
+                      <select
+                        value={item.icon || ''}
+                        onChange={(event) => updateArrayItem('facilities', index, {
+                          ...item, icon: event.target.value,
+                        })}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                      >
+                        {item.icon && !CMS_FACILITY_ICONS.some(([value]) => value === item.icon) && (
+                          <option value={item.icon}>Ikon lama: {item.icon}</option>
+                        )}
+                        {CMS_FACILITY_ICONS.map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
 
                   <CmsTextarea
@@ -1650,20 +1881,49 @@ const OrganizationProfileManagement = ({
               }
             />
 
-            <CmsInput
-              label="Jam Kunjungan"
-              value={
-                form.contact_info
-                  .visiting_hours
-              }
-              onChange={
-                (value) =>
-                  setContactField(
-                    'visiting_hours',
-                    value
-                  )
-              }
-            />
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-700">Jam Kunjungan</p>
+              <div className="flex flex-wrap gap-2">
+                {CMS_VISITING_DAYS.map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-1.5 text-xs text-slate-700">
+                    <input type="checkbox"
+                      checked={form.contact_info.visiting_schedule.days.includes(key)}
+                      onChange={(event) => {
+                        const previous = form.contact_info.visiting_schedule;
+                        updateVisitingSchedule({ ...previous,
+                          days: event.target.checked
+                            ? [...previous.days, key]
+                            : previous.days.filter((day) => day !== key),
+                        });
+                      }}
+                    /> {label}
+                  </label>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-xs text-slate-600">Mulai
+                  <input type="time" value={form.contact_info.visiting_schedule.start}
+                    onChange={(event) => updateVisitingSchedule({
+                      ...form.contact_info.visiting_schedule, start: event.target.value,
+                    })}
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
+                </label>
+                <label className="text-xs text-slate-600">Selesai
+                  <input type="time" value={form.contact_info.visiting_schedule.end}
+                    onChange={(event) => updateVisitingSchedule({
+                      ...form.contact_info.visiting_schedule, end: event.target.value,
+                    })}
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm" />
+                </label>
+              </div>
+              <p className="text-xs text-slate-500">
+                {scheduleChanged || form.contact_info.visiting_schedule.days.length
+                  ? (cmsVisitLabel(form.contact_info.visiting_schedule) || 'Belum ada hari kunjungan')
+                  : (form.contact_info.visiting_hours
+                    ? `Jadwal lama: ${form.contact_info.visiting_hours}. Pilih hari dan jam untuk menggantinya.`
+                    : 'Belum ada jam kunjungan yang ditetapkan.')}
+              </p>
+            </div>
 
             <div className="md:col-span-2">
               <CmsInput
@@ -1810,39 +2070,32 @@ const OrganizationProfileManagement = ({
                                 }
                               />
 
-                              <CmsInput
-                                label="Role Code"
-                                value={
-                                  member.role_code
-                                }
-                                placeholder="Opsional"
-                                onChange={
-                                  (value) =>
-                                    updateStructureMember(
-                                      groupIndex,
-                                      memberIndex,
-                                      'role_code',
-                                      value
-                                    )
-                                }
-                              />
-
-                              <CmsInput
-                                label="Foto"
-                                value={
-                                  member.photo
-                                }
-                                placeholder="URL/path opsional"
-                                onChange={
-                                  (value) =>
-                                    updateStructureMember(
-                                      groupIndex,
-                                      memberIndex,
-                                      'photo',
-                                      value
-                                    )
-                                }
-                              />
+                              <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-700">Foto Pengurus (Opsional)</label>
+                                <input type="file" accept="image/jpeg,image/png,image/webp"
+                                  disabled={uploadingPhoto || saving}
+                                  onChange={async (event) => {
+                                    const file = event.target.files?.[0];
+                                    if (file) await uploadMemberPhoto(groupIndex, memberIndex, file);
+                                    event.target.value = '';
+                                  }}
+                                  className="block w-full text-xs file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:font-bold" />
+                                {member.photo_url && (
+                                  <img src={member.photo_url} alt={`Foto ${member.name}`}
+                                    className="h-24 w-24 rounded-lg border border-slate-200 object-cover" />
+                                )}
+                                {member.photo && (
+                                  <button type="button" disabled={uploadingPhoto || saving}
+                                    className="text-xs font-semibold text-rose-600"
+                                    onClick={() => {
+                                      updateStructureMember(groupIndex, memberIndex, 'photo', '');
+                                      updateStructureMember(groupIndex, memberIndex, 'photo_url', '');
+                                    }}>
+                                    Hapus Foto
+                                  </button>
+                                )}
+                                <p className="text-[11px] text-slate-500">JPG, PNG, WebP. Maksimal 3 MB. Simpan profil setelah upload.</p>
+                              </div>
                             </div>
 
                             <CmsTextarea
@@ -1923,9 +2176,7 @@ const OrganizationProfileManagement = ({
 
           <button
             type="submit"
-            disabled={
-              saving
-            }
+            disabled={saving || uploadingPhoto}
             className="w-full sm:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white rounded-xl text-sm font-extrabold flex items-center justify-center gap-2"
           >
             <LucideIcon
