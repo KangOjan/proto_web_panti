@@ -871,7 +871,7 @@ const FinancialReportPSAK45 = ({
         !error && (
         <>
           {/* Printable Report */}
-          <div className="bg-white rounded-3xl p-8 shadow-md border border-slate-200 printable-area text-slate-900 space-y-6">
+          <div id="simk-print-financial-report" className="bg-white rounded-3xl p-8 shadow-md border border-slate-200 printable-area text-slate-900 space-y-6">
 
             {/* Header */}
             <div className="text-center border-b-2 border-slate-900 pb-4">

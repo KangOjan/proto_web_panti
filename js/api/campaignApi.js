@@ -81,6 +81,12 @@ const CampaignApi = {
     );
   },
 
+  uploadBanner(file) {
+    const form = new FormData();
+    form.append('banner', file);
+    return apiRequest('/pengurus/campaigns/banner', { method: 'POST', body: form });
+  },
+
   createCampaign(payload) {
     return apiRequest(
       '/pengurus/campaigns',

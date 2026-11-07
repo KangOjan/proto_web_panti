@@ -98,7 +98,7 @@ const Navbar = ({
           <Link href="/" className="flex items-center space-x-3 cursor-pointer">
             <div className="w-12 h-12 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 shadow-sm flex items-center justify-center">
               <img
-                src="/assets/images/logo-panti.png"
+                src="/storage/site/logo-panti.png"
                 alt="Logo Panti Sosial Asuhan Anak Taman Harapan Muhammadiyah Bandung"
                 className="h-full w-full object-contain"
               />

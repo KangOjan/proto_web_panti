@@ -12,22 +12,18 @@ const LandingPage = ({
   onNavigateToArticle,
   onNavigateToFaq,
 }) => {
-  const defaultProfile = window.INITIAL_SIMK_DATA?.orphanageProfile || {};
-  const currentProfile = organizationProfile || defaultProfile;
+  const currentProfile = organizationProfile || {};
+  const heroImageUrl = CmsApi.normalizeMediaUrl(currentProfile.heroImageUrl || currentProfile.hero_image_url);
 
   const profile = {
     name: currentProfile.name || 'Panti Asuhan LKSA Taman Harapan Muhammadiyah',
-    tagline: currentProfile.tagline || 'Menebar Kasih, Membina Generasi Berakhlak Mulia & Mandiri',
-    foundedYear: currentProfile.foundedYear || '2012',
+    tagline: String(currentProfile.tagline || 'Pengasuhan, Pembinaan, dan Pendidikan Anak')
+      .replace(/Transaparansi/gi, 'Transparansi'),
     history: currentProfile.history || '',
-    facilities: currentProfile.facilities || [],
-    achievements: currentProfile.achievements || [],
-    contactInfo: currentProfile.contactInfo || {
-      address: 'Jl. Merdeka LKSA Taman Harapan Muhammadiyah No. 45, Jakarta Selatan',
-      phone: '(021) 7829-1029',
-      whatsapp: '0812-3456-7890',
-      email: 'kontak@pantikasihbunda.or.id'
-    }
+    missions: Array.isArray(currentProfile.missions) ? currentProfile.missions : [],
+    foundedYear: currentProfile.foundedYear || null,
+    facilities: Array.isArray(currentProfile.facilities) ? currentProfile.facilities : [],
+    contactInfo: currentProfile.contactInfo || {},
   };
 
   // Campaign publik berasal dari API. Tidak ada fallback ke mock campaign.
@@ -40,55 +36,106 @@ const LandingPage = ({
       return Number.isFinite(deadline) && deadline >= Date.now();
     });
 
-  const displayArticles = (articles && articles.length > 0)
-    ? articles
-    : (window.INITIAL_SIMK_DATA?.articles || []);
+  const [displayArticles, setDisplayArticles] = React.useState([]);
+  const [displayFaqs, setDisplayFaqs] = React.useState([]);
+  const [cmsLoadError, setCmsLoadError] = React.useState('');
+  const [openFaqId, setOpenFaqId] = React.useState(null);
+  React.useEffect(() => {
+    let live = true;
+    Promise.all([CmsApi.getPublicArticles(), CmsApi.getPublicFaqs()])
+      .then(([articleResponse, faqResponse]) => {
+        if (!live) return;
+        setDisplayArticles(Array.isArray(articleResponse?.data) ? articleResponse.data.map(CmsApi.normalizeArticle) : []);
+        setDisplayFaqs(Array.isArray(faqResponse?.data) ? faqResponse.data.map(CmsApi.normalizeFaq) : []);
+      })
+      .catch(error => {
+        if (live) {
+          setDisplayArticles([]); setDisplayFaqs([]);
+          setCmsLoadError(error?.message || 'Konten CMS belum dapat dimuat.');
+        }
+      });
+    return () => { live = false; };
+  }, []);
 
-  const displayFaqs = (faqs && faqs.length > 0)
-    ? faqs
-    : (window.INITIAL_SIMK_DATA?.faqs || []);
-
-  const [openFaqId, setOpenFaqId] = React.useState('FAQ-001');
-
+  // Semua angka berikut berasal dari response profil atau campaign, bukan mock data.
+  const dormitoryCount = profile.facilities.filter((facility) => /asrama/i.test(facility?.name || '')).length;
   const impactStats = [
-    { label: 'Anak Asuh Terbina', value: '45+', desc: 'Yatim, Piatu & Dhuafa Aktif', icon: window.Users, color: 'emerald' },
-    { label: 'Donasi Tersalurkan', value: 'Rp 450Jt+', desc: '100% Diaudit & Terverifikasi', icon: window.TrendingUp, color: 'teal' },
-    { label: 'Tahun Pengabdian', value: '14 Tahun', desc: 'Melayani Sejak 2012', icon: window.Building2, color: 'amber' },
-    { label: 'Akreditasi Lembaga', value: 'Terakreditasi A', desc: 'Resmi Kemenkumham & Dinsos', icon: window.ShieldCheck, color: 'blue' }
+    { label: 'Tahun Awal Pengabdian', value: profile.foundedYear ? String(profile.foundedYear) : '—', desc: 'Menemani tumbuh kembang generasi', icon: window.CalendarDays },
+    { label: 'Asrama Pengasuhan', value: dormitoryCount ? String(dormitoryCount) : '—', desc: 'Lingkungan pengasuhan yang hangat', icon: window.Building2 },
+    { label: 'Program Kebaikan', value: String(activeCampaigns.length), desc: 'Peluang berbagi untuk anak asuh', icon: window.Heart },
+    { label: 'Fokus Pembinaan', value: profile.missions.length ? String(profile.missions.length) : '—', desc: 'Arah pengabdian dan pendidikan', icon: window.Sparkles },
   ];
+
+  // Gambar konten berasal dari URL/path pada JSON API. Bukan dari assets/images.
+  // Berkas fisiknya tetap disimpan sebagai file di Laravel public storage.
+  const cmsImageUrl = (raw) => CmsApi.normalizeMediaUrl(raw) || '';
 
   const trustPillars = [
-    {
-      title: 'Legalitas Berbadan Hukum',
-      desc: 'Terdaftar resmi di Kemenkumham RI (No. AHU-0012847.AH.01.04) dan Dinas Sosial sebagai Lembaga Kesejahteraan Sosial (LKS).',
-      icon: window.ShieldCheck,
-      badge: 'SK Kemenkumham Aktif'
-    },
-    {
-      title: 'Penyaluran Terdokumentasi',
-      desc: 'Setiap pengadaan dana dipublikasikan secara terbuka melalui laporan foto, nota belanja, dan linimasa perkembangan program.',
-      icon: window.FileCheck,
-      badge: 'Laporan Terbuka'
-    },
-    {
-      title: 'Kuitansi Digital Otomatis',
-      desc: 'Setiap donasi yang diverifikasi langsung menerbitkan tanda terima resmi (digital receipt) ber-ID unik yang dapat diunduh.',
-      icon: window.Receipt,
-      badge: 'Receipt Otomatis'
-    },
-    {
-      title: 'Rekening Resmi Yayasan',
-      desc: 'Seluruh transaksi masuk langsung ke rekening bank berbadan hukum atas nama yayasan, tanpa perantara rekening pribadi.',
-      icon: window.CreditCard,
-      badge: 'Rek. Badan Hukum'
-    }
+    { title: 'Pengasuhan Penuh Kepedulian', desc: 'Lingkungan yang mendorong anak tumbuh dengan perhatian, nilai, dan rasa kebersamaan.', icon: window.Heart, badge: 'Kepedulian' },
+    { title: 'Pendidikan dan Keterampilan', desc: 'Menguatkan semangat belajar serta kemandirian untuk bekal masa depan anak.', icon: window.BookOpen, badge: 'Pembinaan' },
+    { title: 'Kesehatan dan Kesejahteraan', desc: 'Mendukung kebutuhan keseharian serta lingkungan pengasuhan yang sehat.', icon: window.ShieldCheck, badge: 'Kesejahteraan' },
+    { title: 'Donasi yang Bertanggung Jawab', desc: 'Donatur dapat memilih program dan mengikuti informasi donasi yang tersedia.', icon: window.Receipt, badge: 'Kepercayaan' },
   ];
 
-  const recentDonorWishes = [
-    { name: 'Hamba Allah', initials: 'HA', amount: 'Rp 500.000', program: 'Pemenuhan Gizi Harian', message: 'Semoga anak-anak panti selalu sehat, cerdas, dan dilimpahi keberkahan.', time: '2 jam lalu' },
-    { name: 'Keluarga Bpk. Hendra S.', initials: 'HS', amount: 'Rp 1.000.000', program: 'Beasiswa Pendidikan', message: 'Doa terbaik untuk kelancaran sekolah adik-adik sekalian. Terus semangat mengejar cita-cita.', time: '5 jam lalu' },
-    { name: 'Ibu Ratna Dewi', initials: 'RD', amount: 'Rp 250.000', program: 'Kamar Asrama & Komputer', message: 'Semoga fasilitas belajar barunya bermanfaat dan melahirkan programmer hebat!', time: '1 hari lalu' }
-  ];
+  // Sebelumnya hardcoded: Hamba Allah Rp500.000, Hendra Rp1.000.000, Ratna Rp250.000.
+  // Sekarang doa dibaca dari endpoint PUBLIK per campaign; API bertanggung jawab menyaring
+  // hanya doa dengan persetujuan publikasi dan mengaburkan identitas donatur.
+  const campaignSlugKey = activeCampaigns
+    .map((c) => c.slug).filter(Boolean).slice(0, 6).join('|');
+  const [recentDonorWishes, setRecentDonorWishes] = React.useState([]);
+  const [wishesLoading, setWishesLoading] = React.useState(false);
+  const [wishesError, setWishesError] = React.useState(false);
+  React.useEffect(() => {
+    const slugs = campaignSlugKey.split('|').filter(Boolean);
+    let cancelled = false;
+    setWishesLoading(true);
+    setWishesError(false);
+    const request = window.apiRequest;
+    if (typeof request !== 'function') {
+      setWishesLoading(false);
+      setWishesError(true);
+      return undefined;
+    }
+    Promise.allSettled([
+      ...slugs.map((slug) => request(`/campaigns/${encodeURIComponent(slug)}/prayers`, { auth: false })),
+      request('/donations/general/prayers', { auth: false }),
+    ]).then((results) => {
+      if (cancelled) return;
+      const items = [];
+      results.forEach((result, idx) => {
+        if (result.status !== 'fulfilled') return;
+        const payload = result.value;
+        const data = payload?.data;
+        const prayers = Array.isArray(data) ? data
+          : Array.isArray(data?.items) ? data.items
+          : Array.isArray(data?.prayers) ? data.prayers
+          : Array.isArray(payload?.prayers) ? payload.prayers : [];
+        prayers.forEach((item, j) => {
+          const message = String(item?.public_message || item?.donor_message ||
+            item?.message || item?.prayer || '').trim();
+          if (!message) return;
+          const name = String(item?.display_name || item?.donor_name ||
+            item?.donorName || 'Hamba Allah').trim();
+          const sourceCampaign = activeCampaigns.find((c) => c.slug === slugs[idx]);
+          const rawDate = item?.date || item?.published_at || item?.created_at || item?.verified_at;
+          items.push({
+            id: `${idx === slugs.length ? 'general' : slugs[idx]}:${String(item?.public_id || item?.id || j)}`,
+            name: name || 'Hamba Allah',
+            message,
+            program: sourceCampaign?.title || 'Donasi Umum',
+            timestamp: rawDate && Number.isFinite(Date.parse(rawDate)) ? Date.parse(rawDate) : 0,
+            isDemo: /\[DEMO\]/i.test(message) || /\[DEMO\]/i.test(name),
+          });
+        });
+      });
+      items.sort((a, b) => b.timestamp - a.timestamp);
+      const unique = Array.from(new Map(items.map((item) => [item.id, item])).values());
+      setRecentDonorWishes(unique.slice(0, 3));
+      setWishesError(results.every((result) => result.status === 'rejected'));
+      setWishesLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [campaignSlugKey]);
 
   return (
     <div className="animate-fade-in pb-0">
@@ -105,7 +152,7 @@ const LandingPage = ({
               <div className="inline-flex items-center space-x-2 bg-emerald-500/15 px-4 py-1.5 rounded-full border border-emerald-400/30 text-emerald-300 text-xs font-bold shadow-inner tracking-wide">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <window.Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Lembaga Kesejahteraan Sosial Resmi • Akreditasi A</span>
+                <span>LKSA Taman Harapan Muhammadiyah · Bandung</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight leading-[1.1]">
@@ -116,8 +163,8 @@ const LandingPage = ({
               </h1>
 
               <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                {profile.name} membina 45 anak yatim piatu & dhuafa. Bersama wujudkan masa depan mereka lewat donasi yang{' '}
-                <span className="text-emerald-300 font-semibold">100% transparan, terverifikasi, dan tercatat resmi</span>.
+                {profile.name} berkomitmen memberikan pengasuhan, pembinaan, pendidikan,
+                dan pendampingan bagi anak-anak melalui program sosial dan kegiatan pemberdayaan.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-1">
@@ -139,12 +186,12 @@ const LandingPage = ({
                   className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl text-sm flex items-center justify-center space-x-2 backdrop-blur-md border border-white/15 transition-all"
                 >
                   <window.Building2 className="w-4 h-4 text-emerald-300" />
-                  <span>Profil & Legalitas Panti</span>
+                  <span>Profil, Legalitas & Lokasi</span>
                 </window.Link>
               </div>
 
               <div className="pt-5 flex flex-wrap items-center justify-center lg:justify-start gap-y-2 gap-x-5 text-xs text-slate-400 font-medium border-t border-slate-800/60">
-                {['Izin Kemenkumham RI', 'Dinas Sosial Terdaftar', 'Kuitansi Donasi Sah', '100% Diaudit'].map((item) => (
+                {['Pengasuhan yang hangat', 'Pendidikan yang mendampingi', 'Kesempatan berbagi kebaikan'].map((item) => (
                   <div key={item} className="flex items-center space-x-1.5">
                     <window.CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     <span>{item}</span>
@@ -156,20 +203,20 @@ const LandingPage = ({
             {/* Right Column (5 cols) */}
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/10 group">
-                <img
-                  src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60"
-                  alt="Anak Panti Asuhan LKSA Taman Harapan Muhammadiyah"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
+                {heroImageUrl ? (
+                  <img src={heroImageUrl} alt="Ilustrasi anak-anak belajar bersama" className="w-full h-full object-cover object-center scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none" loading="eager" fetchPriority="high" />
+                ) : (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center p-8 text-center text-sm text-slate-200">Gambar kegiatan pembinaan belum tersedia</div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
 
                 <div className="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-xl rounded-xl p-3 shadow-2xl border border-white/15 flex items-center space-x-3 text-white">
                   <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 flex-shrink-0">
-                    <window.Heart className="w-4 h-4 fill-emerald-400 text-emerald-400" />
+                    <window.Newspaper className="w-4 h-4" />
                   </div>
                   <div className="text-xs min-w-0">
-                    <div className="font-bold text-white truncate">Hamba Allah baru berdonasi</div>
-                    <div className="text-[11px] text-emerald-300/80 font-medium truncate">Rp 250.000 • Untuk Pemenuhan Gizi Harian</div>
+                    <div className="font-bold text-white truncate">Belajar, Berkembang, Berdaya</div>
+                    <div className="text-[11px] text-emerald-300/80 font-medium truncate">Ilustrasi visual, bukan foto anak asuh LKSA</div>
                   </div>
                 </div>
               </div>
@@ -216,7 +263,7 @@ const LandingPage = ({
               Mengapa Berdonasi di Panti Asuhan Taman Harapan Muhammadiyah?
             </h2>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Kami menjunjung tinggi amanah donatur melalui sistem pencatatan donasi digital, audit berkala, dan transparansi laporan penyaluran.
+              Setiap dukungan berarti bagi pendidikan, pengasuhan, kesehatan, dan kesempatan tumbuh anak-anak. Pilih program yang paling dekat dengan kepedulian Anda.
             </p>
           </div>
 
@@ -283,17 +330,17 @@ const LandingPage = ({
 
           {campaignLoading && (
             <p role="status" className="rounded-xl bg-white p-5 text-sm text-slate-600 border border-slate-200">
-              Memuat campaign dari database...
+              Memuat program donasi...
             </p>
           )}
           {campaignError && !campaignLoading && (
             <p role="alert" className="rounded-xl bg-rose-50 p-5 text-sm text-rose-800 border border-rose-200">
-              Gagal memuat campaign: {campaignError}
+              Program belum dapat dimuat: {campaignError}
             </p>
           )}
           {!campaignLoading && !campaignError && activeCampaigns.length === 0 && (
             <p className="rounded-xl bg-white p-5 text-sm text-slate-600 border border-slate-200">
-              Belum ada campaign aktif yang tersedia. Donasi Umum tetap dapat dipilih.
+              Program donasi belum tersedia saat ini. Donasi umum tetap dapat dipilih.
             </p>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -309,11 +356,11 @@ const LandingPage = ({
                   className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col group"
                 >
                   <div className="aspect-video relative overflow-hidden bg-slate-100">
-                    {camp.headerImageUrl && !camp.headerImageUrl.includes('example.com') ? (
+                    {cmsImageUrl(camp.headerImageUrl) ? (
                       <img
-                        src={camp.headerImageUrl}
+                        src={cmsImageUrl(camp.headerImageUrl)}
                         alt={camp.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center bg-slate-100 text-xs font-medium text-slate-500">
@@ -360,7 +407,7 @@ const LandingPage = ({
                           </div>
                         </>
                       ) : (
-                        <p className="text-xs text-slate-500">Data dana terkumpul belum tersedia dari API.</p>
+                        <p className="text-xs text-slate-500">Informasi dana terkumpul belum tersedia.</p>
                       )}
                       <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400 font-medium">
                         <span>Target: Rp {(camp.targetAmount || 0).toLocaleString('id-ID')}</span>
@@ -420,32 +467,33 @@ const LandingPage = ({
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Doa Donatur & Orang Baik</h2>
             </div>
             <span className="text-xs font-medium text-slate-400 hidden sm:inline">
-              Update Real-Time
+              Doa dan harapan dari para donatur
             </span>
           </div>
 
+          {wishesLoading && <p role="status" className="text-xs text-slate-500">Memuat doa donatur...</p>}
+          {wishesError && <p role="alert" className="text-xs text-amber-800">Doa donatur belum dapat dimuat saat ini.</p>}
+          {!wishesLoading && !wishesError && recentDonorWishes.length === 0 && (
+            <p className="text-xs text-slate-500">Belum ada doa donatur yang dipublikasikan.</p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {recentDonorWishes.map((wish, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-3"
-              >
+            {recentDonorWishes.map((wish) => (
+              <div key={wish.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                    {wish.initials}
+                    {wish.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-bold text-slate-900 truncate">{wish.name}</div>
-                    <div className="text-[10px] text-slate-400 font-medium">{wish.time}</div>
+                    <div className="text-[10px] text-slate-400 font-medium">{wish.timestamp ? new Date(wish.timestamp).toLocaleDateString('id-ID') : 'Doa terpublikasi'}</div>
                   </div>
+                  {wish.isDemo && <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded">DEMO</span>}
                 </div>
-
-                <div className="inline-block text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100 font-mono">
-                  {wish.amount} • {wish.program}
+                <div className="inline-block text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                  {wish.program}
                 </div>
-
                 <p className="text-xs text-slate-600 italic leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  "{wish.message}"
+                  “{wish.message}”
                 </p>
               </div>
             ))}
@@ -463,6 +511,7 @@ const LandingPage = ({
                 <span>Kabar & Transparansi Kegiatan</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Artikel & Berita Panti</h2>
+                {cmsLoadError && <p role="alert" className="text-[11px] text-rose-700 mt-1">{cmsLoadError}</p>}
             </div>
 
             <window.Link
@@ -475,6 +524,7 @@ const LandingPage = ({
             </window.Link>
           </div>
 
+          {displayArticles.length === 0 && <p className="text-sm text-slate-500">Belum ada artikel resmi yang dipublikasikan.</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {displayArticles.slice(0, 2).map((art) => (
               <window.Link
@@ -484,11 +534,7 @@ const LandingPage = ({
                 className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200/80 hover:shadow-lg hover:border-slate-300 transition-all duration-300 flex flex-col sm:flex-row group"
               >
                 <div className="sm:w-44 h-40 sm:h-auto relative overflow-hidden bg-slate-100 flex-shrink-0">
-                  <img
-                    src={art.image}
-                    alt={art.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {cmsImageUrl(art.image) ? <img src={cmsImageUrl(art.image)} alt={art.title} className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-500 ease-out motion-reduce:transform-none motion-reduce:transition-none" /> : <div className="h-full flex items-center justify-center text-xs text-slate-400">Belum ada foto</div>}
                   {art.category && (
                     <span className="absolute top-2 left-2 px-2 py-0.5 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold rounded-full">
                       {art.category}
@@ -530,11 +576,13 @@ const LandingPage = ({
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Pertanyaan yang Sering Diajukan
             </h2>
+
             <p className="text-sm text-slate-500 leading-relaxed">
               Jawaban ringkas seputar penyaluran donasi, verifikasi kuitansi, transparansi, dan tata cara kunjungan panti asuhan.
             </p>
           </div>
 
+          {displayFaqs.length === 0 && <p className="text-center text-sm text-slate-500">Belum ada FAQ resmi yang dipublikasikan.</p>}
           <div className="max-w-4xl mx-auto space-y-3.5">
             {displayFaqs.slice(0, 4).map((faq) => {
               const isOpen = openFaqId === faq.id;
@@ -598,7 +646,7 @@ const LandingPage = ({
               Bersama Nyalakan Harapan Masa Depan Anak Yatim Dhuafa
             </h2>
             <p className="text-sm text-emerald-200/80 max-w-xl mx-auto leading-relaxed relative z-10">
-              Donasi Anda disalurkan secara amanah dengan kuitansi digital sah dan dokumentasi belanja terbuka.
+              Dukung pengasuhan dan pendidikan anak melalui program-program kebaikan yang tersedia.
             </p>
             <div className="pt-2 relative z-10">
               <window.Link

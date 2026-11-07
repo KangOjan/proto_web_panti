@@ -6,6 +6,8 @@ const ProgramManagement = ({
   onDeactivateProgram,
   currentUser,
 }) => {
+  const role = String(currentUser?.role?.value ?? currentUser?.role ?? '').toLowerCase();
+  const canManagePrograms = role === 'pengurus_harian' || role === 'pengurus harian';
   const [isModalOpen, setIsModalOpen] =
     React.useState(false);
 
@@ -105,11 +107,13 @@ const ProgramManagement = ({
   };
 
   const handleOpenAddModal = () => {
+    if (!canManagePrograms) return;
     resetForm();
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (program) => {
+    if (!canManagePrograms) return;
     setEditingProg(program);
 
     setTitle(program.title || '');
@@ -147,6 +151,7 @@ const ProgramManagement = ({
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!canManagePrograms) return;
 
     if (!title.trim()) {
       alert(
@@ -235,6 +240,7 @@ const ProgramManagement = ({
   };
 
   const handleDeactivate = async () => {
+    if (!canManagePrograms) return;
     if (!deactivateConfirmId) {
       return;
     }
@@ -274,6 +280,7 @@ const ProgramManagement = ({
       0
     );
 
+  const hasUnknownCollected = priorityPrograms.some((program) => program.collectedAmount == null);
   const totalCollected =
     priorityPrograms.reduce(
       (sum, program) =>
@@ -294,7 +301,7 @@ const ProgramManagement = ({
             <LucideIcon name="layers" className="w-4 h-4 text-emerald-400" />
 
             <span>
-              Ruang Kerja: Pengurus Harian
+              {canManagePrograms ? 'Ruang Kerja: Pengurus Harian' : 'Pengawasan: Pemimpin Lembaga'}
             </span>
           </div>
 
@@ -303,13 +310,13 @@ const ProgramManagement = ({
           </h1>
 
           <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl mt-1 leading-relaxed">
-            Kelola program prioritas panti.
-            Program berstatus Aktif akan
-            ditampilkan pada halaman publik.
+            {canManagePrograms
+              ? 'Kelola program prioritas panti. Program aktif tampil pada halaman publik.'
+              : 'Pantau program prioritas dan capaian dana. Akses ini hanya untuk membaca.'}
           </p>
         </div>
 
-        <button
+        {canManagePrograms && <button
           type="button"
           onClick={handleOpenAddModal}
           disabled={categoriesLoading}
@@ -320,7 +327,7 @@ const ProgramManagement = ({
           <span>
             Tambah Program Prioritas
           </span>
-        </button>
+        </button>}
       </div>
 
       {campaignError && (
@@ -367,7 +374,7 @@ const ProgramManagement = ({
           </div>
 
           <div className="text-xl font-black mt-1">
-            Rp {totalCollected.toLocaleString('id-ID')}
+            {hasUnknownCollected ? 'Sebagian belum tersedia' : `Rp ${totalCollected.toLocaleString('id-ID')}`}
           </div>
 
           <div className="text-[11px] text-slate-400 mt-1">
@@ -425,9 +432,9 @@ const ProgramManagement = ({
                   Status
                 </th>
 
-                <th className="py-3.5 px-4 text-right">
+                {canManagePrograms && <th className="py-3.5 px-4 text-right">
                   Aksi
-                </th>
+                </th>}
               </tr>
             </thead>
 
@@ -436,7 +443,7 @@ const ProgramManagement = ({
               {campaignLoading ? (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan={canManagePrograms ? 6 : 5}
                     className="text-center py-12 text-slate-400"
                   >
                     Memuat program...
@@ -445,7 +452,7 @@ const ProgramManagement = ({
               ) : priorityPrograms.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan={canManagePrograms ? 6 : 5}
                     className="text-center py-12 text-slate-400"
                   >
                     Belum ada program prioritas.
@@ -482,10 +489,9 @@ const ProgramManagement = ({
                       </td>
 
                       <td className="py-3.5 px-4 font-black text-emerald-700 whitespace-nowrap">
-                        Rp{' '}
-                        {Number(
-                          program.collectedAmount || 0
-                        ).toLocaleString('id-ID')}
+                        {program.collectedAmount == null
+                          ? 'Belum tersedia'
+                          : `Rp ${Number(program.collectedAmount).toLocaleString('id-ID')}`}
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -506,7 +512,7 @@ const ProgramManagement = ({
 
                       </td>
 
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      {canManagePrograms && <td className="py-3.5 px-4 text-right whitespace-nowrap">
 
                         <div className="flex justify-end gap-2">
 
@@ -540,7 +546,7 @@ const ProgramManagement = ({
                           )}
 
                         </div>
-                      </td>
+                      </td>}
                     </tr>
                   )
                 )
@@ -551,7 +557,7 @@ const ProgramManagement = ({
         </div>
       </div>
 
-      {isModalOpen && (
+      {canManagePrograms && isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
 
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
@@ -788,7 +794,7 @@ const ProgramManagement = ({
         </div>
       )}
 
-      {deactivateConfirmId && (
+      {canManagePrograms && deactivateConfirmId && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
 
           <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">

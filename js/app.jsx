@@ -1,6 +1,59 @@
 // Main React Application Component
 // SIMK-Panti
 
+// Metadata updates on client-side navigation. Static index.html remains the fallback
+// for crawlers that do not execute JS; true per-article SEO needs server rendering.
+const SIMK_SEO_PAGES = Object.freeze({
+  beranda: ['LKSA Taman Harapan Muhammadiyah Bandung', 'Informasi resmi lembaga, kegiatan, dan dukungan untuk anak asuh.'],
+  profil: ['Profil Lembaga', 'Profil, legalitas, kepengurusan, dan kontak LKSA Taman Harapan Muhammadiyah.'],
+  'public-donation': ['Donasi', 'Salurkan donasi untuk kegiatan dan program LKSA Taman Harapan Muhammadiyah.'],
+  'public-dashboard': ['Transparansi Keuangan', 'Informasi transparansi pengelolaan dan donasi lembaga.'],
+  berita: ['Artikel dan Berita', 'Berita dan informasi kegiatan LKSA Taman Harapan Muhammadiyah.'],
+  faq: ['Pertanyaan Umum', 'Jawaban pertanyaan umum tentang donasi, program, dan kunjungan lembaga.'],
+});
+const simkSetMeta = (selector, attribute, value) => {
+  const element = document.head.querySelector(selector);
+  if (element) element.setAttribute(attribute, value);
+};
+const simkUpdateSeo = (tab, options = {}) => {
+  const base = 'LKSA Taman Harapan Muhammadiyah';
+  const page = SIMK_SEO_PAGES[tab];
+  const noIndex = !page && tab !== 'detail-berita' && tab !== 'detail-campaign';
+  const title = options.title || (page ? page[0] : base);
+  const description = options.description || (page ? page[1] : 'Informasi resmi lembaga.');
+  const pathname = window.location.pathname;
+  const canonical = `https://tamanharapanmu.com${pathname === '/beranda' ? '/' : pathname}`;
+  document.title = `${title} | SIMK-Panti`;
+  simkSetMeta('meta[name="description"]', 'content', description);
+  simkSetMeta('meta[name="robots"]', 'content', noIndex ? 'noindex,nofollow' : 'index,follow');
+  simkSetMeta('meta[property="og:title"]', 'content', title);
+  simkSetMeta('meta[property="og:description"]', 'content', description);
+  simkSetMeta('meta[property="og:url"]', 'content', canonical);
+  simkSetMeta('meta[property="og:type"]', 'content', options.article ? 'article' : 'website');
+  if (options.image) {
+    const image = new URL(options.image, window.location.origin).href;
+    simkSetMeta('meta[property="og:image"]', 'content', image);
+    simkSetMeta('meta[name="twitter:image"]', 'content', image);
+  }
+  simkSetMeta('meta[name="twitter:title"]', 'content', title);
+  simkSetMeta('meta[name="twitter:description"]', 'content', description);
+  const node = document.getElementById('simk-page-jsonld');
+  if (node) {
+    const pageSchema = options.article ? {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: title, description, mainEntityOfPage: canonical,
+      ...(options.image ? { image: new URL(options.image, window.location.origin).href } : {}),
+      publisher: { '@type': 'NGO', name: base },
+      ...(options.date ? { datePublished: options.date } : {}),
+    } : options.campaign ? {
+      '@context': 'https://schema.org', '@type': 'WebPage',
+      name: title, description, url: canonical,
+    } : null;
+    node.textContent = pageSchema ? JSON.stringify(pageSchema) : '';
+  }
+  simkSetMeta('link[rel="canonical"]', 'href', canonical);
+};
+
 // UI-only route permissions. Laravel middleware/policies MUST enforce these roles
 // independently on every protected API endpoint.
 const SIMK_PROTECTED_ROUTES = Object.freeze({
@@ -232,13 +285,31 @@ const App = () => {
 
   // Do not render privileged pages before validating a saved token via /me.
   const [authStatus, setAuthStatus] = React.useState('checking');
+  // One confirmation for both the admin Sidebar and public Navbar.
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = React.useState(false);
+  const [logoutInProgress, setLogoutInProgress] = React.useState(false);
+  const logoutCancelRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!logoutConfirmOpen) return;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    logoutCancelRef.current?.focus();
+    const onEscape = (event) => {
+      if (event.key === 'Escape' && !logoutInProgress) setLogoutConfirmOpen(false);
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, [logoutConfirmOpen, logoutInProgress]);
+
   const isAuthenticated = authStatus === 'authenticated' && Boolean(currentUser);
   const currentRole = isAuthenticated ? simkUserRole(currentUser) : null;
   const hasPengurusAccess = () => isAuthenticated && currentRole === 'pengurus_harian';
   const hasPemimpinAccess = () => isAuthenticated && currentRole === 'pemimpin_lembaga';
-  // Read-only monitoring. Creation, editing, deletion and verification remain Pengurus-only.
-  const hasOversightReadAccess = () => isAuthenticated &&
-    ['pengurus_harian', 'pemimpin_lembaga'].includes(currentRole);
+  const hasReadOnlyOversightAccess = () => isAuthenticated && ['pengurus_harian', 'pemimpin_lembaga'].includes(currentRole);
 
   /*
   |--------------------------------------------------------------------------
@@ -313,20 +384,25 @@ const App = () => {
   const [
     donations,
     setDonations,
-  ] = React.useState([]); // Verified/pending donations must come from Laravel, not mock fixtures.
+  ] = React.useState([]); // Existing offline donation workflow.
+  const [manualDonations, setManualDonations] = React.useState([]);
+  const [manualDonationsLoading, setManualDonationsLoading] = React.useState(false);
+  const [manualDonationsError, setManualDonationsError] = React.useState(null);
+  const [manualDonationPage, setManualDonationPage] = React.useState(1);
+  const [manualDonationLastPage, setManualDonationLastPage] = React.useState(1);
 
   const [
     articles,
     setArticles,
   ] = React.useState(
-    window.INITIAL_SIMK_DATA?.articles || []
+    []
   );
 
   const [
     faqs,
     setFaqs,
   ] = React.useState(
-    window.INITIAL_SIMK_DATA?.faqs || []
+    []
   );
 
   const [
@@ -343,6 +419,13 @@ const App = () => {
     isMobileSidebarOpen,
     setIsMobileSidebarOpen,
   ] = React.useState(false);
+
+  // Desktop sidebar can be collapsed and restored independently from mobile.
+  const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    simkUpdateSeo(activeTab);
+  }, [activeTab, selectedArticleSlug, selectedCampaignId]);
 
   /*
   |--------------------------------------------------------------------------
@@ -621,16 +704,69 @@ const App = () => {
     navigateToRoute(requestedRole === 'pengurus_harian' ? '/pengelola/dashboard' : '/approval');
   };
 
-  // Verification must be persisted and authorized on the server, never
-  // simulated by changing donations/campaign totals in React.
-  const handleApproveDonation = async () => {
-    showToast('Verifikasi dinonaktifkan sampai terhubung ke endpoint Laravel yang terotorisasi.', 'rose');
-    return false;
+  const loadManualDonations = async (page = 1) => {
+    if (!hasPengurusAccess()) return;
+    setManualDonationsLoading(true);
+    setManualDonationsError(null);
+    try {
+      const response = await DonationApi.getManualTransferDonations(page);
+      const items = Array.isArray(response?.data?.items) ? response.data.items : [];
+      setManualDonationPage(Number(response?.data?.pagination?.current_page) || 1);
+      setManualDonationLastPage(Number(response?.data?.pagination?.last_page) || 1);
+      setManualDonations(items.map((item) => ({
+        id: item.public_id || item.id,
+        donorName: item.donor_name || 'Hamba Allah',
+        phone: item.phone || null,
+        email: item.email || null,
+        campaignTitle: item.campaign?.title || 'Donasi Umum',
+        amount: Number(item.amount) || 0,
+        createdAt: item.created_at || null,
+        status: String(item.status).toLowerCase() === 'verified' ? 'Terverifikasi'
+          : String(item.status).toLowerCase() === 'cancelled' ? 'Ditolak' : 'Pending',
+        type: 'manual_transfer',
+        hasProof: item.has_payment_proof === true,
+      })));
+    } catch (error) {
+      setManualDonationsError(error?.message || 'Gagal memuat antrean transfer manual.');
+      setManualDonations([]);
+    } finally {
+      setManualDonationsLoading(false);
+    }
   };
 
-  const handleRejectDonation = async () => {
-    showToast('Penolakan dinonaktifkan sampai terhubung ke endpoint Laravel yang terotorisasi.', 'rose');
-    return false;
+  React.useEffect(() => {
+    if (activeTab === 'admin-verifikasi' && hasPengurusAccess()) {
+      loadManualDonations();
+    }
+  }, [activeTab, currentUser]);
+
+  const handleApproveDonation = async (publicId) => {
+    if (!hasPengurusAccess()) return false;
+    if (!window.confirm('Pastikan mutasi rekening resmi sudah dicek dan dana benar-benar diterima. Lanjutkan verifikasi?')) return false;
+    try {
+      await DonationApi.verifyManualTransfer(publicId);
+      await loadManualDonations();
+      setFinancialTransactionRefreshKey((key) => key + 1);
+      showToast('Transfer diverifikasi dan dicatat satu kali di Buku Kas.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Verifikasi gagal.', 'rose');
+      return false;
+    }
+  };
+
+  const handleRejectDonation = async (publicId, reasonCode) => {
+    if (!hasPengurusAccess()) return false;
+    if (!window.confirm('Tolak bukti ini? Donasi tidak akan masuk Buku Kas.')) return false;
+    try {
+      await DonationApi.rejectManualTransfer(publicId, reasonCode);
+      await loadManualDonations();
+      showToast('Pengajuan transfer manual ditolak.', 'info');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Penolakan gagal.', 'rose');
+      return false;
+    }
   };
 
   const handleAddOfflineDonation = async (payload) => {
@@ -679,6 +815,27 @@ const App = () => {
     }
   };
 
+  // Verify only offline donations; the Laravel service owns ledger and audit writes.
+  const handleVerifyOfflineDonation = async (publicId) => {
+    if (!hasPengurusAccess()) {
+      showToast('Hanya Pengurus Harian yang boleh memverifikasi donasi.', 'rose');
+      return false;
+    }
+    try {
+      if (!publicId) throw new Error('ID publik donasi tidak tersedia.');
+      const response = await DonationApi.verifyOfflineDonation(publicId);
+      if (response?.success !== true || !response?.data) {
+        throw new Error(response?.message || 'Laravel belum mengonfirmasi verifikasi donasi.');
+      }
+      setFinancialTransactionRefreshKey((key) => key + 1);
+      showToast('Donasi berhasil diverifikasi. Periksa catatan penerimaan pada Buku Kas.', 'success');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Verifikasi donasi gagal di backend.', 'rose');
+      return false;
+    }
+  };
+
   // Legacy CampaignManagement callbacks: never treat local state as saved data.
   const handleSaveCampaign = async (payload) => {
     if (!hasPengurusAccess()) {
@@ -692,12 +849,18 @@ const App = () => {
         ? await CampaignApi.updateCampaign(existingId, payload)
         : await CampaignApi.createCampaign(payload);
       if (!response?.data) throw new Error('API tidak mengonfirmasi penyimpanan campaign.');
-      await Promise.all([loadManagedCampaigns(), refreshPublicPrograms()]);
-      showToast('Campaign berhasil disimpan di database.');
+      const [managementLoaded] = await Promise.all([loadManagedCampaigns(), refreshPublicPrograms()]);
+      showToast(managementLoaded
+        ? (payload?.status === 'draft' ? 'Campaign tersimpan sebagai Draft. Hanya muncul di CMS sampai diaktifkan.' : 'Campaign berhasil disimpan dan tersedia di Manajemen Campaign.')
+        : 'Campaign tersimpan, tetapi daftar pengurus gagal dimuat. Muat ulang halaman.',
+        managementLoaded ? 'success' : 'rose');
       return true;
     } catch (error) {
-      showToast(error?.message || 'Campaign gagal disimpan.', 'rose');
-      return false;
+      const message = error?.errors
+        ? Object.values(error.errors).flat().join(' ')
+        : error?.message || 'Campaign gagal disimpan.';
+      showToast(message, 'rose');
+      return { success: false, message };
     }
   };
 
@@ -769,24 +932,75 @@ const App = () => {
     }
   };
 
-  const handleSaveArticle = (newArticle) => {
-    setArticles((prev) => [newArticle, ...prev]);
-    showToast('Artikel baru hanya masuk pratinjau lokal. API artikel dan upload gambar belum tersedia.', 'info');
+  // Legacy callbacks still passed as props. Never simulate persistence in React.
+  // ContentManagement currently uses CmsApi itself; these remain safe if reused.
+  const handleSaveArticle = async (article) => {
+    if (!hasPengurusAccess()) return false;
+    try {
+      const payload = {
+        title: article?.title,
+        excerpt: article?.excerpt || '',
+        content: article?.content,
+        status: article?.status || 'draft',
+      };
+      const result = article?.id
+        ? await CmsApi.updateArticle(article.id, payload)
+        : await CmsApi.createArticle(payload);
+      if (!result?.success) throw new Error('Artikel tidak tersimpan ke Laravel.');
+      showToast('Artikel berhasil disimpan di database.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Artikel gagal disimpan.', 'rose');
+      return false;
+    }
   };
 
-  const handleDeleteArticle = (id) => {
-    setArticles((prev) => prev.filter((a) => a.id !== id));
-    showToast('Artikel berhasil dihapus!');
+  const handleDeleteArticle = async (id) => {
+    if (!hasPengurusAccess()) return false;
+    try {
+      const result = await CmsApi.deleteArticle(id);
+      if (!result?.success) throw new Error('Artikel tidak terhapus di Laravel.');
+      showToast('Artikel berhasil dihapus dari database.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Penghapusan artikel gagal.', 'rose');
+      return false;
+    }
   };
 
-  const handleSaveFaq = (newFaq) => {
-    setFaqs((prev) => [...prev, newFaq]);
-    showToast('FAQ hanya masuk pratinjau lokal. API penyimpanan FAQ belum tersedia.', 'info');
+  const handleSaveFaq = async (faq) => {
+    if (!hasPengurusAccess()) return false;
+    try {
+      const payload = {
+        question: faq?.question,
+        answer: faq?.answer,
+        category: faq?.category || 'Umum',
+        sort_order: Number(faq?.sort_order ?? faq?.sortOrder ?? 0),
+        is_published: faq?.is_published ?? faq?.isPublished ?? false,
+      };
+      const result = faq?.id
+        ? await CmsApi.updateFaq(faq.id, payload)
+        : await CmsApi.createFaq(payload);
+      if (!result?.success) throw new Error('FAQ tidak tersimpan di Laravel.');
+      showToast('FAQ berhasil disimpan di database.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Penyimpanan FAQ gagal.', 'rose');
+      return false;
+    }
   };
 
-  const handleDeleteFaq = (id) => {
-    setFaqs((prev) => prev.filter((f) => f.id !== id));
-    showToast('Pertanyaan FAQ berhasil dihapus!');
+  const handleDeleteFaq = async (id) => {
+    if (!hasPengurusAccess()) return false;
+    try {
+      const result = await CmsApi.deleteFaq(id);
+      if (!result?.success) throw new Error('FAQ tidak terhapus di Laravel.');
+      showToast('FAQ berhasil dihapus dari database.');
+      return true;
+    } catch (error) {
+      showToast(error?.message || 'Penghapusan FAQ gagal.', 'rose');
+      return false;
+    }
   };
 
   const getCurrentUserName =
@@ -863,8 +1077,7 @@ const App = () => {
         campaign.deadline || null,
 
       headerImageUrl:
-        campaign.header_image_url ||
-        null,
+        CmsApi.normalizeMediaUrl(campaign.header_image_url),
 
       createdAt:
         campaign.created_at || null,
@@ -925,18 +1138,17 @@ const App = () => {
           await CampaignApi
             .getPengurusCampaigns();
 
-        const campaigns =
-          Array.isArray(
-            response?.data
-          )
-            ? response.data
-            : [];
+        if (!response?.success || !Array.isArray(response?.data)) {
+          throw new Error('Respons daftar campaign CMS tidak sesuai format API Laravel.');
+        }
+        const campaigns = response.data;
 
         setManagedPrograms(
           campaigns.map(
             normalizeCampaign
           )
         );
+        return true;
       } catch (error) {
         console.error(
           'Failed to load management campaigns:',
@@ -947,6 +1159,7 @@ const App = () => {
           error?.message ||
             'Gagal mengambil data program pengurus.'
         );
+        return false;
       } finally {
         setCampaignLoading(
           false
@@ -1119,7 +1332,7 @@ const App = () => {
         filters = {}
       ) => {
         if (
-          !hasOversightReadAccess()
+          !hasReadOnlyOversightAccess()
         ) {
           setFinancialTransactions(
             []
@@ -1324,9 +1537,8 @@ const App = () => {
 
   React.useEffect(() => {
     if (
-      activeTab !==
-        'programs' ||
-      !hasPengurusAccess()
+      !['programs', 'admin-campaign'].includes(activeTab) ||
+      !hasReadOnlyOversightAccess()
     ) {
       return;
     }
@@ -1392,6 +1604,8 @@ const App = () => {
 
         setCurrentUser(user);
         setAuthStatus('authenticated');
+        setIsMobileSidebarOpen(false);
+        setIsDesktopSidebarOpen(true);
 
         const role = simkUserRole(user);
         const destination = role === 'pengurus_harian' ? '/pengelola/dashboard' : '/approval';
@@ -1429,6 +1643,10 @@ const App = () => {
       }
     };
 
+  const requestLogoutConfirmation = () => {
+    if (!logoutInProgress) setLogoutConfirmOpen(true);
+  };
+
   const handleLogout =
     async () => {
       let serverLogoutSucceeded = true;
@@ -1452,6 +1670,9 @@ const App = () => {
         setCurrentUser(null);
         setAuthStatus('guest');
         setDonations([]);
+        setManualDonations([]);
+        setManualDonationPage(1);
+        setManualDonationLastPage(1);
         setIsAddTrxModalOpen(false);
         setIsDeleteModalOpen(false);
         setIsReceiptModalOpen(false);
@@ -1494,6 +1715,8 @@ const App = () => {
           total: 0,
         });
 
+        setIsMobileSidebarOpen(false);
+        setIsDesktopSidebarOpen(true);
         setActiveTab(
           'beranda'
         );
@@ -1507,6 +1730,19 @@ const App = () => {
         );
       }
     };
+
+  const confirmLogout = async () => {
+    if (logoutInProgress) return;
+    setLogoutInProgress(true);
+    try {
+      await handleLogout();
+      setLogoutConfirmOpen(false);
+    } catch (error) {
+      showToast(error?.message || 'Tidak dapat mengakhiri sesi.', 'rose');
+    } finally {
+      setLogoutInProgress(false);
+    }
+  };
 
   /*
   |--------------------------------------------------------------------------
@@ -1810,38 +2046,13 @@ const App = () => {
             previous + 1
         );
 
-        setReceiptData({
-          receiptNo:
-            transaction.id,
-
-          type:
-            transaction.type,
-
-          donorName:
-            transaction.donorName,
-
-          description:
-            transaction.description,
-
-          amount:
-            transaction.amount,
-
-          category:
-            transaction.category,
-
-          paymentMethod:
-            transaction.paymentMethod,
-
-          date:
-            transaction.date,
-
-          createdBy:
-            transaction.createdBy,
-        });
-
-        setIsReceiptModalOpen(
-          true
-        );
+        // Penerbitan kwitansi adalah tindakan terpisah, tidak otomatis saat transaksi dibuat.
+        // Klik Cetak dari Buku Kas untuk membekukan nilai kwitansi sekali secara idempotent.
+        if (transaction.type === 'pemasukan') {
+          showToast('Transaksi tersimpan. Pilih Cetak pada Buku Kas untuk menerbitkan kwitansi tetap.', 'success');
+        } else {
+          await handlePrintTransactionReceipt(transaction);
+        }
 
         return {
           success: true,
@@ -1888,6 +2099,34 @@ const App = () => {
   | donation yang sama agar tidak membuat duplicate donation record.
   |
   */
+
+  const handleManualDonationSubmit = async (donationData) => {
+    try {
+      const payload = {
+        campaign_id: donationData.campaignId ?? null,
+        submission_token: donationData.submissionToken,
+        allocation_category: donationData.category,
+        donor_name: donationData.donorName.trim(),
+        phone: donationData.phone?.trim() || null,
+        email: donationData.email?.trim() || null,
+        amount: Number(donationData.amount),
+        donor_message: donationData.note?.trim() || null,
+        publish_message: donationData.publishMessage === true,
+        publish_identity: donationData.isAnonymous !== true,
+      };
+      const response = await DonationApi.createManualTransferDonation(payload, donationData.proofFile);
+      if (!response?.success || !response?.data?.public_id) {
+        throw new Error(response?.message || 'Server tidak mengonfirmasi bukti.');
+      }
+      showToast('Bukti diterima. Menunggu verifikasi pengurus.');
+      return { success: true, donation: response.data };
+    } catch (error) {
+      const message = error?.errors
+        ? Object.values(error.errors).flat().join(' ') : error?.message || 'Upload bukti gagal.';
+      showToast(message, 'rose');
+      return { success: false, message };
+    }
+  };
 
   const handlePublicDonationSubmit =
     async (
@@ -2012,55 +2251,35 @@ const App = () => {
       }
     };
 
-  const handlePrintTransactionReceipt =
-    (trxObj) => {
-      setReceiptData({
-        receiptNo:
-          trxObj.id,
-
-        type:
-          trxObj.type,
-
-        donorName:
-          trxObj.donorName ||
-          trxObj.description,
-
-        description:
-          trxObj.description,
-
-        amount:
-          trxObj.amount,
-
-        category:
-          trxObj.category,
-
-        paymentMethod:
-          trxObj.paymentMethod ||
-          (
-            trxObj.type ===
-            'pemasukan'
-              ? 'Kas Masuk Bendahara'
-              : 'Kas Keluar Operasional'
-          ),
-
-        date:
-          trxObj.date,
-
-        createdBy:
-          trxObj.createdBy,
-      });
-
-      setIsReceiptModalOpen(
-        true
-      );
-    };
+  const handlePrintTransactionReceipt = async (trxObj) => {
+    if (trxObj.type === 'pemasukan') {
+      try {
+        const response = hasPengurusAccess()
+          ? await FinancialApi.issueReceipt(trxObj.id)
+          : await FinancialApi.getReceipt(trxObj.id);
+        const snapshot = response?.data?.receipt;
+        if (!snapshot || response?.data?.issued !== true) {
+          throw new Error('Kwitansi belum diterbitkan oleh Pengurus Harian.');
+        }
+        setReceiptData({ ...snapshot, issued: true, type: 'pemasukan' });
+        setIsReceiptModalOpen(true);
+      } catch (error) {
+        showToast(error?.message || 'Kwitansi gagal dimuat.', 'rose');
+      }
+      return;
+    }
+    // Voucher pengeluaran tetap merupakan pratinjau, bukan bukti donasi.
+    setReceiptData({
+      type: trxObj.type, receiptNo: trxObj.id, donorName: trxObj.donorName,
+      description: trxObj.description, amount: trxObj.amount,
+      category: trxObj.category, paymentMethod: trxObj.paymentMethod,
+      date: trxObj.date, createdBy: trxObj.createdBy,
+    });
+    setIsReceiptModalOpen(true);
+  };
 
   const handleDeleteTransaction =
     async (trxId) => {
-      if (!hasPengurusAccess()) {
-        showToast('Hanya Pengurus Harian yang dapat menghapus transaksi.', 'rose');
-        return { success: false };
-      }
       const target =
         financialTransactions
           .find(
@@ -2371,10 +2590,7 @@ const App = () => {
       0
     );
 
-  const pendingDonationsCount =
-    donations.filter(
-      (d) => d.type === 'online' && d.status === 'Pending'
-    ).length;
+  const pendingDonationsCount = manualDonations.filter((d) => d.status === 'Pending').length;
 
   const adminRoutes = Object.keys(SIMK_PROTECTED_ROUTES);
   const isAdminView = adminRoutes.includes(activeTab);
@@ -2401,6 +2617,37 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-800">
+      {logoutConfirmOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
+            onClick={() => { if (!logoutInProgress) setLogoutConfirmOpen(false); }} />
+          <section role="alertdialog" aria-modal="true" aria-labelledby="simk-logout-title"
+            aria-describedby="simk-logout-description"
+            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <LucideIcon name="log-out" className="h-7 w-7" />
+            </div>
+            <h2 id="simk-logout-title" className="text-center text-xl font-extrabold text-slate-900">
+              Yakin ingin keluar?
+            </h2>
+            <p id="simk-logout-description" className="mt-2 text-center text-sm leading-relaxed text-slate-500">
+              Sesi pengelolaan SIMK-Panti akan diakhiri. Pastikan perubahan yang sedang dikerjakan sudah tersimpan.
+            </p>
+            <div className="mt-7 grid grid-cols-2 gap-3">
+              <button ref={logoutCancelRef} type="button" disabled={logoutInProgress}
+                onClick={() => setLogoutConfirmOpen(false)}
+                className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 disabled:opacity-50">
+                Tetap Masuk
+              </button>
+              <button type="button" disabled={logoutInProgress} onClick={confirmLogout}
+                className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white hover:bg-rose-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-600 disabled:opacity-50">
+                {logoutInProgress ? 'Mengakhiri sesi...' : 'Ya, Keluar'}
+              </button>
+            </div>
+          </section>
+        </div>, document.body
+      )}
+
       {/* Toast Alert Banner */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in toast-alert">
@@ -2448,22 +2695,42 @@ const App = () => {
             currentUser={currentUser}
             currentRoute={activeTab}
             onNavigateTab={navigateToRoute}
-            onLogout={handleLogout}
+            onLogout={requestLogoutConfirmation}
             pendingApprovalCount={pendingApprovalCount}
             pendingDonationsCount={pendingDonationsCount}
             isMobileSidebarOpen={isMobileSidebarOpen}
             setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+            isDesktopSidebarOpen={isDesktopSidebarOpen}
+            setIsDesktopSidebarOpen={setIsDesktopSidebarOpen}
             evaluatorMode={false}
           />
 
           {/* Admin Main Workspace Area */}
-          <div className="flex-1 flex flex-col lg:ml-72 min-w-0">
+          <div
+            className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ${isDesktopSidebarOpen ? 'lg:ml-72' : 'lg:ml-0'}`}
+          >
+            {/* The desktop sidebar changes only when the user presses this toggle. */}
+            <header className="hidden lg:flex sticky top-0 z-30 items-center justify-between bg-white border-b border-slate-200 px-6 py-3 shadow-sm no-print">
+              <button
+                type="button"
+                aria-label={isDesktopSidebarOpen ? 'Tutup sidebar' : 'Buka sidebar'}
+                aria-expanded={isDesktopSidebarOpen}
+                onClick={() => setIsDesktopSidebarOpen((open) => !open)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100"
+              >
+                <LucideIcon name={isDesktopSidebarOpen ? 'panel-left-close' : 'panel-left-open'} className="w-5 h-5" />
+                <span>{isDesktopSidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'}</span>
+              </button>
+              <span className="text-xs font-semibold text-slate-500">{currentRole === 'pemimpin_lembaga' ? 'Pengawasan Pemimpin Lembaga' : 'Panel Pengurus Harian'}</span>
+            </header>
             {/* Top Admin Mobile Header Bar */}
             <header className="lg:hidden sticky top-0 z-30 bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 shadow-sm no-print">
               <div className="flex items-center space-x-3">
                 <button
                   type="button"
-                  onClick={() => setIsMobileSidebarOpen(true)}
+                  onClick={() => setIsMobileSidebarOpen((open) => !open)}
+                  aria-label={isMobileSidebarOpen ? 'Tutup navigasi' : 'Buka navigasi'}
+                  aria-expanded={isMobileSidebarOpen}
                   className="p-2 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700"
                 >
                   <LucideIcon name="menu" className="w-5 h-5" />
@@ -2481,27 +2748,25 @@ const App = () => {
 
             <main className="flex-1 p-4 sm:p-6">
               {activeTab === 'admin-dashboard' && (
-                currentRole === 'pemimpin_lembaga' ? (
-                  // Executive overview reuses the read-only financial analytics endpoint.
-                  <FinancialDashboard
-                    currentUser={currentUser}
-                    onNavigateTab={navigateToRoute}
-                  />
-                ) : (
-                  <AdminDashboard
-                    campaigns={displayCampaigns}
-                    donations={donations}
-                    transactions={displayTransactions}
-                    currentUser={currentUser}
-                    onNavigateTab={navigateToRoute}
-                    financialTransactionRefreshKey={financialTransactionRefreshKey}
-                  />
-                )
+                <AdminDashboard
+                  campaigns={displayCampaigns}
+                  donations={donations}
+                  transactions={displayTransactions}
+                  currentUser={currentUser}
+                  onNavigateTab={navigateToRoute}
+                  financialTransactionRefreshKey={financialTransactionRefreshKey}
+                />
               )}
 
               {activeTab === 'admin-verifikasi' && (
                 <DonationVerification
-                  donations={donations}
+                  donations={manualDonations}
+                  loading={manualDonationsLoading}
+                  error={manualDonationsError}
+                  onReload={() => loadManualDonations(manualDonationPage)}
+                  currentPage={manualDonationPage}
+                  lastPage={manualDonationLastPage}
+                  onPageChange={loadManualDonations}
                   campaigns={displayCampaigns}
                   onApproveDonation={handleApproveDonation}
                   onRejectDonation={handleRejectDonation}
@@ -2514,12 +2779,15 @@ const App = () => {
                   donations={donations}
                   campaigns={displayCampaigns}
                   onAddOfflineDonation={handleAddOfflineDonation}
+                  onVerifyOfflineDonation={handleVerifyOfflineDonation}
                 />
               )}
 
               {activeTab === 'admin-campaign' && (
                 <CampaignManagement
-                  campaigns={displayCampaigns}
+                  campaigns={managedPrograms}
+                  campaignLoading={campaignLoading}
+                  campaignError={campaignError}
                   onSaveCampaign={handleSaveCampaign}
                   onDeleteCampaign={handleDeleteCampaign}
                   onAddCampaignUpdate={handleAddCampaignUpdate}
@@ -2528,6 +2796,9 @@ const App = () => {
 
               {activeTab === 'admin-konten' && (
                 <ContentManagement
+                  currentUser={currentUser}
+                  onProfileUpdated={loadPublicOrganizationProfile}
+                  showToast={showToast}
                   orphanageProfile={displayProfile}
                   articles={articles}
                   faqs={faqs}
@@ -2556,18 +2827,10 @@ const App = () => {
                   transactionRefreshKey={financialTransactionRefreshKey}
                   onLoadTransactions={loadFinancialTransactions}
                   onOpenAddModal={() => {
-                    if (!hasPengurusAccess()) {
-                      showToast('Mode monitoring: hanya Pengurus Harian yang dapat mencatat transaksi.', 'rose');
-                      return;
-                    }
                     setEditingTrx(null);
                     setIsAddTrxModalOpen(true);
                   }}
                   onOpenEditModal={(transaction) => {
-                    if (!hasPengurusAccess()) {
-                      showToast('Mode monitoring: perubahan transaksi tidak diizinkan.', 'rose');
-                      return;
-                    }
                     if (transaction.editable !== true) {
                       showToast('Transaksi sistem tidak dapat diedit manual.', 'rose');
                       return;
@@ -2576,10 +2839,6 @@ const App = () => {
                     setIsAddTrxModalOpen(true);
                   }}
                   onConfirmDeleteTrx={(transaction) => {
-                    if (!hasPengurusAccess()) {
-                      showToast('Mode monitoring: penghapusan transaksi tidak diizinkan.', 'rose');
-                      return;
-                    }
                     if (transaction.editable !== true) {
                       showToast('Transaksi sistem tidak dapat dihapus manual.', 'rose');
                       return;
@@ -2592,41 +2851,14 @@ const App = () => {
               )}
 
               {activeTab === 'programs' && (
-                currentRole === 'pemimpin_lembaga' ? (
-                  <section className="mx-auto max-w-6xl space-y-6">
-                    <div className="rounded-3xl bg-slate-900 p-7 text-white shadow-lg">
-                      <p className="text-sm font-semibold text-emerald-300">Ikhtisar eksekutif</p>
-                      <h1 className="mt-2 text-2xl font-extrabold">Program Prioritas</h1>
-                      <p className="mt-2 text-sm text-slate-300">Daftar campaign dari API. Akses Pemimpin Lembaga bersifat baca saja.</p>
-                    </div>
-                    {publicCampaignLoading && <p className="text-sm text-slate-500">Memuat program dari database...</p>}
-                    {publicCampaignError && <p className="text-sm text-rose-600">{publicCampaignError}</p>}
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                      {displayCampaigns.map((program) => (
-                        <article key={program.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                          <span className="text-xs font-semibold text-emerald-700">{program.category}</span>
-                          <h2 className="mt-2 text-base font-bold text-slate-900">{program.title}</h2>
-                          <p className="mt-2 text-xs text-slate-500">Status: {program.status}</p>
-                          <p className="mt-3 text-sm font-semibold">Target: Rp {Number(program.targetAmount || 0).toLocaleString('id-ID')}</p>
-                          <p className="mt-1 text-sm">Dana terverifikasi: {program.verifiedCollectedAmount == null ? 'Belum tersedia' : `Rp ${program.verifiedCollectedAmount.toLocaleString('id-ID')}`}</p>
-                          <button type="button" onClick={() => navigateToRoute(`/campaign/${encodeURIComponent(String(program.id))}`)}
-                            className="mt-4 rounded-xl border border-emerald-200 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
-                            Lihat detail publik
-                          </button>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                ) : (
-                  <ProgramManagement
-                    priorityPrograms={managedPrograms && managedPrograms.length > 0 ? managedPrograms : displayCampaigns}
-                    campaignLoading={campaignLoading}
-                    campaignError={campaignError}
-                    onSaveProgram={handleSaveProgram}
-                    onDeactivateProgram={handleDeactivateProgram}
-                    currentUser={currentUser}
-                  />
-                )
+                <ProgramManagement
+                  priorityPrograms={managedPrograms && managedPrograms.length > 0 ? managedPrograms : displayCampaigns}
+                  campaignLoading={campaignLoading}
+                  campaignError={campaignError}
+                  onSaveProgram={handleSaveProgram}
+                  onDeactivateProgram={handleDeactivateProgram}
+                  currentUser={currentUser}
+                />
               )}
 
               {activeTab === 'organization-profile-management' && (
@@ -2671,7 +2903,7 @@ const App = () => {
             currentRoute={activeTab === 'beranda' ? 'home' : activeTab === 'public-donation' ? 'donasi' : activeTab}
             onSwitchUserRole={handleSwitchUserRole}
             onNavigateTab={navigateToRoute}
-            onLogout={handleLogout}
+            onLogout={requestLogoutConfirmation}
             pendingApprovalCount={pendingApprovalCount}
             evaluatorMode={false}
             organizationProfile={displayProfile}
@@ -2708,6 +2940,7 @@ const App = () => {
                 campaignError={publicCampaignError}
                 donationContext={selectedDonationContext}
                 onSubmitPublicDonation={handlePublicDonationSubmit}
+                onSubmitManualDonation={handleManualDonationSubmit}
                 resolveAllocationCategory={mapCampaignCategoryToDonationAllocation}
                 onNavigateHome={() => navigateToRoute('/beranda')}
               />

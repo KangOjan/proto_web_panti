@@ -78,7 +78,7 @@ window.INITIAL_SIMK_DATA = {
       deadline: '2026-10-31',
       status: 'Aktif',
       image: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&auto=format&fit=crop&q=60',
-      description: 'Pengadaan beras, lauk pauk, telur, susu, dan buah-buahan bergizi seimbang untuk 45 anak asuh setiap hari.',
+      description: 'Pengadaan beras, lauk pauk, telur, susu, dan buah-buahan bergizi seimbang untuk 145 anak asuh setiap hari.',
       bankAccount: 'Bank Syariah Indonesia (BSI) - 7123-4567-89 a.n. LKSA Taman Harapan Muhammadiyah',
       updates: [
         {
@@ -99,7 +99,7 @@ window.INITIAL_SIMK_DATA = {
       deadline: '2026-09-30',
       status: 'Target Tercapai',
       image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&auto=format&fit=crop&q=60',
-      description: 'Dukungan biaya SPP bulanan, buku teks pelajaran, dan kelengkapan seragam sekolah 45 anak dari tingkat SD hingga SMA.',
+      description: 'Dukungan biaya SPP bulanan, buku teks pelajaran, dan kelengkapan seragam sekolah 145 anak dari tingkat SD hingga SMA.',
       bankAccount: 'Bank Mandiri - 123-00-0987654-3 a.n. Yayasan LKSA Taman Harapan Muhammadiyah',
       updates: [
         {

@@ -51,19 +51,13 @@ const FinancialDashboard = ({
   ] =
     React.useState(null);
 
-  /*
-   * Internal dashboard endpoint
-   * currently belongs to Pengurus Harian.
-   */
-  const roleNormalized = String(currentUser?.role || '').toLowerCase();
+  // Display guard only; Laravel auth:sanctum + approved + read-only
+  // oversight middleware enforce the actual API authorization.
+  const roleNormalized = String(currentUser?.role?.value ?? currentUser?.role ?? '')
+    .trim().toLowerCase().replaceAll(' ', '_');
   const canAccessDashboard =
     roleNormalized === 'pengurus_harian' ||
-    roleNormalized === 'pengurus harian' ||
-    roleNormalized === 'pemimpin_lembaga' ||
-    roleNormalized === 'pemimpin lembaga' ||
-    roleNormalized === 'evaluator' ||
-    roleNormalized === 'admin' ||
-    !currentUser?.role;
+    roleNormalized === 'pemimpin_lembaga';
 
   const destroyCharts = () => {
     if (
@@ -758,10 +752,7 @@ const FinancialDashboard = ({
     ]
   );
 
-  /*
-   * Backend endpoint belum diberikan
-   * ke role Pemimpin Lembaga pada fase ini.
-   */
+  // GET dashboard is shared read-only for approved daily staff and leadership.
   if (
     !canAccessDashboard
   ) {
@@ -780,7 +771,7 @@ const FinancialDashboard = ({
           </h2>
 
           <p className="text-sm text-slate-600 mt-2 max-w-xl mx-auto">
-            Endpoint dashboard internal saat ini tersedia untuk Pengurus Harian. Dukungan read-only untuk Pemimpin Lembaga akan ditambahkan pada fase role terkait.
+            Dashboard keuangan tersedia untuk Pengurus Harian dan Pemimpin Lembaga yang telah disetujui. Silakan login dengan akun berizin.
           </p>
         </div>
       </div>
@@ -945,7 +936,7 @@ const FinancialDashboard = ({
             />
 
             <span>
-              Kelola & Catat Transaksi
+              {roleNormalized === 'pemimpin_lembaga' ? 'Lihat Buku Kas' : 'Kelola & Catat Transaksi'}
             </span>
           </button>
         </div>

@@ -154,3 +154,85 @@
     padding: 6px 8px !important;
   }
 }
+
+/* Public-photo credit overlay: discourages unattributed screenshots, not downloads. */
+.simk-protected-media { position: relative; overflow: hidden; }
+.simk-protected-media::after {
+  content: "LKSA TAMAN HARAPAN";
+  position: absolute; pointer-events: none; right: 0.6rem; bottom: 0.6rem;
+  padding: 0.18rem 0.42rem; border-radius: 0.3rem;
+  font: 700 0.58rem/1.4 sans-serif; letter-spacing: 0.04em;
+  color: white; background: rgb(15 23 42 / 55%);
+}
+
+/* Immutable donor receipt: two compact copies on one A4 page. */
+.simk-receipt-pages { display:flex; flex-direction:column; gap:14px; color:#17212f; font-family:Arial,sans-serif; }
+.simk-kwitansi-copy { display:grid; grid-template-columns:27% 73%; position:relative; border:1.5px solid #475569; background:white; min-height:305px; overflow:hidden; page-break-inside:avoid; break-inside:avoid; }
+.simk-kwitansi-stub { padding:14px 12px; border-right:2px dashed #94a3b8; font-size:10px; line-height:1.5; min-width:0; }
+.simk-stub-logo { width:42px; height:42px; object-fit:contain; margin:0 auto 6px; }
+.simk-small-heading { text-align:center; font-size:11px; font-weight:800; border-bottom:1px solid #cbd5e1; padding-bottom:5px; margin-bottom:7px; }
+.simk-label { margin-top:8px; font-weight:700; color:#475569; }
+.simk-wrap { overflow-wrap:anywhere; }
+.simk-kwitansi-main { position:relative; min-width:0; }
+.simk-kwitansi-watermark { position:absolute; width:58%; height:75%; left:21%; top:12%; object-fit:contain; opacity:.07; pointer-events:none; }
+.simk-kwitansi-content { position:relative; z-index:1; padding:13px 18px; }
+.simk-kwitansi-header { display:flex; gap:10px; align-items:center; justify-content:center; border-bottom:2px solid #065f46; padding-bottom:8px; }
+.simk-kwitansi-header img { width:53px; height:53px; object-fit:contain; }
+.simk-kwitansi-header h3 { font-size:15px; line-height:1.18; font-weight:900; text-transform:uppercase; color:#0b5343; }
+.simk-kwitansi-header p { font-size:10px; color:#475569; }
+.simk-kwitansi-eyebrow { text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+.simk-kwitansi-title { display:flex; flex-direction:column; gap:2px; align-items:center; padding:7px 0; font-size:11px; }
+.simk-kwitansi-title strong { font-size:15px; letter-spacing:.3px; }
+.simk-kwitansi-fields { display:flex; flex-direction:column; gap:7px; font-size:11px; }
+.simk-kwitansi-fields>div { display:grid; grid-template-columns:122px minmax(0,1fr); gap:6px; align-items:start; }
+.simk-kwitansi-fields span { color:#475569; }
+.simk-kwitansi-fields strong { overflow-wrap:anywhere; font-weight:700; }
+.simk-kwitansi-signers { display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:center; margin-top:12px; font-size:10px; }
+.simk-signature-slot { height:40px; display:flex; align-items:center; justify-content:center; }
+.simk-signature-slot img { max-height:40px; max-width:140px; object-fit:contain; }
+.simk-signer-name { padding-top:3px; border-top:1px solid #64748b; font-weight:700; overflow-wrap:anywhere; }
+.simk-kwitansi-note { font-size:8px; margin-top:8px; color:#64748b; text-align:center; }
+@media print {
+  @page { size:A4 portrait; margin:10mm; }
+  body:has(#simk-print-receipt) * { visibility:hidden !important; }
+  #simk-print-receipt, #simk-print-receipt * { visibility:visible !important; }
+  #simk-print-receipt .simk-no-print { display:none !important; }
+  #simk-print-receipt { position:absolute !important; inset:0 auto auto 0 !important; width:190mm !important; max-width:190mm !important; height:auto !important; min-height:0 !important; max-height:none !important; padding:0 !important; margin:0 !important; overflow:visible !important; border:0 !important; box-shadow:none !important; border-radius:0 !important; }
+  .simk-receipt-pages { gap:4mm !important; }
+  .simk-kwitansi-copy { width:190mm !important; min-height:118mm !important; max-height:120mm !important; break-inside:avoid !important; page-break-inside:avoid !important; }
+  .simk-kwitansi-content { padding:4mm 5mm !important; }
+  .simk-kwitansi-stub { padding:5mm 3mm !important; }
+  .simk-kwitansi-watermark { opacity:.07 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
+
+/* Print the financial report separately from the donor receipt. */
+@media print {
+  body:has(#simk-print-financial-report) * { visibility: hidden !important; }
+  body:has(#simk-print-financial-report) #simk-print-financial-report,
+  body:has(#simk-print-financial-report) #simk-print-financial-report * {
+    visibility: visible !important;
+  }
+  body:has(#simk-print-financial-report) aside,
+  body:has(#simk-print-financial-report) .no-print { display: none !important; }
+  body:has(#simk-print-financial-report) .animate-fade-in {
+    animation: none !important;
+    transform: none !important;
+  }
+  #simk-print-financial-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 190mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  #simk-print-financial-report table { page-break-inside: auto !important; }
+  #simk-print-financial-report tr { break-inside: avoid !important; }
+}

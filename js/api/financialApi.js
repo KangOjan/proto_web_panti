@@ -418,6 +418,13 @@ const FinancialApi = {
     );
   },
 
+  issueReceipt(publicId) {
+    return apiRequest(`/pengurus/financial-transactions/${encodeURIComponent(publicId)}/issue-receipt`, { method: 'POST' });
+  },
+  getReceipt(publicId) {
+    return apiRequest(`/pengurus/financial-transactions/${encodeURIComponent(publicId)}/receipt`);
+  },
+
   createTransaction(
     payload
   ) {

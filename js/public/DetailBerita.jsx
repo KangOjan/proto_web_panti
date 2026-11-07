@@ -3,30 +3,30 @@
 
 const DetailBerita = ({
   articleSlug = null,
-  articles = (window.INITIAL_SIMK_DATA?.articles || []),
+  articles = [],
   onNavigateBack = null,
 }) => {
-  const displayArticles = (articles && articles.length > 0)
-    ? articles
-    : (window.INITIAL_SIMK_DATA?.articles || []);
+  const [article, setArticle] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState('');
+  React.useEffect(() => {
+    let live = true;
+    setLoading(true); setLoadError(''); setArticle(null);
+    if (!articleSlug) { setLoading(false); setLoadError('Artikel tidak ditemukan.'); return; }
+    CmsApi.getPublicArticle(articleSlug)
+      .then(response => { if (live) setArticle(response?.data ? CmsApi.normalizeArticle(response.data) : null); })
+      .catch(error => { if (live) setLoadError(error?.message || 'Artikel tidak ditemukan.'); })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, [articleSlug]);
 
-  const article = displayArticles.find(
-    (a) => a.slug === articleSlug || a.id === articleSlug
-  ) || displayArticles[0] || {
-    id: 'ART-001',
-    title: 'Kunjungan Edukasi & Pelatihan Coding Dasar untuk Anak Panti',
-    excerpt: 'Sebanyak 25 anak asuh jenjang SMP dan SMA mengikuti workshop pemrograman web dasar.',
-    content: `Panti Asuhan LKSA Taman Harapan Muhammadiyah menerima kunjungan istimewa dari tim relawan teknologi. Kegiatan diawali dengan pengenalan logika dasar komputer dan pemrograman web HTML/CSS.
-
-Anak-anak sangat antusias mengikuti setiap sesi latihan. Beberapa anak bahkan berhasil membuat halaman biodata sederhana secara mandiri.
-
-"Kami sangat bersyukur atas ilmu dan bimbingan yang diberikan oleh para mentor relawan. Keterampilan digital seperti ini sangat penting untuk bekal masa depan anak-anak kami," ungkap Budi Santoso, Pengurus Harian Panti LKSA Taman Harapan Muhammadiyah.
-
-Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk mendukung laboratorium belajar panti.`,
-    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=60',
-    date: '2026-08-22',
-    author: 'Humas Panti'
-  };
+  React.useEffect(() => {
+    if (article) simkUpdateSeo('detail-berita', {
+      title: article.title,
+      description: (article.excerpt || article.content || '').slice(0, 155),
+      image: article.image, article: true, date: article.published_at,
+    });
+  }, [article]);
 
   const handleBack = () => {
     if (onNavigateBack) {
@@ -47,7 +47,9 @@ Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk menduku
         <span>Kembali ke Daftar Berita</span>
       </button>
 
-      <article className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 space-y-6">
+      {loading && <p className="text-sm text-slate-500">Memuat artikel...</p>}
+      {loadError && <p role="alert" className="text-sm text-rose-700">{loadError}</p>}
+      {article &&       <article className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 space-y-6">
         <div className="space-y-3 border-b border-slate-100 pb-6">
           <div className="flex items-center space-x-3 text-xs text-slate-400 font-semibold">
             <span className="flex items-center space-x-1">
@@ -66,18 +68,12 @@ Kegiatan ditutup dengan penyerahan bantuan 5 unit komputer desktop untuk menduku
           </h1>
         </div>
 
-        <div className="rounded-2xl overflow-hidden aspect-video bg-slate-100 shadow-inner">
-          <img
-            src={article.image}
-            alt={article.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        {article.image && <div className="simk-protected-media rounded-2xl overflow-hidden aspect-video bg-slate-100 shadow-inner"><img src={article.image} alt={article.title} draggable={false} onContextMenu={(event) => event.preventDefault()} className="w-full h-full object-cover" /></div>}
 
         <div className="prose prose-emerald max-w-none text-slate-700 text-sm sm:text-base leading-relaxed whitespace-pre-line">
           {article.content}
         </div>
-      </article>
+      </article>}
     </div>
   );
 };

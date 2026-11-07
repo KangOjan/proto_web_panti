@@ -41,7 +41,7 @@ const apiRequest = async (
 
   const headers = {
     Accept: 'application/json',
-    ...(body
+    ...(body && !(body instanceof FormData)
       ? {
           'Content-Type':
             'application/json',
